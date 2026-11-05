@@ -130,7 +130,7 @@ describe('runCandidates と評価', () => {
       expect(r3.imported).toBe(0);
       expect(await readFile(join(paths.selection, '2026/10.md'), 'utf8')).toBe(text);
       expect(text).toContain('表示 2件 / 非表示 0件 / 要判断 0件');
-      expect(text).toContain('| 表示 | mystery |');
+      expect(text).toContain('| 表示 | クエスト | mystery |');
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
@@ -145,9 +145,9 @@ describe('runCandidates と評価', () => {
       await runCandidates(recs, paths, join(dir, 'pub'), at, rules);
       const text = await readFile(join(paths.selection, '2026/10.md'), 'utf8');
       expect(text).toContain('# 表示の判断 2026-10');
-      expect(text).toContain('| 判定 | 項目 | カテゴリ | 期間 | 理由 | 記事 |');
-      expect(text).toContain('| 表示 | BBB x |');
-      expect(text).toContain('| 要判断 | mystery |');
+      expect(text).toContain('| 判定 | セクション | 項目 | カテゴリ | 期間 | 理由 | 記事 |');
+      expect(text).toContain('| 表示 | クエスト | BBB x |');
+      expect(text).toContain('| 要判断 | クエスト | mystery |');
       expect(text).not.toContain(at);
       expect(text).not.toContain('BBB old');
       await runCandidates(recs, paths, join(dir, 'pub'), '2026-10-24T09:00:00+09:00', rules);
@@ -180,6 +180,22 @@ describe('runCandidates と評価', () => {
     expect(m.get('2026-07')).toContain('BBB nodate');
     expect([...m.values()].join()).not.toContain('BBB far');
     expect([...renderSelectionMonths(js).keys()]).toEqual(['2025-10', '2026-03', '2026-07', '2028-04']);
+  });
+  it('月別の表はセクション(画面と同じ順)→期間の順に並び、セクションの列を持つ', () => {
+    const at2 = (id: string, title: string, cat: string, start: string, end: string): ArticleRecord => ({ ...rec(id, title, cat), url: `https://www.monster-strike.com/news/${id}.html`, events: [{ ...rec(id, title, cat).events[0]!, start, end }] });
+    const js = judgeAll(
+      buildCandidates([
+        at2('20261001_1', 'ガチャ「テスト」開催', 'collab', '2026-10-01T12:00:00+09:00', '2026-10-02T11:59:00+09:00'),
+        at2('20261001_2', 'テストキャンペーン', 'campaign', '2026-10-01T12:00:00+09:00', '2026-10-02T11:59:00+09:00'),
+        at2('20261001_3', 'テストクエスト', 'event', '2026-10-05T12:00:00+09:00', '2026-10-06T11:59:00+09:00'),
+      ]),
+      emptyDecisions(),
+      rules,
+    );
+    const text = renderSelectionMonths(js).get('2026-10') as string;
+    expect(text).toContain('| 判定 | セクション | 項目 |');
+    const secs = text.split('\n').filter((l) => /^\| (表示|非表示|要判断) \|/.test(l)).map((l) => l.split(' | ')[1]);
+    expect(secs).toEqual(['クエスト', 'キャンペーン', 'ガチャ']);
   });
   it('一致率: 記憶を教師にルール単独の判定を比較', () => {
     const d = emptyDecisions();

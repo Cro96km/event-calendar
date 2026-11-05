@@ -1,5 +1,6 @@
 // 判断の記憶(config/judge/decisions.json)・4区分・要判断ファイル(config/judge/needs-review.md)の純関数。spec §4.6。
 import { classify, type Rule } from './classify';
+import { SECTIONS, sectionOfEvent } from './sections';
 import type { Candidate } from './selection';
 
 /** 確定した判断(記憶に保存できる値)。未確定を含む classify.ts の Decision とは別。 */
@@ -233,9 +234,14 @@ export function renderSelectionMonths(js: Judged[], range: SelectionRange | null
   }
   const out = new Map<string, string>();
   for (const [month, list] of [...byMonth].sort(([a], [b]) => a.localeCompare(b))) {
-    list.sort((a, b) => a.cand.latest.localeCompare(b.cand.latest) || a.cand.key.localeCompare(b.cand.key));
+    // セクション(画面と同じ順。どこにも入らないものは末尾)→ 期間 → 項目名
+    const section = (j: Judged): { rank: number; label: string } => {
+      const sec = sectionOfEvent({ category: j.cand.category, name: j.cand.key, title: j.cand.key });
+      return sec ? { rank: SECTIONS.findIndex((x) => x.id === sec.id), label: sec.label } : { rank: SECTIONS.length, label: '-' };
+    };
+    list.sort((a, b) => section(a).rank - section(b).rank || a.cand.latest.localeCompare(b.cand.latest) || a.cand.key.localeCompare(b.cand.key));
     const n = (d: string): number => list.filter((j) => verdict(j) === d).length;
-    const rows = list.map((j) => `| ${verdict(j)} | ${esc(j.cand.key)} | ${j.cand.category} | ${j.cand.latest} | ${how(j)} | [記事](${j.cand.url}) |`);
+    const rows = list.map((j) => `| ${verdict(j)} | ${section(j).label} | ${esc(j.cand.key)} | ${j.cand.category} | ${j.cand.latest} | ${how(j)} | [記事](${j.cand.url}) |`);
     out.set(
       month,
       [
@@ -244,10 +250,10 @@ export function renderSelectionMonths(js: Judged[], range: SelectionRange | null
         '',
         '自動生成です(`npm run update` が作り直します)。**編集しないでください**。判断を変えるときは、要対応の Issue のチェック(`/apply`)、`config/judge/decisions.json`(種類・項目の記憶)、`config/judge/rules.json`(自動ルール)を直します。',
         '',
-        `表示 ${n('表示')}件 / 非表示 ${n('非表示')}件 / 要判断 ${n('要判断')}件(要判断は、判断するまで非表示)。記事の月(\`data/articles\` と同じ分類)の表です。メンテナンスと手動の調整(\`config/schedule/manual.json\`)は載りません。`,
+        `表示 ${n('表示')}件 / 非表示 ${n('非表示')}件 / 要判断 ${n('要判断')}件(要判断は、判断するまで非表示)。記事の月(\`data/articles\` と同じ分類)の表で、セクション(画面と同じ順)→期間の順に並べています。メンテナンスと手動の調整(\`config/schedule/manual.json\`)は載りません。`,
         '',
-        '| 判定 | 項目 | カテゴリ | 期間 | 理由 | 記事 |',
-        '|---|---|---|---|---|---|',
+        '| 判定 | セクション | 項目 | カテゴリ | 期間 | 理由 | 記事 |',
+        '|---|---|---|---|---|---|---|',
         ...rows,
         '',
       ].join('\n'),
