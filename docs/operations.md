@@ -91,7 +91,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 |---|---|---|
 | `config/judge/` | 表示・非表示の判断 | `rules.json`(自動判定のルール。上から最初の一致)、`decisions.json`(判断の記憶。`npm run candidates` が要判断ファイルから取り込む生成物なので、通常は手で編集しない)。ローカルの生成物 `needs-review.md`(要判断の一覧・編集する)・`selection.md`(参照用)はgit管理外 |
 | `config/display/` | 表記・並び・色 | `label-overrides.json`(長いラベルを短くする)、`sort-order.json`・`gacha-order.json`・`campaign-order.json`・`quest-order.json`(並び順・小見出し)、`quest-colors.json`(禁忌の獄の属性色と色の定義)、`recurring.json`(定例のラベル) |
-| `config/schedule/` | ニュースに載らない日程・事実 | `hakai.json`(星墓のクエスト名→色と、固定の階層。§8)、`monthly-days.json`(毎月決まった日に出る項目)、`normal-quest-attributes.json`(ノーマルクエストの曜日別の対象属性) |
+| `config/schedule/` | ニュースに載らない日程・事実 | `manual.json`(手動の調整。公式に無い項目の追加・項目の非表示。§14)、`hakai.json`(星墓のクエスト名→色と、固定の階層。§8)、`monthly-days.json`(毎月決まった日に出る項目)、`normal-quest-attributes.json`(ノーマルクエストの曜日別の対象属性) |
 
 過去記事を全体から判断し直す仕組み(`npm run review-year`・`config/review/`)は廃止した。更新ごとの差分で判断する(運用の再設計。。
 
@@ -166,3 +166,20 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 4. 外部からの PR は原則無視する。
 
 **注意**: 定例の自動実行(schedule)は、リポジトリに60日間活動が無いと自動停止する。自動マージのコミット(週1回)が活動に数えられるので通常は止まらないが、停止の通知が来たらワークフローを手動で再有効化する。公式サイトの規約変更・運営からの要請があれば、`update.yml` の `schedule` を外して収集を止める(§4)。
+
+## 14. 手動の調整 `npm run manual`
+公式ニュースだけでは足りないときの手動の調整は、**`config/schedule/manual.json` の1ファイル**に集める(星墓の固定階層は §8 の `hakai.json`、毎月決まった日の項目は `monthly-days.json`)。
+
+| 設定 | 内容 |
+|---|---|
+| `add` | 公式に無い項目をカレンダーに足す。`name`・`category`(`event`=クエスト / `campaign`=キャンペーン)・`start`・`end`(JST の `"YYYY-MM-DD HH:MM"`)・`group`(小見出し。省略可。クエストは `定例クエスト` など、キャンペーンは `config/display/campaign-order.json` のグループ語)・`note`(メモ)。**公式由来の項目と同じ扱い**(色や印の区別なし)。表示の判断(選択)の対象外で、常に表示する |
+| `hide` | 項目を表示から外す。`id` は項目ID(例 `20261030_3#0`)か記事ID(例 `20261030_3`。その記事の全項目)。**データ(`data/articles`)は消さない**。メンテナンスにも効く。この行を消せば元に戻る。`note` に理由 |
+
+項目IDは、更新PR・要対応Issueの記事リンク(`…/news/20261030_3.html` の `20261030_3`)から分かる。記事ID(日付_番号)で指定すれば、項目番号(`#0`)は要らない。
+
+**編集の方法**(どれでも同じ結果。書式の誤りは `npm run check` と CI が検知する)
+- **Actions の manual**(パソコンの環境が要らない): Actions → manual → Run workflow に入力すると、`manual.json` を更新する PR が作られ、検証が通れば自動でマージされて反映される。
+- **コマンド**: `npm run manual -- add --name 名前 --category event --start "2024-01-01 00:00" --end "2026-12-31 23:59" --group 定例クエスト`、`npm run manual -- hide --id 20261030_3 --note 理由`、`remove --name 名前`、`unhide --id ID`、`list`。
+- **JSON を直接編集**(GitHub の Web エディタでもよい)。
+
+反映は main への変更後の `deploy.yml`(収集は不要)。常設・期間付きの `add` は、`end` を過ぎると表示されなくなるので、延長するときは `end` を直す。

@@ -215,7 +215,8 @@ const RAID_NAME = /^(轟絶|黎絶|滅絶) .+降臨$/;
 const RAID_TIERS = ['滅絶', '黎絶', '轟絶'];
 
 /** クエストの小見出し(QUEST_GROUPS のいずれか)。spec §4.3.5。 */
-export function questGroup(e: { name: string; id?: string }): string {
+export function questGroup(e: { name: string; id?: string; group?: string }): string {
+  if (e.group !== undefined && QUEST_GROUPS.includes(e.group)) return e.group;
   if (e.id?.endsWith(EVENT_QUEST_SUFFIX)) return QUEST_GROUPS[1] as string;
   if (QUEST_ORDER.some((k) => e.name.includes(k))) return QUEST_GROUPS[0] as string;
   if (RAID_NAME.test(e.name)) return '絶級クエスト';
@@ -331,7 +332,8 @@ export function campaignRank(e: ExportEvent, order: readonly string[] = CAMPAIGN
 }
 
 /** キャンペーンの小見出し(一致したグループ語)。一致しなければ null。 */
-export function campaignGroup(e: { name: string }, order: readonly string[] = CAMPAIGN_GROUPS): string | null {
+export function campaignGroup(e: { name: string; group?: string }, order: readonly string[] = CAMPAIGN_GROUPS): string | null {
+  if (e.group !== undefined && order.includes(e.group)) return e.group;
   const direct = order.find((k) => e.name.includes(k));
   if (direct) return direct;
   const alias = Object.keys(CAMPAIGN_ALIASES).find((k) => e.name.includes(k));
