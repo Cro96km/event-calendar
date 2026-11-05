@@ -1,6 +1,6 @@
 // 週表示の純ロジック（DOMなし）。spec §4.3。日付はゲーム日 YYYY-MM-DD(JST)。
 import { gameDayOf, isOnGameDay } from './gameday';
-import { CHARACTER_GROUPS, characterGroup, GACHA_EVENT, GACHA_GROUPS, GACHA_REGULAR_GROUP, QUEST_DEFAULT, QUEST_EVENT, QUEST_GROUPS, QUEST_RAID, QUEST_SUPER, gachaEra, gachaGroup, regularGachaDerived, matchGroup, regularGachaIndex, CAMPAIGN_ALIASES, CAMPAIGN_GROUPS, ROW_RULES, MAINTENANCE_CATEGORY, EVENT_QUEST_SUFFIX, SECTIONS, sectionOf, sectionOfEvent, type Section } from './sections';
+import { groupDefs, CHARACTER_GROUPS, characterGroup, GACHA_EVENT, GACHA_GROUPS, GACHA_REGULAR_GROUP, QUEST_DEFAULT, QUEST_EVENT, QUEST_GROUPS, QUEST_RAID, QUEST_SUPER, gachaEra, gachaGroup, regularGachaDerived, matchGroup, regularGachaIndex, CAMPAIGN_ALIASES, CAMPAIGN_GROUPS, ROW_RULES, MAINTENANCE_CATEGORY, EVENT_QUEST_SUFFIX, SECTIONS, sectionOf, sectionOfEvent, type Section } from './sections';
 import type { ExportEvent } from './data/export';
 import { labelLines, shortLabel, superUltimateLabel, superUltimateParts } from './label';
 import { labelOverride } from './label-override';
@@ -250,8 +250,24 @@ export interface RowLabel {
   wrap: boolean;
 }
 
-/** 行ラベルの表示内容(ui と並び順の「名前」で共用)。キャンペーンの小見出し配下は説明のみ、超究極はキャラ名（補足）。 */
-export function rowLabel(sectionId: string, e: { name: string; pickup?: { name: string } }): RowLabel {
+/** 行ラベルの表示内容(ui と並び順の「名前」で共用)。キャンペーンの小見出し配下は説明のみ、超究極はキャラ名（補足）。小見出しの label_strip の語は取り除く。 */
+export function rowLabel(sectionId: string, e: { name: string; pickup?: { name: string }; id?: string; group?: string }): RowLabel {
+  const r = rowLabelRaw(sectionId, e);
+  const words = sectionId === 'quest' ? (groupDefs('quest').find((g) => g.name === questGroup(e))?.label_strip ?? []) : [];
+  return words.length === 0 ? r : stripLabel(r, words);
+}
+
+/** ラベルから語を取り除く。1行目が空になれば2行目(括弧は外す)を1行目に。それでも空なら元のまま。 */
+function stripLabel(r: RowLabel, words: readonly string[]): RowLabel {
+  const cut = (t: string): string => words.reduce((a, w) => a.split(w).join(''), t).replace(/^[、\s]+|[、\s]+$/g, '').trim();
+  const l1 = cut(r.l1);
+  const l2 = r.l2 === null ? null : cut(r.l2);
+  if (l1 !== '') return { ...r, l1, l2: l2 === '' ? null : l2 };
+  const alt = l2 === null ? '' : l2.replace(/^[（(](.*)[）)]$/, '$1').trim();
+  return alt === '' ? r : { ...r, l1: alt, l2: null };
+}
+
+function rowLabelRaw(sectionId: string, e: { name: string; pickup?: { name: string }; id?: string; group?: string }): RowLabel {
   // クエスト・キャンペーンの長いラベルの上書き(config/display/label-overrides.json)。1行(折り返さない)。ガチャには適用しない
   if (sectionId !== 'gacha') {
     const o = labelOverride(e.name);

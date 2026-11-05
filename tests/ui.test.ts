@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ExportEvent, IndexFile } from '../src/data/export';
 import { dragShift, initialState, render, type AppState } from '../src/ui';
-import { periodText, addDays, addMonthsToDay, monthWindow, barSpan, campaignGroup, campaignRank, questGroup, eventsForDay, formatJst, ganttSections, mergeEvents, maintenanceBars, maintenanceOnDay, isOnCalendarDay, mergeSameLabel, monthDays, addMonths, slotRows, weekDays } from '../src/week';
+import { periodText, rowLabel, addDays, addMonthsToDay, monthWindow, barSpan, campaignGroup, campaignRank, questGroup, eventsForDay, formatJst, ganttSections, mergeEvents, maintenanceBars, maintenanceOnDay, isOnCalendarDay, mergeSameLabel, monthDays, addMonths, slotRows, weekDays } from '../src/week';
 import { gachaGroup, sectionOf, sectionOfEvent } from '../src/sections';
 import { applySelection } from '../src/selection';
 import { MONTHLY, monthlyDays, monthlyEvents } from '../src/monthly';
@@ -1255,7 +1255,27 @@ describe('ガチャセクション', () => {
     state.collapsed.clear();
     render(root, state);
     const order = [...root.querySelectorAll('.g-inner .g-rows > .g-group, .g-inner .g-rows > .g-row')].map((x) => (x.classList.contains('g-group') ? `H:${x.textContent}` : `R:${x.querySelector('.g-l1')?.textContent}`));
-    expect(order).toEqual(['H:イベントクエスト', 'R:ギャラクシーアドベンチャー II', 'R:黄泉のツガイ', 'H:イベントガチャ', 'R:ギャラクシーアドベンチャー II', 'R:黄泉のツガイ', 'H:定例ガチャ', 'R:超・獣神祭', 'R:激・獣神祭', 'R:RED STARS', 'R:水の遊宴', 'R:ミッドナイト・パーティー', 'R:オリエンタル・トラベラーズ', 'R:モンコレDX', 'R:モンコレDX 〜ビナー編〜', 'R:モンストジェネレーション', 'H:期間限定ガチャ', 'R:あいうえお', 'R:集結、天下五剣']);
+    expect(order).toEqual(['H:イベントクエスト', 'R:ギャラクシーアドベンチャー II', 'R:黄泉のツガイ', 'H:イベントガチャ', 'R:ギャラクシーアドベンチャー II', 'R:黄泉のツガイ', 'H:定例ガチャ', 'R:超・獣神祭', 'R:激・獣神祭', 'R:RED STARS', 'R:水の遊宴', 'R:ミッドナイト・パーティー', 'R:オリエンタル・トラベラーズ', 'R:モンコレDX', 'R:モンコレDX 〜ビナー編〜', 'R:モンストジェネレーション', 'H:期間限定ガチャ', 'R:集結、天下五剣', 'R:あいうえお']);
+  });
+
+  it('期間限定ガチャは日程(開始)順に並ぶ(名前順ではない。開始が同じなら記事・項目の順)', () => {
+    const mk = (id: string, name: string, start: string) => ev(id, 'event', start, '2026-11-09T11:59:00+09:00', { name: `ガチャ「${name}」開催!`, title: 'x' });
+    state.weekStart = '2026-11-05';
+    state.events = [mk('a#0', 'あ後のガチャ', '2026-11-07T12:00:00+09:00'), mk('b#0', 'わ先のガチャ', '2026-11-05T12:00:00+09:00'), mk('c#0', 'い中のガチャ', '2026-11-06T12:00:00+09:00')];
+    state.collapsed.clear();
+    render(root, state);
+    const rows = [...root.querySelectorAll('.g-inner .g-rows > .g-row')].map((x) => x.querySelector('.g-l1')?.textContent);
+    expect(rows).toEqual(['わ先のガチャ', 'い中のガチャ', 'あ後のガチャ']);
+  });
+
+  it('期間限定クエストの行ラベルから「期間限定クエスト」を取り除く(括弧だけ残るときは中身を使う。取り除くと空なら元のまま)', () => {
+    const lab = (name: string) => rowLabel('quest', { name, group: '期間限定クエスト' });
+    expect(lab('期間限定クエスト「ユククル」登場!').l1).toBe('ユククル');
+    expect(lab('期間限定クエスト（ユーフリィム）が再登場！').l1).toBe('ユーフリィム');
+    expect(lab('期間限定クエスト登場!').l1).toBe('期間限定クエスト');
+    expect(lab('DREAMDAZE IV開催記念クエストあゆむ').l1).toBe('DREAMDAZE IV開催記念クエストあゆむ');
+    // 他の小見出し・セクションは変えない
+    expect(rowLabel('quest', { name: '覇者の塔', group: '定例クエスト' }).l1).toBe('覇者の塔');
   });
 
   it('isOnCalendarDay: 翌4:00終了のイベントは終了日の暦日(バーの列)にもかかる', () => {

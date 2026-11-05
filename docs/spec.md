@@ -124,6 +124,7 @@
 - 除外語は `not_gacha`(セクション振り分け)と `rules.json` の `gacha-exclude`(非表示。「ガチャ」を含む項目のみ対象)に同じ語を持つ。`gacha-on` は `not_gacha` 相当の語を含む項目には適用しない。
 - 表示判定(`config/judge/rules.json`、collab-category より前): `gacha-exclude`(ガチャギフト・先行販売・Webショップ・シールガチャ・フレンドガチャ・誠くん・ガチャ&オーブのセット・ガチャ玉・ランク到達の★6確定ガチャ・「各期間」(マルチガチャの期間別項目)・引き方/結果の案内・シェアキャンペーン/チャレンジ)と `gacha-detail`(ガチャ…詳細/について)は off、`collab-gacha`(collab の `ガチャ「`)と `gacha-on`(event/campaign の「ガチャ」)は on。過去の判断の記憶(decisions.json)にあった定例ガチャ(RED STARS 等)・黄泉のツガイの off は on に更新した。
 - 並びの調整: 定例は `order.json` の定例ガチャ(`role: regular`)の `words`、期間限定は `order.json` の期間限定ガチャの `sort`/`words`(語を書くとその語を含む行が先に並ぶ)。「1体確定!集結、天下五剣」と「集結、天下五剣」のような近い名称の行は自動では隣接させない(上の語指定で寄せられる)。
+- **期間限定ガチャは日程(開始)順**に並ぶ(`order.json` の期間限定ガチャの `sort: start`。まばらに見えないよう、名前順をやめた。開始が同じなら記事・項目の順)。
 - 旧セクション「ピックアップ」(collab カテゴリ)は廃止した。collab の表示対象はガチャ本体のみで、コラボガチャに移ったため。
 - 非表示: アイテムガチャ(`item-gacha`)・トリプルミッション(`triple-mission`)。コラボ本体ガチャ以外の「ガチャ」を含む題名でも、`ガチャ」も`(「…ミッションクリアで★6確定ガチャも!」等のクエスト告知)はクエスト項目のままガチャにしない(禁忌の獄などが消えた不具合の修正)。
 - 既知の割り切り: 記事内の見出しが記事タイトルにまとめられる項目(例: ラブライブ!シリーズ第2弾のガチャ)は項目キーが記事タイトルになり、ガチャとして出ない。
@@ -133,6 +134,7 @@
 - `sections`=セクションの定義(`id`・`label`・`hue`・`categories`)と順(上から)。character・quest・campaign・gacha は必須(振り分けの判定がコードにある。character は §4.13)。追加も可(§4.11。小見出しは持たない)。
 - `groups`=quest・campaign・gacha ごとの小見出しの配列。**配列の順が表示順**。1つの小見出しの項目: `name`(表示名)・`role`(コードが特別扱いする役割。quest: `event`=イベントガチャの写し〈通常→コラボの固定順〉・`raid`=降臨〈行ラベルから「降臨」を除く〉・`super`=超究極〈補足なし→補足→キャラ名の固定順〉、gacha: `event`・`regular`=定例。名前を変えても役割は残る。各1つ必須)・`match`(どの項目が入るか: `"words"`=自分の `words` / `"name"`=自分の `name` / `{includes}` / `{pattern}`。無ければ名称では入らない)・`words`・`sort`・`then`・`aliases`・`late`・`default`。
 - 振り分け(`matchGroup`): `late` でない `match` を配列の順に、次に `late` のもの、最後に `default`。手動の `group`(manual・overrides)は最優先、イベントガチャの写し(id 末尾 `~event`)は quest の `event`。ガチャは、コラボ記事の「ガチャ「」」本体=`event`、定例ガチャの語を `ガチャ「語」` で含む=`regular`(年代別の行を含む)、記事タイトルが `classify.gacha.event_title_prefixes` で始まる=`event`、それ以外=`default`。キャンペーンは `match: "name"` の小見出しの名前を含む(または `aliases`)。どれにも入らないものは「その他」(キャンペーンの先頭固定の月次項目は見出しなし)。
+- `label_strip`(小見出しの項目): この小見出しの行ラベルから取り除く語(小見出しの名前で自明な語)。取り除いて空になるときは元のまま、1行目だけが空になれば2行目(括弧は外す)を使う。現在は「期間限定クエスト」の小見出しで「期間限定クエスト」を取り除く(`期間限定クエストユククル` → `ユククル`)。詳細パネルの項目名は変えない。
 - `sort`(行の並び方): `fixed`(`words` の順。項目名に含む語を上から、一致しない行は `*` の位置・無ければ末尾。同順位は `then`=`name`〈既定〉/`start`)/ `name`(表示ラベルの五十音順)/ `start`(開始順。既定)/ `builtin`(コード固定: `role: event` のイベント、`role: super` の超究極)。定例クエスト・定例ガチャの `words` は、その小見出しに入れる項目の判定も兼ねる。
 - `classify.gacha`: `not_gacha`(名称に含めばガチャ扱いしない語)・`event_title_prefixes`。
 - 点検(`npm run check`): 名前の重複・空、`sort`・`then`・`match` の書式、`role` が各1つ(quest: event/raid/super、gacha: event/regular)、`default` が quest・gacha に1つ、正規表現の不正。**小見出しを改名したら、`manual.json`・`overrides.json` の `group` に書いた旧名も直す**(誤りとして検知される)。

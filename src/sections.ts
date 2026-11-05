@@ -18,6 +18,8 @@ export interface GroupDef {
   late?: boolean;
   /** どれにも入らない項目の小見出し */
   default?: boolean;
+  /** この小見出しの行ラベルから取り除く語(小見出しの名前で自明な語。取り除いて空になるときは元のまま) */
+  label_strip?: string[];
 }
 
 const GROUPS = order.groups as Record<string, GroupDef[]>;
