@@ -52,6 +52,7 @@ export function orderProblems(cfg: OrderConfig = order as unknown as OrderConfig
       }
       if (g.role !== undefined && !(ROLES[sec] ?? []).includes(g.role)) p.push(`${w}: role は ${(ROLES[sec] ?? []).join(' / ') || '(このセクションは無し)'}`);
       if (g.aliases?.some((x) => x.trim() === '')) p.push(`${w}: aliases に空の語があります`);
+      if (g.label_strip !== undefined && !(Array.isArray(g.label_strip) && g.label_strip.every((x) => typeof x === 'string' && x.trim() !== ''))) p.push(`${w}: label_strip は空でない語の配列`);
     }
     if (new Set(names).size !== names.length) p.push(`groups.${sec}: name が重複しています`);
     for (const role of ROLES[sec] ?? []) {
