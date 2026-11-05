@@ -1,37 +1,81 @@
 // カテゴリ → カレンダーのセクション対応。表示の調整はこのファイルだけで行う。spec §4.3。
 import order from '../config/display/order.json';
 
-/** 行の並び方(config/display/order.json の rows)。 */
+/** 小見出しの定義(config/display/order.json の groups。配列の順が表示順)。 */
+export interface GroupDef {
+  name: string;
+  /** コードが特別扱いする役割(quest: event / raid / super、gacha: event / regular) */
+  role?: string;
+  /** どの項目が入るか: "words"=自分の words / "name"=自分の name / {includes} / {pattern}。無ければ名称では入らない */
+  match?: 'words' | 'name' | { includes?: string[]; pattern?: string };
+  words?: string[];
+  sort?: 'fixed' | 'name' | 'start' | 'builtin';
+  then?: 'name' | 'start';
+  /** 項目名にこの語を含めばこの小見出し(キャンペーン) */
+  aliases?: string[];
+  /** 他の小見出しの判定のあとで判定する */
+  late?: boolean;
+  /** どれにも入らない項目の小見出し */
+  default?: boolean;
+}
+
+const GROUPS = order.groups as Record<string, GroupDef[]>;
+export const groupDefs = (section: string): readonly GroupDef[] => GROUPS[section] ?? [];
+const namesOf = (section: string): readonly string[] => groupDefs(section).map((g) => g.name);
+const roleName = (section: string, role: string): string => groupDefs(section).find((g) => g.role === role)?.name ?? '';
+const defaultName = (section: string): string => groupDefs(section).find((g) => g.default)?.name ?? '';
+
+/** 行の並び方(小見出しの sort・words・then)。 */
 export interface RowRule {
   sort: 'fixed' | 'name' | 'start' | 'builtin';
-  /** fixed: 項目名に含む語の順("*"=その他の位置) */
   words?: readonly string[];
-  /** fixed の同順位の並び(既定 name) */
   then?: 'name' | 'start';
 }
-/** 小見出しごとの行の並び。無い小見出しは開始順。 */
-export const ROW_RULES: Readonly<Record<string, RowRule>> = order.rows as Record<string, RowRule>;
-const wordsOf = (group: string): readonly string[] => ROW_RULES[group]?.words ?? [];
+/** セクション → 小見出し名 → 行の並び方。無い小見出しは開始順。 */
+export const ROW_RULES: Readonly<Record<string, Readonly<Record<string, RowRule>>>> = Object.fromEntries(
+  Object.entries(GROUPS).map(([sec, gs]) => [sec, Object.fromEntries(gs.filter((g) => g.sort !== undefined).map((g) => [g.name, { sort: g.sort as RowRule['sort'], ...(g.words ? { words: g.words } : {}), ...(g.then ? { then: g.then } : {}) }]))]),
+);
 
-/** キャンペーンの小見出し(表示順。config/display/order.json の groups.campaign)。 */
-export const CAMPAIGN_GROUPS: readonly string[] = order.groups.campaign;
-/** 名称に含む語で振り分けるキャンペーンの小見出し(セクション振り分け・2行表示の対象)。extra_groups(ミッション)は除く。 */
-export const CAMPAIGN_ORDER: readonly string[] = CAMPAIGN_GROUPS.filter((g) => !order.classify.campaign.extra_groups.includes(g));
-/** キャンペーンの別名(項目名に含む語 → グループ)。order.json の classify.campaign.group_aliases。 */
-export const CAMPAIGN_ALIASES: Readonly<Record<string, string>> = order.classify.campaign.group_aliases;
-/** 定例クエストの語(order.json の rows.定例クエスト.words)。名称に含めば定例クエスト。spec §4.3.5。 */
-export const QUEST_ORDER: readonly string[] = wordsOf('定例クエスト');
-/** クエストの小見出し(判定用。0=定例、1=イベント)。表示順は QUEST_GROUP_ORDER(order.json)。spec §4.3.5。 */
-export const QUEST_GROUPS: readonly string[] = ['定例クエスト', 'イベントクエスト', '常設クエスト', '絶級クエスト', '期間限定クエスト', '超究極クエスト', 'その他'];
+/** 小見出しの名前(表示順)。 */
+export const QUEST_GROUPS: readonly string[] = namesOf('quest');
+export const CAMPAIGN_GROUPS: readonly string[] = namesOf('campaign');
+export const GACHA_GROUPS: readonly string[] = namesOf('gacha');
+/** 役割の小見出し(名前を変えても役割で引く)。 */
+export const QUEST_EVENT = roleName('quest', 'event');
+export const QUEST_RAID = roleName('quest', 'raid');
+export const QUEST_SUPER = roleName('quest', 'super');
+export const QUEST_DEFAULT = defaultName('quest');
+export const GACHA_EVENT = roleName('gacha', 'event');
+export const GACHA_REGULAR_GROUP = roleName('gacha', 'regular');
+export const GACHA_DEFAULT = defaultName('gacha');
+
+/** 名称に含む語で振り分けるキャンペーンの小見出し(match: "name")。セクション振り分け・2行表示の対象。 */
+export const CAMPAIGN_ORDER: readonly string[] = groupDefs('campaign').filter((g) => g.match === 'name').map((g) => g.name);
+/** キャンペーンの別名(項目名に含む語 → 小見出し)。 */
+export const CAMPAIGN_ALIASES: Readonly<Record<string, string>> = Object.fromEntries(groupDefs('campaign').flatMap((g) => (g.aliases ?? []).map((a) => [a, g.name] as const)));
+/** 定例ガチャの語(role: regular の words)。 */
+export const GACHA_REGULAR: readonly string[] = groupDefs('gacha').find((g) => g.role === 'regular')?.words ?? [];
 /** イベントガチャの写しをクエストの「イベントクエスト」に出すためのイベントid接尾辞(week.ts ganttSections)。 */
 export const EVENT_QUEST_SUFFIX = '~event';
-/** ガチャの小見出し(判定用。0=定例、1=イベント〈コラボ含む〉、2=期間限定)と定例ガチャの語(order.json の rows.定例ガチャ.words)。表示順は GACHA_GROUP_ORDER。spec §4.3.7。 */
-export const GACHA_GROUPS: readonly string[] = ['定例ガチャ', 'イベントガチャ', '期間限定ガチャ'];
-export const GACHA_REGULAR: readonly string[] = wordsOf('定例ガチャ');
 
-/** 小見出しの表示順(config/display/order.json の groups)。 */
-export const QUEST_GROUP_ORDER: readonly string[] = order.groups.quest;
-export const GACHA_GROUP_ORDER: readonly string[] = order.groups.gacha;
+/** 小見出しの match に一致するか。 */
+function matcher(g: GroupDef): ((name: string) => boolean) | null {
+  const m = g.match;
+  if (m === undefined) return null;
+  if (m === 'words') return (n) => (g.words ?? []).some((k) => n.includes(k));
+  if (m === 'name') return (n) => n.includes(g.name);
+  const re = m.pattern !== undefined ? new RegExp(m.pattern) : null;
+  return (n) => (m.includes ?? []).some((k) => n.includes(k)) || (re?.test(n) ?? false);
+}
+const MATCHERS: Record<string, { name: string; test: (n: string) => boolean; late: boolean }[]> = Object.fromEntries(
+  Object.entries(GROUPS).map(([sec, gs]) => [sec, gs.flatMap((g) => { const t = matcher(g); return t ? [{ name: g.name, test: t, late: g.late === true }] : []; })]),
+);
+
+/** 項目名が match で入る小見出し(late でないものを配列の順に、次に late のもの)。無ければ null。default は含まない。 */
+export function matchGroup(section: string, name: string): string | null {
+  const ms = MATCHERS[section] ?? [];
+  return [...ms.filter((m) => !m.late), ...ms.filter((m) => m.late)].find((m) => m.test(name))?.name ?? null;
+}
 
 /** 年代別の行 `ガチャ「<定例ガチャ名> 2013＆2014」`(年代の表由来)。 */
 const ERA_GACHA = /^ガチャ「(.+?) (?:(\d{4})(?:[＆&]\d{4})?|Vol\.(\d+))」$/;
@@ -51,10 +95,10 @@ export function gachaEra(name: string): number {
 /** ガチャの小見出し。ガチャでなければ null。コラボ記事は「ガチャ「」で始まる本体のみ(付随項目は対象外)。 */
 export function gachaGroup(e: { category: string; name: string; title?: string }): string | null {
   if (!e.name.includes('ガチャ') || order.classify.gacha.not_gacha.some((k) => e.name.includes(k))) return null;
-  if (e.category === 'collab') return e.name.startsWith('ガチャ「') ? GACHA_GROUPS[1] ?? null : null;
-  if (regularGachaIndex(e.name) >= 0) return GACHA_GROUPS[0] ?? null;
+  if (e.category === 'collab') return e.name.startsWith('ガチャ「') ? GACHA_EVENT : null;
+  if (regularGachaIndex(e.name) >= 0) return GACHA_REGULAR_GROUP;
   const t = e.title ?? '';
-  return order.classify.gacha.event_title_prefixes.some((p) => t.startsWith(p)) ? GACHA_GROUPS[1] ?? null : GACHA_GROUPS[2] ?? null;
+  return order.classify.gacha.event_title_prefixes.some((p) => t.startsWith(p)) ? GACHA_EVENT : GACHA_DEFAULT;
 }
 
 export interface Section {

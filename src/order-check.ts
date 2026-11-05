@@ -1,12 +1,20 @@
-// 表示順の設定(config/display/order.json)の点検。純関数。spec §4.3.8
+// 表示順・小見出しの設定(config/display/order.json)の点検。純関数。spec §4.3.8
 import order from '../config/display/order.json';
-import { CAMPAIGN_GROUPS, GACHA_GROUPS, QUEST_GROUPS, ROW_RULES } from './sections';
+import type { GroupDef } from './sections';
 
 const SORTS = ['fixed', 'name', 'start', 'builtin'];
-const same = (a: readonly string[], b: readonly string[]): boolean => a.length === b.length && new Set(a).size === a.length && b.every((x) => a.includes(x));
+/** コードが特別扱いする役割(セクションごとに、各1つ必須)。 */
+const ROLES: Record<string, readonly string[]> = { quest: ['event', 'raid', 'super'], gacha: ['event', 'regular'], campaign: [] };
+/** default(どれにも入らない項目の小見出し)が必須のセクション。 */
+const NEEDS_DEFAULT = ['quest', 'gacha'];
 
-/** order.json の誤り。groups は固定の小見出しと過不足なく一致させる(ミッション等の追加・削除はコードの変更を伴うため)。 */
-export function orderProblems(cfg: typeof order = order): string[] {
+export interface OrderConfig {
+  sections: { id: string; label: string; hue: number; categories: string[] }[];
+  groups: Record<string, GroupDef[]>;
+}
+
+/** order.json の誤り。小見出しの名前・個数は自由。役割(role)と default は必須。 */
+export function orderProblems(cfg: OrderConfig = order as unknown as OrderConfig): string[] {
   const p: string[] = [];
   const ids = cfg.sections.map((x) => x.id);
   for (const need of ['quest', 'campaign', 'gacha']) if (!ids.includes(need)) p.push(`sections に ${need} が必要です`);
@@ -16,17 +24,47 @@ export function orderProblems(cfg: typeof order = order): string[] {
     if (x.label.trim() === '') p.push(`sections「${x.id}」: label が空です`);
     if (!Number.isInteger(x.hue) || x.hue < 0 || x.hue > 359) p.push(`sections「${x.id}」: hue は 0〜359 の整数`);
   }
-  if (!same(cfg.groups.quest, QUEST_GROUPS)) p.push(`groups.quest は ${QUEST_GROUPS.join(' / ')} を1回ずつ`);
-  if (!same(cfg.groups.gacha, GACHA_GROUPS)) p.push(`groups.gacha は ${GACHA_GROUPS.join(' / ')} を1回ずつ`);
-  if (new Set(CAMPAIGN_GROUPS).size !== CAMPAIGN_GROUPS.length) p.push('groups.campaign に重複があります');
-  const known = new Set<string>([...cfg.groups.quest, ...cfg.groups.gacha, ...cfg.groups.campaign]);
-  for (const [g, r] of Object.entries(ROW_RULES)) {
-    if (!known.has(g)) p.push(`rows「${g}」: 存在しない小見出し`);
-    if (!SORTS.includes(r.sort)) p.push(`rows「${g}」: sort は ${SORTS.join(' / ')}`);
-    if (r.sort === 'fixed' && (r.words ?? []).some((w) => w.trim() === '')) p.push(`rows「${g}」: words に空の語があります`);
-    if (r.sort !== 'fixed' && (r.words !== undefined || r.then !== undefined)) p.push(`rows「${g}」: words・then は sort=fixed のときだけ`);
+  for (const sec of Object.keys(ROLES)) {
+    const gs = cfg.groups[sec];
+    if (!gs || gs.length === 0) {
+      p.push(`groups.${sec} が必要です`);
+      continue;
+    }
+    const names = gs.map((g) => g.name);
+    for (const g of gs) {
+      const w = `groups.${sec}「${g.name}」`;
+      if (g.name.trim() === '') p.push(`groups.${sec}: name が空の小見出しがあります`);
+      if (g.sort !== undefined && !SORTS.includes(g.sort)) p.push(`${w}: sort は ${SORTS.join(' / ')}`);
+      if (g.then !== undefined && g.then !== 'name' && g.then !== 'start') p.push(`${w}: then は name か start`);
+      if (g.words?.some((x) => x.trim() === '')) p.push(`${w}: words に空の語があります`);
+      if (g.sort === 'fixed' && (g.words ?? []).length === 0) p.push(`${w}: sort が fixed のときは words が必要です`);
+      if (g.match === 'words' && (g.words ?? []).length === 0) p.push(`${w}: match が "words" のときは words が必要です`);
+      if (g.match !== undefined && g.match !== 'words' && g.match !== 'name') {
+        if (g.match.includes === undefined && g.match.pattern === undefined) p.push(`${w}: match は "words" / "name" / {includes} / {pattern}`);
+        if (g.match.includes?.some((x) => x.trim() === '')) p.push(`${w}: match.includes に空の語があります`);
+        if (g.match.pattern !== undefined) {
+          try {
+            new RegExp(g.match.pattern);
+          } catch {
+            p.push(`${w}: match.pattern が正規表現として不正です`);
+          }
+        }
+      }
+      if (g.role !== undefined && !(ROLES[sec] ?? []).includes(g.role)) p.push(`${w}: role は ${(ROLES[sec] ?? []).join(' / ') || '(このセクションは無し)'}`);
+      if (g.aliases?.some((x) => x.trim() === '')) p.push(`${w}: aliases に空の語があります`);
+    }
+    if (new Set(names).size !== names.length) p.push(`groups.${sec}: name が重複しています`);
+    for (const role of ROLES[sec] ?? []) {
+      const n = gs.filter((g) => g.role === role).length;
+      if (n !== 1) p.push(`groups.${sec}: role「${role}」の小見出しが ${n} 個です(1つ必要)`);
+    }
+    const defaults = gs.filter((g) => g.default).length;
+    if (NEEDS_DEFAULT.includes(sec) ? defaults !== 1 : defaults > 1) p.push(`groups.${sec}: default の小見出しは${NEEDS_DEFAULT.includes(sec) ? '1つ必要' : '1つまで'}です(${defaults} 個)`);
   }
-  for (const x of cfg.classify.campaign.extra_groups) if (!cfg.groups.campaign.includes(x)) p.push(`classify.campaign.extra_groups: groups.campaign に無い「${x}」`);
-  for (const [k, v] of Object.entries(cfg.classify.campaign.group_aliases)) if (!cfg.groups.campaign.includes(v)) p.push(`classify.campaign.group_aliases「${k}」: groups.campaign に無い「${v}」`);
+  const aliasOwner = new Map<string, string>();
+  for (const g of cfg.groups.campaign ?? []) for (const a of g.aliases ?? []) {
+    if (aliasOwner.has(a)) p.push(`groups.campaign: alias「${a}」が複数の小見出しにあります`);
+    aliasOwner.set(a, g.name);
+  }
   return p;
 }

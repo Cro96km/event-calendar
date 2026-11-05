@@ -1,6 +1,6 @@
 // 週表示の純ロジック（DOMなし）。spec §4.3。日付はゲーム日 YYYY-MM-DD(JST)。
 import { gameDayOf, isOnGameDay } from './gameday';
-import { GACHA_GROUPS, GACHA_GROUP_ORDER, QUEST_GROUP_ORDER, gachaEra, gachaGroup, regularGachaIndex, CAMPAIGN_ALIASES, CAMPAIGN_GROUPS, ROW_RULES, MAINTENANCE_CATEGORY, EVENT_QUEST_SUFFIX, QUEST_GROUPS, QUEST_ORDER, SECTIONS, sectionOf, sectionOfEvent, type Section } from './sections';
+import { GACHA_EVENT, GACHA_GROUPS, GACHA_REGULAR_GROUP, QUEST_DEFAULT, QUEST_EVENT, QUEST_GROUPS, QUEST_RAID, QUEST_SUPER, gachaEra, gachaGroup, matchGroup, regularGachaIndex, CAMPAIGN_ALIASES, CAMPAIGN_GROUPS, ROW_RULES, MAINTENANCE_CATEGORY, EVENT_QUEST_SUFFIX, SECTIONS, sectionOf, sectionOfEvent, type Section } from './sections';
 import type { ExportEvent } from './data/export';
 import { labelLines, shortLabel, superUltimateLabel, superUltimateParts } from './label';
 import { labelOverride } from './label-override';
@@ -209,18 +209,12 @@ export function mergeSameLabel(events: ExportEvent[]): ExportEvent[] {
   return out;
 }
 
-/** 降臨スケジュールの名称(`黎絶 キャローネ降臨`)。 */
-const RAID_NAME = /^(轟絶|黎絶|滅絶) .+降臨$/;
 
-/** クエストの小見出し(QUEST_GROUPS のいずれか)。spec §4.3.5。 */
+/** クエストの小見出し(order.json の groups.quest のいずれか)。spec §4.3.5。 */
 export function questGroup(e: { name: string; id?: string; group?: string }): string {
   if (e.group !== undefined && QUEST_GROUPS.includes(e.group)) return e.group;
-  if (e.id?.endsWith(EVENT_QUEST_SUFFIX)) return QUEST_GROUPS[1] as string;
-  if (QUEST_ORDER.some((k) => e.name.includes(k))) return QUEST_GROUPS[0] as string;
-  if (RAID_NAME.test(e.name)) return '絶級クエスト';
-  if (e.name.includes('超究極')) return '超究極クエスト';
-  if (e.name.includes('クエスト')) return '期間限定クエスト';
-  return 'その他';
+  if (e.id?.endsWith(EVENT_QUEST_SUFFIX)) return QUEST_EVENT;
+  return matchGroup('quest', e.name) ?? QUEST_DEFAULT;
 }
 
 /** 名前順(かな→漢字。漢字はJIS順相当で、訓読みの読み順にはならない。数字は数値順)。 */
@@ -241,13 +235,13 @@ export function rowLabel(sectionId: string, e: { name: string; pickup?: { name: 
     if (o) return { l1: o.l1, l2: o.l2, wrap: false };
   }
   const lines = labelLines(e.name);
-  const chara = sectionId === 'quest' && questGroup(e) === '超究極クエスト' ? superUltimateLabel(e.name) : null;
+  const chara = sectionId === 'quest' && questGroup(e) === QUEST_SUPER ? superUltimateLabel(e.name) : null;
   if (chara) return { l1: chara, l2: null, wrap: true };
   // コラボガチャのピックアップ: 通常ガチャの行の直下に、ピックアップ名だけを出す(インデントと点はCSS。作品名は上の行・ツールチップ)
   if (sectionId === 'gacha' && e.pickup) return { l1: e.pickup.name, l2: null, wrap: true };
   const gacha = sectionId === 'gacha' ? /ガチャ「([^」]+)」/.exec(e.name)?.[1] : undefined;
   if (gacha) return { l1: gacha, l2: null, wrap: true };
-  if (sectionId === 'quest' && RAID_NAME.test(e.name)) return { l1: e.name.replace(/降臨$/, ''), l2: null, wrap: false };
+  if (sectionId === 'quest' && questGroup(e) === QUEST_RAID && /降臨$/.test(e.name)) return { l1: e.name.replace(/降臨$/, ''), l2: null, wrap: false };
   if (sectionId === 'campaign' && campaignGroup(e) !== null && lines.desc) return { l1: lines.desc, l2: null, wrap: true };
   return { l1: lines.title, l2: lines.desc, wrap: false };
 }
@@ -261,7 +255,7 @@ const byLabel = (sectionId: string, a: ExportEvent, b: ExportEvent): number => {
 
 /** 小見出し内の並び(order.json の rows)。fixed=語の順 → 同順位は then(既定 name=名前順 / start=0 で開始順に任せる)。name=名前順。start・設定なし=0(開始順に任せる)。 */
 function groupSortCmp(group: string, sectionId: string, a: ExportEvent, b: ExportEvent): number {
-  const rule = ROW_RULES[group];
+  const rule = ROW_RULES[sectionId]?.[group];
   if (!rule || rule.sort === 'start' || rule.sort === 'builtin') return 0;
   if (rule.sort === 'name') return byLabel(sectionId, a, b);
   const spec = rule.words ?? [];
@@ -277,9 +271,9 @@ function groupSortCmp(group: string, sectionId: string, a: ExportEvent, b: Expor
 function questCmp(a: ExportEvent, b: ExportEvent): number {
   const ga = questGroup(a);
   const gb = questGroup(b);
-  if (ga !== gb) return QUEST_GROUP_ORDER.indexOf(ga) - QUEST_GROUP_ORDER.indexOf(gb);
-  if (ga === QUEST_GROUPS[1]) return Number(a.category === 'collab') - Number(b.category === 'collab');
-  if (ga === '超究極クエスト') {
+  if (ga !== gb) return QUEST_GROUPS.indexOf(ga) - QUEST_GROUPS.indexOf(gb);
+  if (ga === QUEST_EVENT) return Number(a.category === 'collab') - Number(b.category === 'collab');
+  if (ga === QUEST_SUPER) {
     const pa = superUltimateParts(a.name) ?? { chara: '', kind: '' };
     const pb = superUltimateParts(b.name) ?? { chara: '', kind: '' };
     // 補足なしが先。補足ありは補足の名前順、同じ補足内はキャラ名順
@@ -308,14 +302,14 @@ function workStarts(events: ExportEvent[]): Map<string, number> {
 function gachaCmp(a: ExportEvent, b: ExportEvent, works: Map<string, number>): number {
   const ga = gachaGroup(a) ?? '';
   const gb = gachaGroup(b) ?? '';
-  if (ga !== gb) return GACHA_GROUP_ORDER.indexOf(ga) - GACHA_GROUP_ORDER.indexOf(gb);
-  if (ga === GACHA_GROUPS[1]) {
+  if (ga !== gb) return GACHA_GROUPS.indexOf(ga) - GACHA_GROUPS.indexOf(gb);
+  if (ga === GACHA_EVENT) {
     // 作品ごとにまとめる: 通常ガチャの行(開始順)の直後に、そのピックアップ(表の登場順)を連続させる
     const start = (e: ExportEvent): number => works.get(workOf(e)) ?? Date.parse(e.start);
     const rank = (e: ExportEvent): number => (e.pickup ? e.pickup.order + 1 : 0);
     return Number(a.category === 'collab') - Number(b.category === 'collab') || start(a) - start(b) || workOf(a).localeCompare(workOf(b)) || rank(a) - rank(b);
   }
-  if (ga !== GACHA_GROUPS[0] || ROW_RULES[ga]?.sort !== 'fixed') return groupSortCmp(ga, 'gacha', a, b);
+  if (ga !== GACHA_REGULAR_GROUP || ROW_RULES.gacha?.[ga]?.sort !== 'fixed') return groupSortCmp(ga, 'gacha', a, b);
   return regularGachaIndex(a.name) - regularGachaIndex(b.name) || gachaEra(a.name) - gachaEra(b.name);
 }
 
@@ -391,7 +385,7 @@ export function ganttSections(events: ExportEvent[], days: string[]): GanttSecti
     g.bars.push(bar);
     map.set(section.id, g);
     // イベントガチャ(コラボ含む)は同じラベル・期間でクエストの「イベントクエスト」にも写す
-    if (section.id === 'gacha' && gachaGroup(e) === GACHA_GROUPS[1] && !e.pickup) {
+    if (section.id === 'gacha' && gachaGroup(e) === GACHA_EVENT && !e.pickup) {
       const quest = SECTIONS.find((x) => x.id === 'quest');
       const copy = { ...e, id: `${e.id}${EVENT_QUEST_SUFFIX}`, name: rowLabel('gacha', e).l1 };
       const cbar = barSpan(copy, days);

@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import order from '../config/display/order.json';
-import { orderProblems } from '../src/order-check';
+import { orderProblems, type OrderConfig } from '../src/order-check';
 import { overrideProblems, type OverridesConfig } from '../src/overrides';
 
 /** md の ```json ブロックを取り出す。 */
@@ -14,12 +14,11 @@ describe('設定の記入例(md)が実際の書式に合っている', () => {
     for (const cfg of ex) expect(overrideProblems(cfg).problems).toEqual([]);
   });
   it('order.md の例は、現在の設定に重ねても点検を通る', () => {
-    const ex = blocks('config/display/order.md') as Partial<typeof order>[];
+    const ex = blocks('config/display/order.md') as Partial<OrderConfig>[];
     expect(ex.length).toBeGreaterThan(0);
     for (const part of ex) {
-      const merged = { ...order, ...part, groups: { ...order.groups, ...part.groups }, rows: { ...order.rows, ...part.rows } } as typeof order;
-      // ROW_RULES は読み込み済みの設定を見るため、ここで確かめるのは sections・groups の書式
-      expect(orderProblems(merged).filter((p) => !p.startsWith('rows'))).toEqual([]);
+      const base = structuredClone(order) as unknown as OrderConfig;
+      expect(orderProblems({ ...base, ...part, groups: { ...base.groups, ...part.groups } })).toEqual([]);
     }
   });
 });
