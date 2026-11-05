@@ -4,6 +4,8 @@ import { parseDetail } from '../scraper/detail';
 import type { ListItem } from '../scraper/list';
 import { parseArticle, type ParseStatus, type PeriodEvent } from '../period';
 import { JST_OFFSET_MS } from '../jst';
+import { GACHA_REGULAR } from '../sections';
+import { gachaPeriod, parseCharacters, type CharacterEntry } from '../characters';
 
 export interface ArticleRecord {
   id: string;
@@ -18,6 +20,8 @@ export interface ArticleRecord {
   parse_status: ParseStatus;
   events: PeriodEvent[];
   reward_until: string | null;
+  /** 本文から取り出したキャラクター(新限定・進化の解禁)。無ければ省略(spec §4.13) */
+  characters?: CharacterEntry[];
 }
 
 
@@ -40,6 +44,7 @@ export interface BuildInput {
 export function buildRecord({ item, html, fetchedAtMs, lastmod, prev }: BuildInput): ArticleRecord {
   const input = parseDetail(item.id, html);
   const parsed = input ? parseArticle(input) : null;
+  const characters = input ? parseCharacters({ title: item.title, lines: input.lines }, gachaPeriod(parsed?.events ?? []), GACHA_REGULAR) : [];
   const next: ArticleRecord = {
     id: item.id,
     url: item.url,
@@ -53,6 +58,7 @@ export function buildRecord({ item, html, fetchedAtMs, lastmod, prev }: BuildInp
     parse_status: parsed?.parse_status ?? 'none',
     events: parsed?.events ?? [],
     reward_until: parsed?.reward_until ?? null,
+    ...(characters.length > 0 ? { characters } : {}),
   };
   if (prev && JSON.stringify({ ...next, fetched_at: '' }) === JSON.stringify({ ...prev, fetched_at: '' })) return prev;
   return next;

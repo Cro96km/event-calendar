@@ -68,6 +68,7 @@
 ```json
 {
   "sections": [
+    { "id": "character", "label": "キャラクター", "hue": 45, "categories": ["character"] },
     { "id": "quest", "label": "クエスト", "hue": 215, "categories": ["event"] },
     { "id": "special", "label": "特別企画", "hue": 40, "categories": [] },
     { "id": "campaign", "label": "キャンペーン", "hue": 140, "categories": ["campaign", "web-shop"] },
@@ -76,6 +77,6 @@
 }
 ```
 
-- 上から順に表示します。上の例では「特別企画」がクエストとキャンペーンの間に入ります。
-- `id` は英小文字・数字・ハイフン、`hue` は色相(0〜359)です。`quest`・`campaign`・`gacha` は必須です(振り分けの判定がコードにあります)。
+- 上から順に表示します。上の例では、キャラクターが一番上で、「特別企画」がクエストとキャンペーンの間に入ります。
+- `id` は英小文字・数字・ハイフン、`hue` は色相(0〜359)です。`character`・`quest`・`campaign`・`gacha` は必須です(振り分けの判定がコードにあります)。`character` は新限定・獣神化・獣神化改・真獣神化の行で、`categories` は `["character"]` のままにします(docs/spec.md §4.13)。
 - 足したセクションは小見出しを持ちません。項目は `config/schedule/overrides.json` の `section`(`"section": "special"`)で入れます。`categories` は空にします。

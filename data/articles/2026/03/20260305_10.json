@@ -7,9 +7,9 @@
     "event"
   ],
   "published": "2026-03-05",
-  "fetched_at": "2026-10-24T17:21:07+09:00",
+  "fetched_at": "2026-11-05T23:36:54+09:00",
   "lastmod": null,
-  "content_hash": "sha256:ce2dcd5345251c1d8bbeabaca63b940eb46fb8c39be692c104c79f50b1a87118",
+  "content_hash": "sha256:e39584d9090b08fec98e0d776990d2488ec6ee2355815a04d676256827523337",
   "parse_status": "ok",
   "events": [
     {
@@ -99,5 +99,15 @@
       "anchor": "4"
     }
   ],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "ミライ",
+      "kind": "新限定",
+      "start": "2026-03-07T12:00:00+09:00",
+      "end": "2026-03-10T11:59:00+09:00",
+      "attr": "木",
+      "gacha": "激・獣神祭"
+    }
+  ]
 }

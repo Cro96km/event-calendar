@@ -1,5 +1,6 @@
 // カテゴリ → カレンダーのセクション対応。表示の調整はこのファイルだけで行う。spec §4.3。
 import order from '../config/display/order.json';
+import { CHARACTER_CATEGORY } from './characters';
 
 /** 小見出しの定義(config/display/order.json の groups。配列の順が表示順)。 */
 export interface GroupDef {
@@ -41,6 +42,9 @@ export const QUEST_GROUPS: readonly string[] = namesOf('quest');
 export const CAMPAIGN_GROUPS: readonly string[] = namesOf('campaign');
 export const GACHA_GROUPS: readonly string[] = namesOf('gacha');
 /** 役割の小見出し(名前を変えても役割で引く)。 */
+export const CHARACTER_NEW = roleName('character', 'new');
+export const CHARACTER_EVOLUTION = roleName('character', 'evolution');
+export const CHARACTER_GROUPS: readonly string[] = namesOf('character');
 export const QUEST_EVENT = roleName('quest', 'event');
 export const QUEST_RAID = roleName('quest', 'raid');
 export const QUEST_SUPER = roleName('quest', 'super');
@@ -48,6 +52,9 @@ export const QUEST_DEFAULT = defaultName('quest');
 export const GACHA_EVENT = roleName('gacha', 'event');
 export const GACHA_REGULAR_GROUP = roleName('gacha', 'regular');
 export const GACHA_DEFAULT = defaultName('gacha');
+
+/** キャラクターの小見出し: 新限定=role new、進化(獣神化・獣神化改・真獣神化)=role evolution。キャラクターの項目でなければ null。 */
+export const characterGroup = (e: { character?: { kind: string } }): string | null => (e.character === undefined ? null : e.character.kind === '新限定' ? CHARACTER_NEW : CHARACTER_EVOLUTION);
 
 /** 名称に含む語で振り分けるキャンペーンの小見出し(match: "name")。セクション振り分け・2行表示の対象。 */
 export const CAMPAIGN_ORDER: readonly string[] = groupDefs('campaign').filter((g) => g.match === 'name').map((g) => g.name);
@@ -120,6 +127,8 @@ export function sectionOfEvent(e: { category: string; name: string; title?: stri
     const forced = SECTIONS.find((s) => s.id === e.section);
     if (forced) return forced;
   }
+  // キャラクターは名称に関わらずキャラクターのセクション(ガチャ等と取り違えない)
+  if (e.category === CHARACTER_CATEGORY) return SECTIONS.find((s) => s.id === 'character') ?? null;
   if (!EXCLUDED_CATEGORIES.includes(e.category) && gachaGroup(e) !== null) return SECTIONS.find((s) => s.id === 'gacha') ?? null;
   if (e.category === 'collab') return null; // collab はガチャ本体のみ表示(付随項目は出さない)
   if (e.category === 'event' && (CAMPAIGN_ORDER.some((k) => e.name.includes(k)))) return SECTIONS.find((s) => s.id === 'campaign') ?? null;

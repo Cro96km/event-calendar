@@ -7,10 +7,20 @@
     "update"
   ],
   "published": "2026-04-16",
-  "fetched_at": "2026-10-24T17:19:28+09:00",
+  "fetched_at": "2026-11-05T23:37:08+09:00",
   "lastmod": null,
-  "content_hash": "sha256:b9c3dd582b149c975d40de5b0973918715bfc3e21c7aa3d5e01b489ee8bdb630",
+  "content_hash": "sha256:17219044dbad35b91bc69cea4852d7bf99bba3830c925cb07db1e289d30f4680",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "一休",
+      "kind": "獣神化・改",
+      "start": "2026-04-21T00:00:00+09:00",
+      "end": "2026-04-22T00:00:00+09:00",
+      "at": "2026-04-21T12:00:00+09:00",
+      "attr": "闇"
+    }
+  ]
 }

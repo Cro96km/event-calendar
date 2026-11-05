@@ -7,10 +7,20 @@
     "update"
   ],
   "published": "2026-10-15",
-  "fetched_at": "2026-11-05T16:49:29+09:00",
+  "fetched_at": "2026-11-05T23:38:17+09:00",
   "lastmod": "2026-10-15T17:53:43+09:00",
   "content_hash": "sha256:56acbece5dbbd834675f889a60f271a2e23d470965d1a6f666b4739212c4d7ed",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "ルイス・フロイス",
+      "kind": "獣神化・改",
+      "start": "2026-10-20T00:00:00+09:00",
+      "end": "2026-10-21T00:00:00+09:00",
+      "at": "2026-10-20T12:00:00+09:00",
+      "attr": "水"
+    }
+  ]
 }

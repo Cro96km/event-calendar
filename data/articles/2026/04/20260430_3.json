@@ -7,10 +7,20 @@
     "update"
   ],
   "published": "2026-04-30",
-  "fetched_at": "2026-10-24T17:18:55+09:00",
+  "fetched_at": "2026-11-05T23:37:13+09:00",
   "lastmod": null,
-  "content_hash": "sha256:678a6d5bcbe041ef9c3ebe1aac3ec73a83fff0f8982af537b42cf9130c51688a",
+  "content_hash": "sha256:4e2d4cd47dfadde8a34469e2310c5c87a7886df8e28880d447767e27e591dfd9",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "ミラ",
+      "kind": "獣神化・改",
+      "start": "2026-05-05T00:00:00+09:00",
+      "end": "2026-05-06T00:00:00+09:00",
+      "at": "2026-05-05T12:00:00+09:00",
+      "attr": "水"
+    }
+  ]
 }

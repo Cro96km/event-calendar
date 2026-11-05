@@ -7,10 +7,20 @@
     "update"
   ],
   "published": "2025-11-06",
-  "fetched_at": "2026-10-24T17:27:09+09:00",
+  "fetched_at": "2026-11-05T23:36:07+09:00",
   "lastmod": null,
-  "content_hash": "sha256:42c8e51aef06ec558ab362b2e1f5c7283af318999a6ecf7be1377c58c4e243aa",
+  "content_hash": "sha256:b0c40359d4b0dc15e6fd2438c2bdf438f5c3a5f65ce981a978ff66b8fe4bfeb3",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "前田慶次",
+      "kind": "獣神化・改",
+      "start": "2025-11-11T00:00:00+09:00",
+      "end": "2025-11-12T00:00:00+09:00",
+      "at": "2025-11-11T12:00:00+09:00",
+      "attr": "火"
+    }
+  ]
 }

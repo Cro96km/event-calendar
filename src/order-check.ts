@@ -4,7 +4,7 @@ import type { GroupDef } from './sections';
 
 const SORTS = ['fixed', 'name', 'start', 'builtin'];
 /** コードが特別扱いする役割(セクションごとに、各1つ必須)。 */
-const ROLES: Record<string, readonly string[]> = { quest: ['event', 'raid', 'super'], gacha: ['event', 'regular'], campaign: [] };
+const ROLES: Record<string, readonly string[]> = { character: ['new', 'evolution'], quest: ['event', 'raid', 'super'], gacha: ['event', 'regular'], campaign: [] };
 /** default(どれにも入らない項目の小見出し)が必須のセクション。 */
 const NEEDS_DEFAULT = ['quest', 'gacha'];
 
@@ -17,7 +17,7 @@ export interface OrderConfig {
 export function orderProblems(cfg: OrderConfig = order as unknown as OrderConfig): string[] {
   const p: string[] = [];
   const ids = cfg.sections.map((x) => x.id);
-  for (const need of ['quest', 'campaign', 'gacha']) if (!ids.includes(need)) p.push(`sections に ${need} が必要です`);
+  for (const need of ['character', 'quest', 'campaign', 'gacha']) if (!ids.includes(need)) p.push(`sections に ${need} が必要です`);
   if (new Set(ids).size !== ids.length) p.push('sections の id が重複しています');
   for (const x of cfg.sections) {
     if (!/^[a-z0-9][a-z0-9-]*$/.test(x.id)) p.push(`sections「${x.id}」: id は英小文字・数字・ハイフン`);

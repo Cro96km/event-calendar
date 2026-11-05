@@ -7,10 +7,20 @@
     "update"
   ],
   "published": "2026-02-05",
-  "fetched_at": "2026-10-24T17:23:22+09:00",
+  "fetched_at": "2026-11-05T23:36:44+09:00",
   "lastmod": null,
-  "content_hash": "sha256:f1f6b124b8a1cb4acda6281b1cf7848fb530d63199b91e7ee038997434df5604",
+  "content_hash": "sha256:d24ae1e03d966d53216b57066ff35fecd36d3ffcf5f9a62db246aae478e3325f",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "トニー緑川",
+      "kind": "真獣神化",
+      "start": "2026-02-10T00:00:00+09:00",
+      "end": "2026-02-11T00:00:00+09:00",
+      "at": "2026-02-10T12:00:00+09:00",
+      "attr": "木"
+    }
+  ]
 }

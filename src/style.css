@@ -99,8 +99,13 @@ button { font: inherit; color: inherit; }
 .gantt.dragging { cursor: grabbing; user-select: none; }
 .gantt:not(.month) { touch-action: pan-y; }
 .vbtn:disabled { opacity: .45; cursor: default; }
-.g-group { padding: .1rem .5rem .1rem 1rem; font-size: .7rem; font-weight: 700; color: hsl(var(--hue) 55% 42%); background: var(--surface-2); border-top: 1px solid var(--border); border-left: 4px solid hsl(var(--hue) 45% 38%); }
+.g-group { cursor: pointer; padding: .1rem .5rem .1rem 1rem; font-size: .7rem; font-weight: 700; color: hsl(var(--hue) 55% 42%); background: var(--surface-2); border-top: 1px solid var(--border); border-left: 4px solid hsl(var(--hue) 45% 38%); }
 @media (prefers-color-scheme: dark) { .g-group { color: hsl(var(--hue) 70% 75%); } }
+.g-group::before { content: '▾ ' / ''; }
+.g-group[aria-expanded="false"]::before { content: '▸ ' / ''; }
+.g-group:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.shot .g-group { cursor: default; }
+.g-group:not([role])::before { content: none; }
 .g-section::before { content: '▾ ' / ''; }
 .g-section[aria-expanded="false"]::before { content: '▸ ' / ''; }
 .g-section:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }

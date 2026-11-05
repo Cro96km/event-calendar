@@ -7,9 +7,9 @@
     "event"
   ],
   "published": "2025-12-04",
-  "fetched_at": "2026-10-24T17:26:02+09:00",
+  "fetched_at": "2026-11-05T23:36:18+09:00",
   "lastmod": null,
-  "content_hash": "sha256:25a5b1acbd01abb448d6ba427c49918867133625447dd29b3721e72696a76935",
+  "content_hash": "sha256:3aede676aebef5b24b8edbd89d62ee983dd8aaee445269fa5bfe2d3487466ab6",
   "parse_status": "ok",
   "events": [
     {
@@ -107,5 +107,15 @@
       "anchor": "6"
     }
   ],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "ジュゲム",
+      "kind": "新限定",
+      "start": "2025-12-06T12:00:00+09:00",
+      "end": "2025-12-10T11:59:00+09:00",
+      "attr": "光",
+      "gacha": "激・獣神祭"
+    }
+  ]
 }

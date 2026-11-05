@@ -7,10 +7,20 @@
     "update"
   ],
   "published": "2026-06-25",
-  "fetched_at": "2026-10-24T17:09:11+09:00",
+  "fetched_at": "2026-11-05T23:37:31+09:00",
   "lastmod": null,
-  "content_hash": "sha256:b44517ab6ab969f79b270c0bd6f886f49367f8fb4b3a7b618244faa07ecc1a26",
+  "content_hash": "sha256:65caf578483ede9a80bb269c49f1cf0692cbfcccfb7e1c60fdf9ddc7a4ab3785",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "椿",
+      "kind": "獣神化・改",
+      "start": "2026-06-30T00:00:00+09:00",
+      "end": "2026-07-01T00:00:00+09:00",
+      "at": "2026-06-30T12:00:00+09:00",
+      "attr": "火"
+    }
+  ]
 }
