@@ -19,5 +19,7 @@ export function orderProblems(cfg: typeof order = order): string[] {
     if (r.sort === 'fixed' && (r.words ?? []).some((w) => w.trim() === '')) p.push(`rows「${g}」: words に空の語があります`);
     if (r.sort !== 'fixed' && (r.words !== undefined || r.then !== undefined)) p.push(`rows「${g}」: words・then は sort=fixed のときだけ`);
   }
+  for (const x of cfg.classify.campaign.extra_groups) if (!cfg.groups.campaign.includes(x)) p.push(`classify.campaign.extra_groups: groups.campaign に無い「${x}」`);
+  for (const [k, v] of Object.entries(cfg.classify.campaign.group_aliases)) if (!cfg.groups.campaign.includes(v)) p.push(`classify.campaign.group_aliases「${k}」: groups.campaign に無い「${v}」`);
   return p;
 }

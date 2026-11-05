@@ -1,6 +1,4 @@
 // カテゴリ → カレンダーのセクション対応。表示の調整はこのファイルだけで行う。spec §4.3。
-import campaignOrder from '../config/display/campaign-order.json';
-import gachaOrder from '../config/display/gacha-order.json';
 import order from '../config/display/order.json';
 
 /** 行の並び方(config/display/order.json の rows)。 */
@@ -18,9 +16,9 @@ const wordsOf = (group: string): readonly string[] => ROW_RULES[group]?.words ??
 /** キャンペーンの小見出し(表示順。config/display/order.json の groups.campaign)。 */
 export const CAMPAIGN_GROUPS: readonly string[] = order.groups.campaign;
 /** 名称に含む語で振り分けるキャンペーンの小見出し(セクション振り分け・2行表示の対象)。extra_groups(ミッション)は除く。 */
-export const CAMPAIGN_ORDER: readonly string[] = CAMPAIGN_GROUPS.filter((g) => !campaignOrder.extra_groups.includes(g));
-/** キャンペーンの別名(項目名に含む語 → グループ)。config/display/campaign-order.json の group_aliases。 */
-export const CAMPAIGN_ALIASES: Readonly<Record<string, string>> = campaignOrder.group_aliases;
+export const CAMPAIGN_ORDER: readonly string[] = CAMPAIGN_GROUPS.filter((g) => !order.classify.campaign.extra_groups.includes(g));
+/** キャンペーンの別名(項目名に含む語 → グループ)。order.json の classify.campaign.group_aliases。 */
+export const CAMPAIGN_ALIASES: Readonly<Record<string, string>> = order.classify.campaign.group_aliases;
 /** 定例クエストの語(order.json の rows.定例クエスト.words)。名称に含めば定例クエスト。spec §4.3.5。 */
 export const QUEST_ORDER: readonly string[] = wordsOf('定例クエスト');
 /** クエストの小見出し(判定用。0=定例、1=イベント)。表示順は QUEST_GROUP_ORDER(order.json)。spec §4.3.5。 */
@@ -52,11 +50,11 @@ export function gachaEra(name: string): number {
 
 /** ガチャの小見出し。ガチャでなければ null。コラボ記事は「ガチャ「」で始まる本体のみ(付随項目は対象外)。 */
 export function gachaGroup(e: { category: string; name: string; title?: string }): string | null {
-  if (!e.name.includes('ガチャ') || gachaOrder.not_gacha.some((k) => e.name.includes(k))) return null;
+  if (!e.name.includes('ガチャ') || order.classify.gacha.not_gacha.some((k) => e.name.includes(k))) return null;
   if (e.category === 'collab') return e.name.startsWith('ガチャ「') ? GACHA_GROUPS[1] ?? null : null;
   if (regularGachaIndex(e.name) >= 0) return GACHA_GROUPS[0] ?? null;
   const t = e.title ?? '';
-  return gachaOrder.event_title_prefixes.some((p) => t.startsWith(p)) ? GACHA_GROUPS[1] ?? null : GACHA_GROUPS[2] ?? null;
+  return order.classify.gacha.event_title_prefixes.some((p) => t.startsWith(p)) ? GACHA_GROUPS[1] ?? null : GACHA_GROUPS[2] ?? null;
 }
 
 export interface Section {

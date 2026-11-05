@@ -28,7 +28,7 @@ on:
         type: string
         default: ''
       group:
-        description: '[add・任意] 小見出し(クエスト: 定例クエスト など。キャンペーンは campaign-order.json のグループ語)'
+        description: '[add・任意] 小見出し(クエスト: 定例クエスト など。キャンペーンは order.json の groups.campaign の語)'
         type: string
         default: ''
       id:

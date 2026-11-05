@@ -1,9 +1,0 @@
-{
-  "_doc": "キャンペーンの分類(spec 4.3.3)。並びは config/display/order.json。小見出しの語(order.json の groups.campaign のうち extra_groups を除くもの)を項目名に含む event 記事はキャンペーンに入り、2行表示では項目名がその語で始まるとき語を1行目(対象)にする(例: 英雄の神殿の「…」)。extra_groups=語で振り分けず並びと小見出しにだけ使うグループ(group_aliases・手動追加の group で入れる)。group_aliases=「項目名にキーが含まれればそのグループ」(CM視聴→ミッション)。",
-  "extra_groups": [
-    "ミッション"
-  ],
-  "group_aliases": {
-    "CM視聴": "ミッション"
-  }
-}
