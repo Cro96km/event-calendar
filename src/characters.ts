@@ -193,3 +193,23 @@ export function gachaPeriod(events: readonly { name: string; start: string; end:
   const name = g ? /ガチャ「([^」]+)」/.exec(g.name)?.[1] : undefined;
   return { start: e.start, end: e.end, ...(name ? { gacha: name } : {}) };
 }
+
+/** 新限定の実装にあたって開催される特殊ガチャの別名(ガチャ名 from → 定例ガチャ名 to)。 */
+export interface GachaAlias {
+  from: string;
+  to: string;
+}
+
+/**
+ * 新限定キャラの記事のガチャが、定例ガチャの名前で表記できるなら、その別名。
+ * 例: `Ultra Charismatic LIVE!!` → `グリーンファンタジー`(本文に「…の限定キャラクターを含む」とある)、`新春!特別おまけ付き 超・獣神祭` → `超・獣神祭`。
+ * 新限定の記事(タイトルに「新限定」)のガチャだけが対象。定例名が分からない・すでに同じ名前なら null。
+ */
+export function gachaAlias(title: string, gacha: GachaPeriod | null, lines: readonly string[], regular: readonly string[]): GachaAlias | null {
+  if (!title.includes('新限定') || gacha?.gacha === undefined) return null;
+  const to = regularGachaName(gacha.gacha, lines, regular);
+  return to === gacha.gacha ? null : { from: gacha.gacha, to };
+}
+
+/** 別名を項目名に当てる(`ガチャ「from」` → `ガチャ「to」`)。該当しなければそのまま。 */
+export const applyGachaAlias = (name: string, alias: GachaAlias | undefined): string => (alias === undefined ? name : name.replace(`ガチャ「${alias.from}」`, `ガチャ「${alias.to}」`));

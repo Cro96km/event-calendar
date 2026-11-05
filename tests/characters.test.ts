@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { attributeColor, calendarDay, characterLabel, CHARACTER_CATEGORY, gachaPeriod, parseCharacters, regularGachaName } from '../src/characters';
+import { applyGachaAlias, attributeColor, calendarDay, gachaAlias, characterLabel, CHARACTER_CATEGORY, gachaPeriod, parseCharacters, regularGachaName } from '../src/characters';
 import { buildExport } from '../src/data/export';
 import type { ArticleRecord } from '../src/data/record';
 import { applySelection } from '../src/selection';
-import { characterGroup, sectionOfEvent, SECTIONS } from '../src/sections';
+import { characterGroup, gachaGroup, regularGachaIndex, sectionOfEvent, SECTIONS } from '../src/sections';
 import { ganttSections, periodText, unlockText, whenText } from '../src/week';
 
 // 公式の本文そのものではなく、構造(見出し→▼解禁日時→日時)だけを写した最小の入力
@@ -242,5 +242,43 @@ describe('キャラクターの小見出し・並び・詳細', () => {
   it('属性色がラベルの色(color)になる。属性が取れなければ色なし', () => {
     expect(events.find((x) => x.name.startsWith('同日の昼'))?.color).toBe('#eb0043');
     expect(events.find((x) => x.name.startsWith('後'))?.color).toBeUndefined();
+  });
+});
+
+describe('新限定の特殊ガチャを定例ガチャ名で表記する', () => {
+  const regular = ['グリーンファンタジー', '超・獣神祭'];
+  const lines = ['ガチャ「Ultra LIVE!!」は、「グリーンファンタジー」の限定キャラクターを含む木属性キャラクターが排出対象！'];
+  it('別名は、新限定の記事のガチャが定例名に結び付くときだけ', () => {
+    expect(gachaAlias('ガチャ「Ultra LIVE!!」開催！新限定「X」登場！', { start: 's', end: 'e', gacha: 'Ultra LIVE!!' }, lines, regular)).toEqual({ from: 'Ultra LIVE!!', to: 'グリーンファンタジー' });
+    expect(gachaAlias('「新春 超・獣神祭」開催！新限定キャラ「X」', { start: 's', end: 'e', gacha: '新春!おまけ付き 超・獣神祭' }, [], regular)).toEqual({ from: '新春!おまけ付き 超・獣神祭', to: '超・獣神祭' });
+    expect(gachaAlias('ガチャ「Ultra LIVE!!」開催！', { start: 's', end: 'e', gacha: 'Ultra LIVE!!' }, lines, regular)).toBeNull(); // 新限定の記事でない
+    expect(gachaAlias('新限定「X」', { start: 's', end: 'e', gacha: 'Other' }, lines, regular)).toBeNull(); // 定例名が分からない
+    expect(gachaAlias('新限定「X」', { start: 's', end: 'e', gacha: '超・獣神祭' }, [], regular)).toBeNull(); // すでに定例名
+    expect(gachaAlias('新限定「X」', null, lines, regular)).toBeNull();
+  });
+  it('項目名のガチャ名だけを置き換える', () => {
+    const a = { from: 'Ultra LIVE!!', to: 'グリーンファンタジー' };
+    expect(applyGachaAlias('ガチャ「Ultra LIVE!!」開催!', a)).toBe('ガチャ「グリーンファンタジー」開催!');
+    expect(applyGachaAlias('サイン色紙プレゼントキャンペーン開催!', a)).toBe('サイン色紙プレゼントキャンペーン開催!');
+    expect(applyGachaAlias('ガチャ「Ultra LIVE!!」開催!', undefined)).toBe('ガチャ「Ultra LIVE!!」開催!');
+  });
+  it('書き出しで項目名が置き換わり、定例ガチャに入る。候補キー(item)は元の名前のまま', () => {
+    const rec = record({ id: '20260709_1', title: 'ガチャ「Ultra LIVE!!」7/11より開催！新限定「X」登場！', category: 'event', parse_status: 'ok', gacha_alias: { from: 'Ultra LIVE!!', to: '超・獣神祭' },
+      events: [{ id: '20260709_1#0', name: 'ガチャ「Ultra LIVE!!」開催!', label: '開催期間', start: '2026-07-11T00:00:00+09:00', end: '2026-07-12T23:59:00+09:00', raw: '' }] });
+    const e = buildExport([rec], 'x').months[0]!.events[0]!;
+    expect(e.name).toBe('ガチャ「超・獣神祭」開催!');
+    expect(e.item).toContain('Ultra LIVE!!');
+    expect(gachaGroup(e)).toBe('定例ガチャ');
+  });
+});
+
+describe('定例ガチャの派生(モンコレDX・モンストジェネレーション)', () => {
+  it('定例ガチャの語で始まる派生は定例ガチャ。語を含むだけの別のガチャは対象外', () => {
+    for (const name of ['ガチャ「モンコレDX 〜アルセーヌ編〜」7/13 0時より開催！ #1', 'ガチャ「モンストジェネレーション2019 〜ソロモン編〜」', 'ガチャ「モンストジェネレーション 2019」5/19より開催！', 'ガチャ「モンコレDX Vol.1」']) {
+      expect(regularGachaIndex(name)).toBeGreaterThanOrEqual(0);
+      expect(gachaGroup({ category: 'event', name })).toBe('定例ガチャ');
+    }
+    expect(regularGachaIndex('ガチャ「選抜!13周年人気投票ガチャ」')).toBe(-1);
+    expect(gachaGroup({ category: 'event', name: 'ガチャ「選抜!13周年人気投票ガチャ」' })).toBe('期間限定ガチャ');
   });
 });

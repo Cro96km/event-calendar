@@ -1,5 +1,5 @@
 // 正本 → UI用の月別JSON。月境界はゲーム日(4:00 JST)基準。none を除く全件。spec §5.2。
-import { attributeColor, characterLabel, CHARACTER_CATEGORY, type CharacterKind } from '../characters';
+import { applyGachaAlias, attributeColor, characterLabel, CHARACTER_CATEGORY, type CharacterKind } from '../characters';
 import { gameDayOf } from '../gameday';
 import { itemKey } from '../selection';
 import type { DetailBlock } from '../details';
@@ -88,7 +88,8 @@ export function buildExport(records: ArticleRecord[], generatedAt: string, colle
       const ev: ExportEvent = {
         id: e.id,
         article_id: r.id,
-        name: e.name,
+        // 新限定の実装にあたる特殊ガチャは、定例ガチャの名前で表記する(候補キー item は元の名前のまま)
+        name: applyGachaAlias(e.name, r.gacha_alias),
         title: r.title,
         category: r.category,
         start: e.start,

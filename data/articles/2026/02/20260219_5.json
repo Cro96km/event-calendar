@@ -61,5 +61,9 @@
       "attr": "水",
       "gacha": "オリエンタル・トラベラーズ"
     }
-  ]
+  ],
+  "gacha_alias": {
+    "from": "Oriental Charming LIVE!!",
+    "to": "オリエンタル・トラベラーズ"
+  }
 }

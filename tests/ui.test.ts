@@ -1046,7 +1046,7 @@ describe('ガチャセクション', () => {
   const e = '2026-10-28T23:59:00+09:00';
   it('gachaGroup: 定例/イベント(コラボ含む)/期間限定。コラボの付随項目・ガチャ以外は null', () => {
     expect(gachaGroup({ category: 'event', name: 'ガチャ「超・獣神祭」開催!' })).toBe('定例ガチャ');
-    expect(gachaGroup({ category: 'event', name: 'ガチャ「モンコレDX 〜ビナー編〜」開催！' })).toBe('期間限定ガチャ');
+    expect(gachaGroup({ category: 'event', name: 'ガチャ「モンコレDX 〜ビナー編〜」開催！' })).toBe('定例ガチャ'); // 定例の語で始まる派生は定例ガチャ
     expect(gachaGroup({ category: 'collab', name: 'ガチャ「呪術廻戦」開催!' })).toBe('イベントガチャ');
     expect(gachaGroup({ category: 'event', name: 'ガチャ「ギャラクシーアドベンチャー II」開催!', title: '新イベント「ギャラクシーアドベンチャー II」11/2より開催！' })).toBe('イベントガチャ');
     expect(gachaGroup({ category: 'event', name: 'ガチャ「モンスト夏休み2026」開催!', title: '期間限定イベント「モンスト夏休み2026」がスタート！' })).toBe('イベントガチャ');
@@ -1202,11 +1202,11 @@ describe('ガチャセクション', () => {
     expect([...root.querySelectorAll('.g-inner .g-rows > .g-row .g-l1')].map((x) => x.textContent).slice(-3)).toEqual(['とても長い作品名のコラボ', 'フリーレン＆ヒンメル', 'フリーレン＆フェルン']);
   });
 
-  it('年代別のガチャ行(ガチャ「定例名 2013＆2014」)は定例ガチャ。同じ定例名の中で年代順、ラベルは「」の中身。「」の後に文が続く別記事の行は対象外', () => {
+  it('年代別のガチャ行(ガチャ「定例名 2013＆2014」)は定例ガチャ。同じ定例名の中で年代順、ラベルは「」の中身。「」の後に文が続く行も定例ガチャ。定例の語を含まない別のガチャは対象外', () => {
     const era = (y: string) => ({ category: 'event', name: `ガチャ「モンストジェネレーション ${y}」` });
     expect(gachaGroup(era('2013＆2014'))).toBe('定例ガチャ');
     expect(gachaGroup(era('2019'))).toBe('定例ガチャ');
-    expect(gachaGroup({ category: 'event', name: 'ガチャ「モンストジェネレーション 2019」開催！「媽祖」の排出確率超UP！' })).toBe('期間限定ガチャ');
+    expect(gachaGroup({ category: 'event', name: 'ガチャ「モンストジェネレーション 2019」開催！「媽祖」の排出確率超UP！' })).toBe('定例ガチャ'); // 派生(続きのある行)も定例ガチャ
     expect(gachaGroup({ category: 'event', name: 'ガチャ「未知のガチャ 2019」' })).toBe('期間限定ガチャ');
     expect(gachaGroup({ category: 'event', name: 'ガチャ「モンコレDX Vol.1」' })).toBe('定例ガチャ');
     // Vol 別の行も Vol 順(登場順に関わらず)
@@ -1255,7 +1255,7 @@ describe('ガチャセクション', () => {
     state.collapsed.clear();
     render(root, state);
     const order = [...root.querySelectorAll('.g-inner .g-rows > .g-group, .g-inner .g-rows > .g-row')].map((x) => (x.classList.contains('g-group') ? `H:${x.textContent}` : `R:${x.querySelector('.g-l1')?.textContent}`));
-    expect(order).toEqual(['H:イベントクエスト', 'R:ギャラクシーアドベンチャー II', 'R:黄泉のツガイ', 'H:イベントガチャ', 'R:ギャラクシーアドベンチャー II', 'R:黄泉のツガイ', 'H:定例ガチャ', 'R:超・獣神祭', 'R:激・獣神祭', 'R:RED STARS', 'R:水の遊宴', 'R:ミッドナイト・パーティー', 'R:オリエンタル・トラベラーズ', 'R:モンコレDX', 'R:モンストジェネレーション', 'H:期間限定ガチャ', 'R:あいうえお', 'R:モンコレDX 〜ビナー編〜', 'R:集結、天下五剣']);
+    expect(order).toEqual(['H:イベントクエスト', 'R:ギャラクシーアドベンチャー II', 'R:黄泉のツガイ', 'H:イベントガチャ', 'R:ギャラクシーアドベンチャー II', 'R:黄泉のツガイ', 'H:定例ガチャ', 'R:超・獣神祭', 'R:激・獣神祭', 'R:RED STARS', 'R:水の遊宴', 'R:ミッドナイト・パーティー', 'R:オリエンタル・トラベラーズ', 'R:モンコレDX', 'R:モンコレDX 〜ビナー編〜', 'R:モンストジェネレーション', 'H:期間限定ガチャ', 'R:あいうえお', 'R:集結、天下五剣']);
   });
 
   it('isOnCalendarDay: 翌4:00終了のイベントは終了日の暦日(バーの列)にもかかる', () => {
