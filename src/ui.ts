@@ -105,7 +105,7 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
   for (const event of [...maint, ...entries.map((x) => x.event)]) {
     const item = el('section', 'detail-item');
     item.append(el('h3', undefined, fullLabel(event.name)));
-    if (!event.hide_period) item.append(el('p', undefined, `${event.category === MAINTENANCE_CATEGORY ? '実施日程' : '開催期間'}: ${periodText(event)}`));
+    if (periodText(event) !== '') item.append(el('p', undefined, `${event.category === MAINTENANCE_CATEGORY ? '実施日程' : '開催期間'}: ${periodText(event)}`));
     // 報酬受取期限は表示しない(別記事の内容を取り込み大半が誤りのため)
     if (event.slots?.length) {
       const box = el('div', 'detail-block');

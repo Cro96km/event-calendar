@@ -27,8 +27,9 @@ export interface ExportEvent {
   pickup?: PickupInfo;
   /** 超究極・絶級のボス名の公式の色(行ラベルの文字用) */
   color?: string;
-  /** 期間を表示しない(仮置きの期間の常設クエスト用。config/schedule/manual.json の hide_period) */
-  hide_period?: true;
+  /** 期間の開始/終了を表示しない(仮置きの期間の常設クエスト用。config/schedule/manual.json の hide_start / hide_end) */
+  hide_start?: true;
+  hide_end?: true;
   /** 小見出しの指定(手動で足した項目用 config/schedule/manual.json、または手動の修正 config/schedule/overrides.json) */
   group?: string;
   /** セクションの指定(手動の修正 config/schedule/overrides.json) */

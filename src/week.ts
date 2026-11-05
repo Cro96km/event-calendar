@@ -102,12 +102,16 @@ export function slotRows(slots: readonly Slot[]): { date: string; times: string[
   return [...rows].map(([day, times]) => ({ date: dayLabel(day), times }));
 }
 
-/** 期間表示。年をまたぐ場合だけ両端に年を付ける。hide_period の項目は空文字(呼び出し側で行ごと出さない)。 */
-export function periodText(e: { start: string; end: string | null; hide_period?: boolean }): string {
-  if (e.hide_period) return '';
-  if (e.end === null) return `${formatJst(e.start)} 〜 終了未定`;
-  const y = jstYear(e.start) !== jstYear(e.end);
-  return `${formatJst(e.start, y)} 〜 ${formatJst(e.end, y)}`;
+/**
+ * 期間表示。年をまたぐ場合だけ(表示する側に)年を付ける。
+ * hide_start / hide_end の側は出さず、片方だけなら `〜 終了` / `開始 〜`、両方なら空文字(呼び出し側で行ごと出さない)。
+ */
+export function periodText(e: { start: string; end: string | null; hide_start?: boolean; hide_end?: boolean }): string {
+  if (e.hide_start && e.hide_end) return '';
+  const y = e.end !== null && jstYear(e.start) !== jstYear(e.end);
+  const start = formatJst(e.start, y);
+  const end = e.end === null ? '終了未定' : formatJst(e.end, y);
+  return e.hide_start ? `〜 ${end}` : e.hide_end ? `${start} 〜` : `${start} 〜 ${end}`;
 }
 
 export interface BarSpan {

@@ -1258,15 +1258,18 @@ describe('ガチャセクション', () => {
     expect(order).toEqual(['H:イベントクエスト', 'R:ギャラクシーアドベンチャー II', 'R:黄泉のツガイ', 'H:イベントガチャ', 'R:ギャラクシーアドベンチャー II', 'R:黄泉のツガイ', 'H:定例ガチャ', 'R:超・獣神祭', 'R:激・獣神祭', 'R:RED STARS', 'R:水の遊宴', 'R:ミッドナイト・パーティー', 'R:オリエンタル・トラベラーズ', 'R:モンコレDX', 'R:モンストジェネレーション', 'H:期間限定ガチャ', 'R:あいうえお', 'R:モンコレDX 〜ビナー編〜', 'R:集結、天下五剣']);
   });
 
-  it('periodText: 年をまたぐ場合だけ年を付ける。hide_period は空', () => {
+  it('periodText: 年をまたぐ場合だけ年を付ける。hide_start / hide_end', () => {
     expect(periodText({ start: '2026-10-27T12:00:00+09:00', end: '2026-10-29T11:59:00+09:00' })).toBe('10/27(火) 12:00 〜 10/29(木) 11:59');
     expect(periodText({ start: '2026-12-31T12:00:00+09:00', end: '2027-01-05T11:59:00+09:00' })).toBe('2026/12/31(木) 12:00 〜 2027/01/05(火) 11:59');
     expect(periodText({ start: '2026-12-31T12:00:00+09:00', end: null })).toBe('12/31(木) 12:00 〜 終了未定');
-    expect(periodText({ start: '2024-01-01T00:00:00+09:00', end: '2026-12-31T23:59:00+09:00', hide_period: true })).toBe('');
+    const p = { start: '2026-12-31T12:00:00+09:00', end: '2027-01-05T11:59:00+09:00' };
+    expect(periodText({ ...p, hide_start: true })).toBe('〜 2027/01/05(火) 11:59');
+    expect(periodText({ ...p, hide_end: true })).toBe('2026/12/31(木) 12:00 〜');
+    expect(periodText({ ...p, hide_start: true, hide_end: true })).toBe('');
   });
 
-  it('hide_period の項目は詳細に開催期間の行を出さない', () => {
-    const h = ev('h#0', 'event', '2026-10-27T00:00:00+09:00', '2026-12-31T23:59:00+09:00', { name: '歴戦の跡地', hide_period: true });
+  it('両方 hide の項目は詳細に開催期間の行を出さない', () => {
+    const h = ev('h#0', 'event', '2026-10-27T00:00:00+09:00', '2026-12-31T23:59:00+09:00', { name: '歴戦の跡地', hide_start: true, hide_end: true });
     state = initialState('2026-10-27', [h], INDEX);
     state.collapsed = new Set();
     render(root, state);
