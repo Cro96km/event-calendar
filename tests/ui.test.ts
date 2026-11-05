@@ -493,11 +493,32 @@ describe('週/月表示', () => {
     expect(cols()).toHaveLength(7);
     click(q('view-toggle'));
     expect(cols()).toHaveLength(31);
-    expect(monthLabel()).toBe('10月');
+    expect(monthLabel()).toBe('2026年10月');
     expect(span('a#0')).toBe('2/5'); // 10/27(左端=grid列2)〜10/29 11:59
     expect(root.querySelector('.month-title')).toBeNull();
     click(q('view-toggle'));
     expect(cols()).toHaveLength(7);
+  });
+  it('日付の行の左端に「年月」を出し、1月1日の目印には年も付ける(年またぎが分かる)', () => {
+    state.weekStart = '2026-12-30';
+    state.monthStart = '2026-12-30';
+    click(q('view-toggle'));
+    render(root, state);
+    expect(root.querySelector('.g-dates .g-label')?.textContent).toBe('2026年12月');
+    expect(root.querySelector('.g-date[data-day="2027-01-01"] .dmon')?.textContent).toBe('2027年1月');
+    expect(root.querySelector('.g-date[data-day="2027-01-02"] .dmon')).toBeNull();
+  });
+  it('カレンダーの移動は表示範囲(今日から過去・未来それぞれ12か月)まで。端で < > が無効になり、週・月どちらでも越えない', () => {
+    for (let i = 0; i < 80; i++) click(q('nav-next'));
+    expect(first()).toBe('2027-10-27');
+    expect((q('nav-next') as HTMLButtonElement).disabled).toBe(true);
+    click(q('view-toggle'));
+    for (let i = 0; i < 24; i++) click(q('nav-next'));
+    expect(first()).toBe('2027-10-27');
+    for (let i = 0; i < 200; i++) click(q('nav-prev'));
+    expect(first()).toBe('2025-10-27');
+    expect((q('nav-prev') as HTMLButtonElement).disabled).toBe(true);
+    expect((q('nav-next') as HTMLButtonElement).disabled).toBe(false);
   });
   it('週⇄月の切替で、切替前の左端の日が切替後も左端になる(移動後の週・月のどちらからでも)。● の基準は今日のまま', () => {
     click(q('nav-next')); // 週を +7日(11/3 が左端)

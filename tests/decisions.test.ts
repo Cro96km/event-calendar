@@ -1,11 +1,11 @@
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdtemp, readdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { Rule } from '../src/classify';
 import type { ArticleRecord } from '../src/data/record';
 import { runCandidates } from '../src/data/selection-store';
-import { emptyDecisions, importReview, judgeAll, kindId, kindKey, parseDecisions, parseReview, renderReference, renderReview, reviewGroups, selectedKeys, serializeDecisions } from '../src/decisions';
+import { emptyDecisions, importReview, judgeAll, kindId, kindKey, parseDecisions, parseReview, renderSelectionMonths, renderReview, reviewGroups, selectedKeys, serializeDecisions } from '../src/decisions';
 import { buildReviewIssue, evaluate, formatEvaluation } from '../src/review-issue';
 import { buildCandidates } from '../src/selection';
 
@@ -114,7 +114,7 @@ describe('runCandidates と評価', () => {
   it('記憶取り込み→再生成。要判断で確定した種類は次回から自動適用され、2回目は変化しない', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'dec-'));
     try {
-      const paths = { selection: join(dir, 'selection.md'), review: join(dir, 'needs-review.md'), decisions: join(dir, 'decisions.json') };
+      const paths = { selection: join(dir, 'selection'), review: join(dir, 'needs-review.md'), decisions: join(dir, 'decisions.json') };
       const pub = join(dir, 'pub');
       const recs = [rec('1_1', 'BBB x'), rec('2_1', 'mystery')];
       const r = await runCandidates(recs, paths, pub, 'G', rules);
@@ -125,46 +125,54 @@ describe('runCandidates と評価', () => {
       const r2 = await runCandidates(recs, paths, pub, 'G', rules);
       expect(r2).toMatchObject({ selected: 2, reviewGroups: 0, imported: 1 });
       expect(JSON.parse(await readFile(join(pub, 'selection.json'), 'utf8')).selected.sort()).toEqual(['BBB x', 'mystery']);
-      const text = await readFile(paths.selection, 'utf8');
+      const text = await readFile(join(paths.selection, '2026/10.md'), 'utf8');
       const r3 = await runCandidates(recs, paths, pub, 'G', rules);
       expect(r3.imported).toBe(0);
-      expect(await readFile(paths.selection, 'utf8')).toBe(text);
-      expect(text).toContain('## 表示(2件)');
-      expect(text).not.toContain('## 要判断(1件)');
-      expect(renderReference(judgeAll(buildCandidates(recs), JSON.parse(await readFile(paths.decisions, 'utf8')), rules))).toBe(text);
+      expect(await readFile(join(paths.selection, '2026/10.md'), 'utf8')).toBe(text);
+      expect(text).toContain('表示 2件 / 非表示 0件 / 要判断 0件');
+      expect(text).toContain('| 表示 | mystery |');
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
   });
-  it('読む用の一覧(selection.md)は、直近12ヶ月の月初以降に終わる項目だけ。日時を含まず、判断が変わらなければ同じ内容', async () => {
+  it('表示の判断の一覧は月ごとの表(selection/YYYY/MM.md)。範囲の外は載せず、日時を含まず、判断が変わらなければ同じ内容。範囲外になった月のファイルは消える', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'dec-'));
     try {
-      const paths = { selection: join(dir, 'selection.md'), review: join(dir, 'r.md'), decisions: join(dir, 'd.json') };
-      const recs = [rec('1_1', 'BBB x'), rec('2_1', 'mystery'), rec('3_1', 'AAA y')];
-      const at = '2026-11-05T12:00:00+09:00';
+      const paths = { selection: join(dir, 'selection'), review: join(dir, 'r.md'), decisions: join(dir, 'd.json') };
+      const old = { ...rec('9_1', 'BBB old'), events: [{ ...rec('9_1', 'BBB old').events[0]!, start: '2024-01-01T12:00:00+09:00', end: '2024-01-05T11:59:00+09:00' }] };
+      const recs = [rec('1_1', 'BBB x'), rec('2_1', 'mystery'), old];
+      const at = '2026-10-23T12:00:00+09:00';
       await runCandidates(recs, paths, join(dir, 'pub'), at, rules);
-      const text = await readFile(paths.selection, 'utf8');
-      expect(text).toContain('# 表示の判断の一覧(自動生成)');
-      expect(text).toContain('2025-11 以降に終わる項目');
-      expect(text.indexOf('## 要判断')).toBeLessThan(text.indexOf('## 表示'));
-      expect(text.indexOf('## 表示')).toBeLessThan(text.indexOf('## 非表示'));
+      const text = await readFile(join(paths.selection, '2026/10.md'), 'utf8');
+      expect(text).toContain('# 表示の判断 2026-10');
+      expect(text).toContain('| 判定 | 項目 | カテゴリ | 期間 | 理由 | 記事 |');
+      expect(text).toContain('| 表示 | BBB x |');
+      expect(text).toContain('| 要判断 | mystery |');
       expect(text).not.toContain(at);
-      await runCandidates(recs, paths, join(dir, 'pub'), '2026-11-06T09:00:00+09:00', rules);
-      expect(await readFile(paths.selection, 'utf8')).toBe(text);
-      // カレンダー用の selection.json は、一覧の窓に関係なく全件の判断から作る
+      expect(text).not.toContain('BBB old');
+      await runCandidates(recs, paths, join(dir, 'pub'), '2026-10-24T09:00:00+09:00', rules);
+      expect(await readFile(join(paths.selection, '2026/10.md'), 'utf8')).toBe(text);
+      // 範囲の外(2か月ずつ進めて1年以上あと)になったら、その月のファイルは作られない(消える)
+      await runCandidates(recs, paths, join(dir, 'pub'), '2028-10-24T09:00:00+09:00', rules);
+      expect(await readdir(paths.selection).catch(() => [])).toEqual([]);
+      // カレンダー用の selection.json は、一覧の範囲に関係なく全件の判断から作る
       expect(JSON.parse(await readFile(join(dir, 'pub/selection.json'), 'utf8')).total).toBe(3);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
   });
-  it('一覧: 窓より前に終わった項目は載せず、窓内は要判断・表示・非表示に分ける(窓なしなら全件)', () => {
-    const old = { ...rec('9_1', 'BBB old'), events: [{ ...rec('9_1', 'BBB old').events[0]!, start: '2024-01-01T12:00:00+09:00', end: '2024-01-05T11:59:00+09:00' }] };
-    const js = judgeAll(buildCandidates([rec('1_1', 'BBB x'), rec('2_1', 'mystery'), old]), emptyDecisions(), rules);
-    const win = renderReference(js, '2025-11');
-    expect(win).toContain('BBB x');
-    expect(win).not.toContain('BBB old');
-    expect(renderReference(js)).toContain('BBB old');
-    expect(win).toMatch(/## 要判断\(1件\)/);
+  it('一覧: 範囲より前に始まって続く項目は最初の月、範囲の後に始まる項目は載せない。範囲なしなら全件', () => {
+    const at = (id: string, title: string, start: string, end: string) => ({ ...rec(id, title), events: [{ ...rec(id, title).events[0]!, start, end }] });
+    const js = judgeAll(
+      buildCandidates([at('1_1', 'BBB cont', '2025-09-01T12:00:00+09:00', '2025-12-01T11:59:00+09:00'), at('2_1', 'BBB far', '2028-05-01T12:00:00+09:00', '2028-05-02T11:59:00+09:00'), at('3_1', 'BBB x', '2026-03-01T12:00:00+09:00', '2026-03-02T11:59:00+09:00')]),
+      emptyDecisions(),
+      rules,
+    );
+    const m = renderSelectionMonths(js, { from: '2025-11-05', to: '2027-11-05' });
+    expect([...m.keys()]).toEqual(['2025-11', '2026-03']);
+    expect(m.get('2025-11')).toContain('BBB cont');
+    expect([...m.values()].join()).not.toContain('BBB far');
+    expect([...renderSelectionMonths(js).keys()]).toEqual(['2025-09', '2026-03', '2028-05']);
   });
   it('一致率: 記憶を教師にルール単独の判定を比較', () => {
     const d = emptyDecisions();

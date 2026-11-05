@@ -1,4 +1,4 @@
-// 表示候補(記事内の項目を同種で集約したキー)と選択ファイル(config/judge/selection.md)の純関数。spec §4.5。
+// 表示候補(記事内の項目を同種で集約したキー)と表示の判断の一覧(config/judge/selection/)の純関数。spec §4.5。
 import type { ExportEvent } from './data/export';
 import type { ArticleRecord } from './data/record';
 import { eventUrl, type PeriodEvent } from './period';
@@ -80,9 +80,6 @@ export function buildCandidates(records: ArticleRecord[]): Candidate[] {
     .sort((a, b) => a.category.localeCompare(b.category) || b._s.localeCompare(a._s) || a.key.localeCompare(b.key))
     .map(({ _s, ...c }) => { void _s; return c; });
 }
-
-/** 項目自身に期間が無く記事の期間を継承していることを示す(選択ファイル・UI共通) */
-export const INHERIT_MARK = '(記事期間を継承)';
 
 export function selectionJson(sel: Map<string, boolean>, generatedAt: string): SelectionJson {
   return { generated_at: generatedAt, selected: [...sel].filter(([, on]) => on).map(([k]) => k), total: sel.size };

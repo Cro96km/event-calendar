@@ -1,6 +1,6 @@
 // 判断の記憶(config/judge/decisions.json)・4区分・要判断ファイル(config/judge/needs-review.md)の純関数。spec §4.6。
 import { classify, type Rule } from './classify';
-import { INHERIT_MARK, type Candidate } from './selection';
+import type { Candidate } from './selection';
 
 /** 確定した判断(記憶に保存できる値)。未確定を含む classify.ts の Decision とは別。 */
 export type Verdict = 'on' | 'off';
@@ -196,47 +196,62 @@ export function serializeDecisions(d: Decisions): string {
 
 export const GENERATED_MARK = '<!-- generated: npm run candidates -->';
 
-/** 候補の期間 `YYYY-MM-DD〜YYYY-MM-DD`(終了未定は `〜` のみ)の終了日(未定なら開始日)。 */
-const endDay = (latest: string): string => {
+/** 候補の期間 `YYYY-MM-DD〜YYYY-MM-DD`(終了未定は `〜` のみ)の開始日と終了日(未定なら開始日)。 */
+const periodDays = (latest: string): { start: string; end: string } => {
   const [start = '', end = ''] = latest.split('〜');
-  return end !== '' ? end : start;
+  return { start, end: end !== '' ? end : start };
 };
 
+/** 表示の判断の一覧に載せる範囲(YYYY-MM-DD)。カレンダーの表示範囲と同じ。 */
+export interface SelectionRange {
+  from: string;
+  to: string;
+}
+
+const esc = (t: string): string => t.replace(/\|/g, '｜');
+
 /**
- * 表示の判断の一覧(config/judge/selection.md。自動生成)。毎回、現在の状態を作り直す(追記ではない)ので、このファイル1つで判断できる。
- * fromMonth(YYYY-MM)以降に終わる項目だけを載せる(カレンダーに出る期間。null なら全件)。日時を含めないので、判断が変わらない限り差分は出ない。
- * 並びは 要判断 → 表示 → 非表示。各区分は開始が新しい順。
+ * 表示の判断の一覧(config/judge/selection/YYYY/MM.md)を、月ごとの表にして返す(キー=YYYY-MM、値=ファイルの中身。自動生成)。
+ * 毎回、現在の状態を作り直す(追記ではない)。range の中(終了が from 以降、開始が to まで)の項目だけを、開始の月に載せる
+ * (range より前に始まって続いている項目は最初の月)。日時を含めないので、判断が変わらない限り差分は出ない。
+ * 各表は開始順。判定の列だけが変わるので、判断を変えたときの差分が小さい。
  */
-export function renderReference(js: Judged[], fromMonth: string | null = null): string {
+export function renderSelectionMonths(js: Judged[], range: SelectionRange | null = null): Map<string, string> {
   const how = (j: Judged): string => {
     const base = j.source === 'memory' ? '判断の記憶' : j.source === 'rule' ? `ルール ${j.rule}` : '未判断';
     return j.bucket === 'recurring' ? `${base}(定例)` : base;
   };
-  const rows = js.filter((j) => fromMonth === null || endDay(j.cand.latest).slice(0, 7) >= fromMonth);
-  const row = (j: Judged): string => `- ${j.cand.key} | ${j.cand.category} | ${j.cand.latest}${j.cand.inherited ? INHERIT_MARK : ''} | ${how(j)} | ${j.cand.url}`;
-  const newestFirst = (a: Judged, b: Judged): number => b.cand.latest.localeCompare(a.cand.latest) || a.cand.key.localeCompare(b.cand.key);
-  const part = (title: string, note: string, list: Judged[]): string => {
-    const lines = [...list].sort(newestFirst).map(row);
-    return `## ${title}(${list.length}件)\n\n${note}\n\n${lines.join('\n')}${lines.length ? '\n' : ''}`;
-  };
-  const review = rows.filter((j) => j.decision === null);
-  const on = rows.filter((j) => j.decision === 'on');
-  const off = rows.filter((j) => j.decision === 'off');
-  const range = fromMonth === null ? 'すべての項目' : `${fromMonth} 以降に終わる項目(カレンダーに出る期間)`;
-  return [
-    GENERATED_MARK,
-    '# 表示の判断の一覧(自動生成)',
-    '',
-    `${range}について、カレンダーに**表示するか・しないか**と、その理由を並べています。このファイルを見るだけで判断できます(差分は見なくて構いません)。`,
-    '',
-    '- **編集しないでください**(`npm run update` が毎回作り直します)。判断を変えるときは、要対応の Issue のチェック(`/apply`)か、`config/judge/decisions.json`(種類・項目の記憶)、`config/judge/rules.json`(自動ルール)を直します。',
-    '- 並びは「要判断 → 表示 → 非表示」。各区分は開始が新しい順。理由は「判断の記憶」「ルール 名前」「未判断」。(定例)は同種が複数の記事に出ているもの。',
-    '- メンテナンスと、手動の調整(`config/schedule/manual.json`)の項目は、ここには載りません。',
-    '',
-    part('要判断', '未判断の項目です。判断するまで**非表示**です。', review),
-    part('表示', 'カレンダーに表示します。', on),
-    part('非表示', 'カレンダーに表示しません。', off),
-  ].join('\n');
+  const verdict = (j: Judged): string => (j.decision === 'on' ? '表示' : j.decision === 'off' ? '非表示' : '要判断');
+  const byMonth = new Map<string, Judged[]>();
+  for (const j of js) {
+    const { start, end } = periodDays(j.cand.latest);
+    if (range !== null && (end < range.from || start > range.to)) continue;
+    const month = (range !== null && start < range.from ? range.from : start).slice(0, 7);
+    byMonth.set(month, [...(byMonth.get(month) ?? []), j]);
+  }
+  const out = new Map<string, string>();
+  for (const [month, list] of [...byMonth].sort(([a], [b]) => a.localeCompare(b))) {
+    list.sort((a, b) => a.cand.latest.localeCompare(b.cand.latest) || a.cand.key.localeCompare(b.cand.key));
+    const n = (d: string): number => list.filter((j) => verdict(j) === d).length;
+    const rows = list.map((j) => `| ${verdict(j)} | ${esc(j.cand.key)} | ${j.cand.category} | ${j.cand.latest} | ${how(j)} | [記事](${j.cand.url}) |`);
+    out.set(
+      month,
+      [
+        GENERATED_MARK,
+        `# 表示の判断 ${month}`,
+        '',
+        '自動生成です(`npm run update` が作り直します)。**編集しないでください**。判断を変えるときは、要対応の Issue のチェック(`/apply`)、`config/judge/decisions.json`(種類・項目の記憶)、`config/judge/rules.json`(自動ルール)を直します。',
+        '',
+        `表示 ${n('表示')}件 / 非表示 ${n('非表示')}件 / 要判断 ${n('要判断')}件(要判断は、判断するまで非表示)。開始の月の表。表示範囲より前に始まって続いている項目は、最初の月に載せています。メンテナンスと手動の調整(\`config/schedule/manual.json\`)は載りません。`,
+        '',
+        '| 判定 | 項目 | カテゴリ | 期間 | 理由 | 記事 |',
+        '|---|---|---|---|---|---|',
+        ...rows,
+        '',
+      ].join('\n'),
+    );
+  }
+  return out;
 }
 
 export const countBuckets = (js: Judged[]): Record<Bucket, number> => {

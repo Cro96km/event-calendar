@@ -12,7 +12,7 @@ const writeJson = async (path: string, value: unknown): Promise<void> => {
   await rename(tmp, path);
 };
 
-const articlePath = (dir: string, id: string): string => join(dir, id.slice(0, 4), id.slice(4, 6), `${id}.json`);
+export const articlePath = (dir: string, id: string): string => join(dir, id.slice(0, 4), id.slice(4, 6), `${id}.json`);
 
 export async function readRecord(dir: string, id: string): Promise<ArticleRecord | null> {
   const text = await readTextIfExists(articlePath(dir, id));

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import type { ExportEvent, IndexFile, MonthFile } from '../src/data/export';
-import { buildPublic, publicCutoff } from '../src/data/public-export';
+import { buildPublic, publicCutoff, publicLimit } from '../src/data/public-export';
 import type { SelectionJson } from '../src/selection';
 
 const NOW = Date.parse('2026-11-05T12:00:00+09:00');
@@ -16,6 +16,17 @@ describe('publicCutoff', () => {
     expect(publicCutoff(NOW)).toBe('2025-11-05');
     // UTCではまだ前日でもJSTの日付で数える
     expect(publicCutoff(Date.parse('2026-11-05T00:30:00+09:00'))).toBe('2025-11-05');
+  });
+});
+
+describe('publicLimit と未来の限界', () => {
+  it('JSTの今日から12ヶ月後。それより後に始まる項目は公開しない', () => {
+    expect(publicLimit(NOW)).toBe('2027-11-05');
+    const near = ev('n', 'N', '2027-11-05T12:00:00+09:00', '2027-11-07T12:00:00+09:00');
+    const far = ev('f', 'F', '2027-11-06T00:00:00+09:00', '2027-11-08T12:00:00+09:00');
+    const out = buildPublic([month('2027-11', [near, far])], index(['2027-11']), sel(['N', 'F']), NOW);
+    expect(out.months.flatMap((m) => m.events.map((e) => e.id))).toEqual(['n']);
+    expect(buildPublic([month('2027-12', [ev('g', 'G', '2027-12-01T12:00:00+09:00', null)])], index(['2027-12']), sel(['G']), NOW).months).toEqual([]);
   });
 });
 

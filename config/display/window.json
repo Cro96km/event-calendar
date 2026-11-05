@@ -1,0 +1,5 @@
+{
+  "_doc": "カレンダーの表示範囲(今日を基準に、過去 past_months か月・未来 future_months か月)。公開サイトのデータ・カレンダーの移動の限界・表示の判断の一覧(config/judge/selection/)・不要データの削除(npm run prune)が、すべてこの値を使う。変えるときはこの2つだけを直す。",
+  "past_months": 12,
+  "future_months": 12
+}

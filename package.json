@@ -24,6 +24,7 @@
     "report:unparsed": "tsx scripts/report-unparsed.ts",
     "check": "tsx scripts/check.ts",
     "manual": "tsx scripts/manual.ts",
+    "prune": "tsx scripts/prune.ts",
     "help": "tsx scripts/help.ts"
   },
   "devDependencies": {
