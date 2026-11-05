@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import config from '../config/display/discord.json';
 import type { ExportEvent, IndexFile } from '../src/data/export';
 import { gachaGroup, groupDefs } from '../src/sections';
-import { SUMMARY, SHOT_MIN_END_FRAC, shotEndFrac, filterSummaryRows, isDay, parseShot, shotConfigProblems, type SummaryConfig } from '../src/shot';
+import { SUMMARY, SHOT_4AM_PAD, shotEndFrac, shotStartFrac, filterSummaryRows, isDay, parseShot, shotConfigProblems, type SummaryConfig } from '../src/shot';
 import { initialState, render } from '../src/ui';
 import { campaignGroup, ganttSections, questGroup, weekDays } from '../src/week';
 
@@ -96,24 +96,39 @@ describe('撮影モードの描画', () => {
   });
 });
 
-describe('撮影モードの4:00終わりのバー', () => {
-  it('4:00(03:59含む)終わりだけ伸ばし、他の終わりは変えない', () => {
-    expect(shotEndFrac(4 / 24)).toBe(SHOT_MIN_END_FRAC);
-    expect(shotEndFrac((3 * 60 + 59) / 1440)).toBe(SHOT_MIN_END_FRAC);
+describe('撮影モードのバーの端', () => {
+  it('4:00(03:59含む)の終わりは右へ、開始は左へ同じ幅だけ伸ばし、他は変えない', () => {
+    expect(shotEndFrac(4 / 24)).toBeCloseTo(0.28);
+    expect(shotEndFrac((3 * 60 + 59) / 1440)).toBeCloseTo(0.28);
+    expect(shotStartFrac(4 / 24)).toBeCloseTo(4 / 24 - SHOT_4AM_PAD);
     expect(shotEndFrac(0.5)).toBe(0.5);
+    expect(shotStartFrac(0.5)).toBe(0.5);
     expect(shotEndFrac(1)).toBe(1);
-    expect(shotEndFrac(2 / 24)).toBe(2 / 24);
+    expect(shotEndFrac((23 * 60 + 59) / 1440)).toBe(1);
+    expect(shotStartFrac(1 / 1440)).toBe(0);
+    expect(shotStartFrac(0)).toBe(0);
   });
-  it('通常表示のバーは変えず、撮影モードだけ右の余白が小さくなる', () => {
-    const e = ev('x#0', 'campaign', 'テスト', '2026-11-04T04:00:00+09:00', '2026-11-05T04:00:00+09:00');
-    const margin = (shot: boolean): string => {
-      const root = document.createElement('div');
-      const state = initialState('2026-11-05', [e], INDEX);
-      if (shot) state.shot = 'campaign';
-      render(root, state);
-      return root.querySelector<HTMLElement>('.bar-ev')!.style.marginRight;
-    };
-    expect(margin(false)).toContain('83.333');
-    expect(margin(true)).toContain('72.000');
+  const margins = (shot: boolean, start: string, end: string): { l: string; r: string } => {
+    const e = ev('x#0', 'campaign', 'テスト', start, end);
+    const root = document.createElement('div');
+    const state = initialState('2026-11-05', [e], INDEX);
+    if (shot) state.shot = 'campaign';
+    render(root, state);
+    const b = root.querySelector<HTMLElement>('.bar-ev')!;
+    return { l: b.style.marginLeft, r: b.style.marginRight };
+  };
+  it('通常表示のバーは変えず、撮影モードだけ4:00の端が伸びる', () => {
+    const a = '2026-11-05T04:00:00+09:00';
+    const b = '2026-11-06T04:00:00+09:00';
+    expect(margins(false, a, b).l).toContain('8.333');
+    expect(margins(true, a, b).l).toContain('2.667');
+    expect(margins(false, a, b).r).toContain('41.667');
+    expect(margins(true, a, b).r).toContain('36.000');
+  });
+  it('撮影モードの0:00開始・24:00終了は余白なしで罫線に接する(通常表示は従来のまま)', () => {
+    const a = '2026-11-06T00:00:00+09:00';
+    const b = '2026-11-07T00:00:00+09:00';
+    expect(margins(true, a, b)).toEqual({ l: '0px', r: '0px' });
+    expect(margins(false, a, b)).toEqual({ l: '', r: '' });
   });
 });
