@@ -212,8 +212,9 @@ const esc = (t: string): string => t.replace(/\|/g, '｜');
 
 /**
  * 表示の判断の一覧(config/judge/selection/YYYY/MM.md)を、月ごとの表にして返す(キー=YYYY-MM、値=ファイルの中身。自動生成)。
- * 毎回、現在の状態を作り直す(追記ではない)。range の中(終了が from 以降、開始が to まで)の項目だけを、開始の月に載せる
- * (range より前に始まって続いている項目は最初の月)。日時を含めないので、判断が変わらない限り差分は出ない。
+ * 毎回、現在の状態を作り直す(追記ではない)。range の中(終了が from 以降、開始が to まで)の項目だけを、
+ * 記事の月(data/articles と同じ分類。記事IDの日付 YYYYMM)に載せる。記事の月が分からないときは項目の開始の月。
+ * 日時を含めないので、判断が変わらない限り差分は出ない。
  * 各表は開始順。判定の列だけが変わるので、判断を変えたときの差分が小さい。
  */
 export function renderSelectionMonths(js: Judged[], range: SelectionRange | null = null): Map<string, string> {
@@ -226,7 +227,8 @@ export function renderSelectionMonths(js: Judged[], range: SelectionRange | null
   for (const j of js) {
     const { start, end } = periodDays(j.cand.latest);
     if (range !== null && (end < range.from || start > range.to)) continue;
-    const month = (range !== null && start < range.from ? range.from : start).slice(0, 7);
+    const id = /\/news\/(\d{4})(\d{2})\d{2}_/.exec(j.cand.url);
+    const month = id ? `${id[1]}-${id[2]}` : start.slice(0, 7);
     byMonth.set(month, [...(byMonth.get(month) ?? []), j]);
   }
   const out = new Map<string, string>();
@@ -242,7 +244,7 @@ export function renderSelectionMonths(js: Judged[], range: SelectionRange | null
         '',
         '自動生成です(`npm run update` が作り直します)。**編集しないでください**。判断を変えるときは、要対応の Issue のチェック(`/apply`)、`config/judge/decisions.json`(種類・項目の記憶)、`config/judge/rules.json`(自動ルール)を直します。',
         '',
-        `表示 ${n('表示')}件 / 非表示 ${n('非表示')}件 / 要判断 ${n('要判断')}件(要判断は、判断するまで非表示)。開始の月の表。表示範囲より前に始まって続いている項目は、最初の月に載せています。メンテナンスと手動の調整(\`config/schedule/manual.json\`)は載りません。`,
+        `表示 ${n('表示')}件 / 非表示 ${n('非表示')}件 / 要判断 ${n('要判断')}件(要判断は、判断するまで非表示)。記事の月(\`data/articles\` と同じ分類)の表です。メンテナンスと手動の調整(\`config/schedule/manual.json\`)は載りません。`,
         '',
         '| 判定 | 項目 | カテゴリ | 期間 | 理由 | 記事 |',
         '|---|---|---|---|---|---|',

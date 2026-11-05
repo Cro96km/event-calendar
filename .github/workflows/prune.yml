@@ -1,0 +1,96 @@
+# 不要データの削除: Actions → prune → Run workflow。表示範囲(config/display/window.json の過去の月数)より前に終わった記事(data/articles)を削除する。
+# 既定は確認だけ(削除しない。対象の件数と月別の内訳が実行結果の概要に出る)。apply=true のときだけ削除して PR を作り、検証が通れば自動マージして反映する。
+# 手動実行できるのは書き込み権限のある人だけ。docs/operations.md §15。
+name: prune
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: '実際に削除する(false=確認だけ。対象の件数と内訳を実行結果の概要に出す)'
+        type: boolean
+        default: false
+      before:
+        description: '[任意] この日(YYYY-MM-DD)より前に終わった記事を対象にする(空=今日から過去の限界の日)'
+        type: string
+        default: ''
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: prune
+  cancel-in-progress: false
+
+jobs:
+  prune:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      # 入力は環境変数経由で渡す(シェルに直接展開しない)。apply でなければ確認だけで終わる。
+      - name: Prune
+        env:
+          IN_APPLY: ${{ github.event.inputs.apply }}
+          IN_BEFORE: ${{ github.event.inputs.before }}
+        run: |
+          set -euo pipefail
+          args=()
+          if [ -n "$IN_BEFORE" ]; then args+=(--before "$IN_BEFORE"); fi
+          if [ "$IN_APPLY" = "true" ]; then args+=(--apply); fi
+          { echo '```'; npm run --silent prune -- "${args[@]}"; echo '```'; } | tee -a "$GITHUB_STEP_SUMMARY"
+
+      # 削除したあとの表示用データ(判断の表・公開データ)を作り直して検証する。
+      - name: Regenerate data
+        if: github.event.inputs.apply == 'true'
+        run: npm run update -- --no-collect
+
+      - name: Verify
+        if: github.event.inputs.apply == 'true'
+        id: verify
+        run: |
+          set +e
+          npm run lint && npm test && npm run build:public
+          echo "ci=$?" >> "$GITHUB_OUTPUT"
+          npm run check
+          echo "check=$?" >> "$GITHUB_OUTPUT"
+
+      - name: PR and merge
+        if: github.event.inputs.apply == 'true'
+        env:
+          CI_RESULT: ${{ steps.verify.outputs.ci }}
+          CHECK_RESULT: ${{ steps.verify.outputs.check }}
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain data config)" ]; then
+            echo "削除する記事はありませんでした。" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          branch="prune/$(date -u +%Y%m%d%H%M%S)"
+          git switch -c "$branch"
+          git add data config
+          git commit -m "data: prune old articles"
+          git push origin "$branch"
+          gh label create "要確認" --color d93f0b 2>/dev/null || true
+          url=$(gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" --title "data: prune old articles" --body "表示範囲より前に終わった記事を削除します(git で戻せます)。判断の表(config/judge/selection/)は削除後の状態で作り直しています。検証: CI相当=$CI_RESULT / 点検=$CHECK_RESULT")
+          if [ "$CI_RESULT" = "0" ] && [ "$CHECK_RESULT" = "0" ]; then
+            gh pr merge "$url" --squash --delete-branch
+            gh workflow run deploy.yml --ref "${{ github.event.repository.default_branch }}"
+            echo "削除して反映しました: $url" | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            gh pr edit "$url" --add-label "要確認"
+            echo "検証が通らなかったため、自動マージしていません: $url" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi

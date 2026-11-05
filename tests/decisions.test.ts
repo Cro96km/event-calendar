@@ -161,18 +161,25 @@ describe('runCandidates と評価', () => {
       await rm(dir, { recursive: true, force: true });
     }
   });
-  it('一覧: 範囲より前に始まって続く項目は最初の月、範囲の後に始まる項目は載せない。範囲なしなら全件', () => {
-    const at = (id: string, title: string, start: string, end: string) => ({ ...rec(id, title), events: [{ ...rec(id, title).events[0]!, start, end }] });
+  it('一覧: 記事の月(data/articles と同じ分類)に載せる。範囲の外の項目は載せない。記事の月が分からないときは開始の月。範囲なしなら全件', () => {
+    const at = (id: string, url: string, title: string, start: string, end: string) => ({ ...rec(id, title), url, events: [{ ...rec(id, title).events[0]!, start, end }] });
+    const news = (id: string) => `https://www.monster-strike.com/news/${id}.html`;
     const js = judgeAll(
-      buildCandidates([at('1_1', 'BBB cont', '2025-09-01T12:00:00+09:00', '2025-12-01T11:59:00+09:00'), at('2_1', 'BBB far', '2028-05-01T12:00:00+09:00', '2028-05-02T11:59:00+09:00'), at('3_1', 'BBB x', '2026-03-01T12:00:00+09:00', '2026-03-02T11:59:00+09:00')]),
+      buildCandidates([
+        at('20251030_3', news('20251030_3'), 'BBB cont', '2025-10-30T12:00:00+09:00', '2025-12-01T11:59:00+09:00'),
+        at('20280401_1', news('20280401_1'), 'BBB far', '2028-05-01T12:00:00+09:00', '2028-05-02T11:59:00+09:00'),
+        at('20260301_1', news('20260301_1'), 'BBB x', '2026-03-05T12:00:00+09:00', '2026-03-09T11:59:00+09:00'),
+        at('x_1', 'https://x/x_1', 'BBB nodate', '2026-07-05T12:00:00+09:00', '2026-07-09T11:59:00+09:00'),
+      ]),
       emptyDecisions(),
       rules,
     );
     const m = renderSelectionMonths(js, { from: '2025-11-05', to: '2027-11-05' });
-    expect([...m.keys()]).toEqual(['2025-11', '2026-03']);
-    expect(m.get('2025-11')).toContain('BBB cont');
+    expect([...m.keys()]).toEqual(['2025-10', '2026-03', '2026-07']);
+    expect(m.get('2025-10')).toContain('BBB cont');
+    expect(m.get('2026-07')).toContain('BBB nodate');
     expect([...m.values()].join()).not.toContain('BBB far');
-    expect([...renderSelectionMonths(js).keys()]).toEqual(['2025-09', '2026-03', '2028-05']);
+    expect([...renderSelectionMonths(js).keys()]).toEqual(['2025-10', '2026-03', '2026-07', '2028-04']);
   });
   it('一致率: 記憶を教師にルール単独の判定を比較', () => {
     const d = emptyDecisions();
