@@ -97,16 +97,16 @@ export function filterSummaryRows(sectionId: string, rows: BarSpan[][], groupOf:
 
 const FOUR_AM = 4 / 24;
 const TOL = 2 / 1440;
-/** 4:00(ゲーム日の境目)は列の 1/6 の位置で、バーの端が詰まる(終わりだと矢印が入らない)。撮影モードだけ、4:00 終わりは右へ、4:00 開始は左へ、同じ幅だけ伸ばす。 */
-export const SHOT_4AM_PAD = 0.28 - FOUR_AM;
+/** 撮影モードでの 4:00(ゲーム日の境目)の位置(列内の割合)。本来は 1/6 だが、端の矢印が入るよう少し右へずらす。開始・終了とも同じ位置にする。 */
+export const SHOT_4AM_FRAC = 0.2;
 const near4am = (frac: number): boolean => Math.abs(frac - FOUR_AM) <= TOL;
-/** 撮影モードの右端(列内の割合)。4:00(03:59含む)終わりだけ伸ばす。 */
+/** 撮影モードの右端(列内の割合)。4:00(03:59含む)終わりは 4:00 の位置へ、23:59 終わりは 24:00 と同じ(罫線に接する)。 */
 export function shotEndFrac(endFrac: number): number {
-  if (endFrac >= 1 - TOL) return 1; // 23:59 終わりは 24:00 と同じ(罫線に接する)
-  return near4am(endFrac) ? FOUR_AM + SHOT_4AM_PAD : endFrac;
+  if (endFrac >= 1 - TOL) return 1;
+  return near4am(endFrac) ? SHOT_4AM_FRAC : endFrac;
 }
-/** 撮影モードの左端(列内の割合)。4:00 開始だけ伸ばす(左へ)。 */
+/** 撮影モードの左端(列内の割合)。4:00 開始も終了と同じ 4:00 の位置へ、0:00(0:01含む)開始は罫線に接する。 */
 export function shotStartFrac(startFrac: number): number {
-  if (startFrac <= TOL) return 0; // 0:00(0:01含む)開始は罫線に接する
-  return near4am(startFrac) ? FOUR_AM - SHOT_4AM_PAD : startFrac;
+  if (startFrac <= TOL) return 0;
+  return near4am(startFrac) ? SHOT_4AM_FRAC : startFrac;
 }

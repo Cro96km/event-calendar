@@ -131,3 +131,6 @@ body:has(.shot) { padding: 0; background: #fff; }
 .shot { background: #fff; padding: 12px; width: 760px; }
 .shot .gantt { --label: 12rem; overflow: visible; }
 .shot .g-row:not(.g-dates) > .g-label { cursor: default; }
+/* 端の矢印を線に寄せる(4:00 の位置をずらす幅を小さくできる) */
+.shot .bar-ev.clip-l::before { left: .15rem; }
+.shot .bar-ev.clip-r::after { right: .15rem; }

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import config from '../config/display/discord.json';
 import type { ExportEvent, IndexFile } from '../src/data/export';
 import { gachaGroup, groupDefs } from '../src/sections';
-import { SUMMARY, SHOT_4AM_PAD, shotEndFrac, shotStartFrac, filterSummaryRows, isDay, parseShot, shotConfigProblems, type SummaryConfig } from '../src/shot';
+import { SUMMARY, SHOT_4AM_FRAC, shotEndFrac, shotStartFrac, filterSummaryRows, isDay, parseShot, shotConfigProblems, type SummaryConfig } from '../src/shot';
 import { initialState, render } from '../src/ui';
 import { campaignGroup, ganttSections, questGroup, weekDays } from '../src/week';
 
@@ -97,10 +97,10 @@ describe('撮影モードの描画', () => {
 });
 
 describe('撮影モードのバーの端', () => {
-  it('4:00(03:59含む)の終わりは右へ、開始は左へ同じ幅だけ伸ばし、他は変えない', () => {
-    expect(shotEndFrac(4 / 24)).toBeCloseTo(0.28);
-    expect(shotEndFrac((3 * 60 + 59) / 1440)).toBeCloseTo(0.28);
-    expect(shotStartFrac(4 / 24)).toBeCloseTo(4 / 24 - SHOT_4AM_PAD);
+  it('4:00(03:59含む)の開始も終わりも同じ位置へずらし、他は変えない', () => {
+    expect(shotEndFrac(4 / 24)).toBe(SHOT_4AM_FRAC);
+    expect(shotEndFrac((3 * 60 + 59) / 1440)).toBe(SHOT_4AM_FRAC);
+    expect(shotStartFrac(4 / 24)).toBe(SHOT_4AM_FRAC);
     expect(shotEndFrac(0.5)).toBe(0.5);
     expect(shotStartFrac(0.5)).toBe(0.5);
     expect(shotEndFrac(1)).toBe(1);
@@ -121,9 +121,9 @@ describe('撮影モードのバーの端', () => {
     const a = '2026-11-05T04:00:00+09:00';
     const b = '2026-11-06T04:00:00+09:00';
     expect(margins(false, a, b).l).toContain('8.333');
-    expect(margins(true, a, b).l).toContain('2.667');
+    expect(margins(true, a, b).l).toContain('10.000');
     expect(margins(false, a, b).r).toContain('41.667');
-    expect(margins(true, a, b).r).toContain('36.000');
+    expect(margins(true, a, b).r).toContain('40.000');
   });
   it('撮影モードの0:00開始・24:00終了は余白なしで罫線に接する(通常表示は従来のまま)', () => {
     const a = '2026-11-06T00:00:00+09:00';
