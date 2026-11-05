@@ -4,6 +4,7 @@ import { todayJstDay } from './gameday';
 import { applySelection, type SelectionJson } from './selection';
 import { mergeEvents, mergeSameLabel } from './week';
 import { applyManual } from './manual';
+import { applyOverrides } from './overrides';
 import { MONTHLY } from './monthly';
 import './style.css';
 
@@ -27,7 +28,7 @@ async function refreshData(state: AppState): Promise<{ ok: boolean; message: str
   if (!body) return { ok: false, message: `更新に失敗しました: 更新APIに接続できません (${res.status})` };
   if (!res.ok || !body.ok) return { ok: false, message: `更新に失敗しました: ${body.error ?? body.log ?? res.status}` };
   const { index, events, selection } = await load();
-  state.events = mergeSameLabel(applyManual(applySelection(events, selection)));
+  state.events = mergeSameLabel(applyManual(applyOverrides(applySelection(events, selection))));
   state.generatedAt = index.generated_at;
   return { ok: true, message: '更新しました' };
 }
@@ -37,7 +38,7 @@ if (root) {
   root.textContent = '読み込み中…';
   load()
     .then(({ index, events, selection }) => {
-      const state = initialState(todayJstDay(), applyManual(applySelection(events, selection)), index, MONTHLY);
+      const state = initialState(todayJstDay(), applyManual(applyOverrides(applySelection(events, selection))), index, MONTHLY);
       if (import.meta.env.DEV) state.refresh = () => refreshData(state);
       render(root, state);
     })

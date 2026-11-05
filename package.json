@@ -25,6 +25,7 @@
     "check": "tsx scripts/check.ts",
     "manual": "tsx scripts/manual.ts",
     "ledger": "tsx scripts/ledger.ts",
+    "override": "tsx scripts/override.ts",
     "prune": "tsx scripts/prune.ts",
     "help": "tsx scripts/help.ts"
   },

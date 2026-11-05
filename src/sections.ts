@@ -66,17 +66,16 @@ export interface Section {
   categories: readonly string[];
 }
 
-const SECTION_DEFS: readonly Section[] = [
-  { id: 'quest', label: 'クエスト', hue: 215, categories: ['event'] },
-  { id: 'campaign', label: 'キャンペーン', hue: 140, categories: ['campaign', 'web-shop'] },
-  { id: 'gacha', label: 'ガチャ', hue: 340, categories: ['collab'] },
-];
-
 /** 表示順(config/display/order.json の sections)。未掲載のカテゴリは表示しない(「その他」セクションは持たない)。 */
-export const SECTIONS: readonly Section[] = order.sections.map((id) => SECTION_DEFS.find((x) => x.id === id) as Section);
+export const SECTIONS: readonly Section[] = order.sections;
 
 /** event カテゴリでも、名称がキャンペーン系キーワード(英雄の神殿など)を含めばキャンペーンセクションに入れる。spec §4.3.5 */
-export function sectionOfEvent(e: { category: string; name: string; title?: string }): Section | null {
+export function sectionOfEvent(e: { category: string; name: string; title?: string; section?: string }): Section | null {
+  // 手動の修正(config/schedule/overrides.json の section)が最優先。除外カテゴリ(メンテナンス等)は対象外
+  if (e.section !== undefined && !EXCLUDED_CATEGORIES.includes(e.category)) {
+    const forced = SECTIONS.find((s) => s.id === e.section);
+    if (forced) return forced;
+  }
   if (!EXCLUDED_CATEGORIES.includes(e.category) && gachaGroup(e) !== null) return SECTIONS.find((s) => s.id === 'gacha') ?? null;
   if (e.category === 'collab') return null; // collab はガチャ本体のみ表示(付随項目は出さない)
   if (e.category === 'event' && (CAMPAIGN_ORDER.some((k) => e.name.includes(k)))) return SECTIONS.find((s) => s.id === 'campaign') ?? null;

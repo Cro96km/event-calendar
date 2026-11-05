@@ -8,7 +8,14 @@ const same = (a: readonly string[], b: readonly string[]): boolean => a.length =
 /** order.json の誤り。groups は固定の小見出しと過不足なく一致させる(ミッション等の追加・削除はコードの変更を伴うため)。 */
 export function orderProblems(cfg: typeof order = order): string[] {
   const p: string[] = [];
-  if (!same(cfg.sections, ['quest', 'campaign', 'gacha'])) p.push('sections は quest・campaign・gacha を1回ずつ');
+  const ids = cfg.sections.map((x) => x.id);
+  for (const need of ['quest', 'campaign', 'gacha']) if (!ids.includes(need)) p.push(`sections に ${need} が必要です`);
+  if (new Set(ids).size !== ids.length) p.push('sections の id が重複しています');
+  for (const x of cfg.sections) {
+    if (!/^[a-z0-9][a-z0-9-]*$/.test(x.id)) p.push(`sections「${x.id}」: id は英小文字・数字・ハイフン`);
+    if (x.label.trim() === '') p.push(`sections「${x.id}」: label が空です`);
+    if (!Number.isInteger(x.hue) || x.hue < 0 || x.hue > 359) p.push(`sections「${x.id}」: hue は 0〜359 の整数`);
+  }
   if (!same(cfg.groups.quest, QUEST_GROUPS)) p.push(`groups.quest は ${QUEST_GROUPS.join(' / ')} を1回ずつ`);
   if (!same(cfg.groups.gacha, GACHA_GROUPS)) p.push(`groups.gacha は ${GACHA_GROUPS.join(' / ')} を1回ずつ`);
   if (new Set(CAMPAIGN_GROUPS).size !== CAMPAIGN_GROUPS.length) p.push('groups.campaign に重複があります');

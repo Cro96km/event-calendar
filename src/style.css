@@ -109,3 +109,4 @@ button { font: inherit; color: inherit; }
 /* 超究極・絶級のボス名の公式の色(行ラベルの文字だけ) */
 .g-label.colored:not(.pickup) .g-l1 { color: color-mix(in srgb, var(--pc) 78%, var(--text)); }
 @media (prefers-color-scheme: dark) { .g-label.colored:not(.pickup) .g-l1 { color: color-mix(in srgb, var(--pc) 52%, var(--text)); } }
+.detail-note { margin: .3rem 0; font-size: .9rem; white-space: pre-wrap; }

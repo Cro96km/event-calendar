@@ -27,8 +27,12 @@ export interface ExportEvent {
   pickup?: PickupInfo;
   /** 超究極・絶級のボス名の公式の色(行ラベルの文字用) */
   color?: string;
-  /** 小見出しの指定(手動で足した項目用。config/schedule/manual.json) */
+  /** 小見出しの指定(手動で足した項目用 config/schedule/manual.json、または手動の修正 config/schedule/overrides.json) */
   group?: string;
+  /** セクションの指定(手動の修正 config/schedule/overrides.json) */
+  section?: string;
+  /** 手動の修正が入っている(config/schedule/overrides.json)。fields=直した項目、notes=詳細に出す注記、hide_blocks=詳細で出さないブロック */
+  fix?: { fields: string[]; notes?: string[]; hide_blocks?: string[] };
 }
 
 export interface MonthFile {

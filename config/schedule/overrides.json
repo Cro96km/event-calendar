@@ -1,0 +1,4 @@
+{
+  "_doc": "項目ごとの手動の修正(spec §4.11。台帳 config/judge/calendar/ で誤りを見つけ、項目IDで直す。手順は docs/operations.md §17 / npm run override)。items の各行: id=項目ID(例 20261030_3#0。公式の項目のみ)、set=直す内容、was=直す前の公式の値(name・start・end のうち set で直すもの。npm run override が自動で記録する。公式の記事が後から変わって was と食い違うと npm run check が警告する=修正の見直しの合図)、note=理由。set の項目: name=表示名 / start・end=JST の \"YYYY-MM-DD HH:MM\"(期間を直すと日別の時間帯 slots は外す) / group=小見出し(クエスト・キャンペーンのみ) / section=セクションid(config/display/order.json の sections) / notes=詳細パネルに出す注記(文字列の配列) / hide_blocks=詳細で出さないブロックの見出し / add_blocks=詳細に足すブロック [{label, lines}](同じ見出しは置き換え)。表示するかどうかの判断は config/judge/、非表示は manual.json の hide。並びは config/display/order.json。公式の記事本文は書かないこと(短い名称・日付のみ)。",
+  "items": []
+}
