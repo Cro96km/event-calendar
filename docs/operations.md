@@ -37,7 +37,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 - `config/judge/decisions.json`・`config/judge/rules.json` はgit管理。`calendar/`(台帳。読む用)もgit管理(更新PRに含まれる)。`needs-review.md`は管理外。
 
 ## 3. データ管理
-- 正本: `data/articles/<YYYY>/<MM>/<id>.json`(月は記事IDの日付から)（git管理）。生HTML: `data/raw/`（git管理外、消えても再取得可）。
+- 正本: `data/articles/<YYYY>/<MM>/<id>.json`(月は記事IDの日付から)（git管理）。生HTML: `data/raw/`（git管理外、消えても再取得可）。最後に公式サイトを収集した時刻: `data/collected.json`（git管理。収集が最後まで終わったときだけ `collect` が書く。429等で中断したら更新しない。画面上部の「公式サイト収集」の元。手で直さない）。
 - バックアップ: git履歴が正本のバックアップ。`data/raw/`は再取得可能なため許容(消えた場合はreparse不可→再取得)。誤削除は `git restore data/articles`。
 - 全再構築: `data/raw/` が残っていれば `reparse`、無ければ `collect --since` で再取得（間隔2秒のため時間がかかる）。
 - 保持: 正本は全件(増えすぎたら §15 の prune で、表示範囲より前に終わった記事を削除する)。公開用exportは表示範囲(過去12か月・未来12か月。`config/display/window.json`)に絞る。
@@ -106,7 +106,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 | 使う場面 | 毎週の更新、不定期の手動収集、設定だけ直した後の確認(`--no-collect`) |
 | 実行 | `npm run update`(最新2ページ)/ `npm run update -- --pages 5` / `npm run update -- --no-collect` / `--since YYYY-MM-DD`(初回・過去分。負荷が大きい) |
 | 入力 | `data/articles`(正本)、`config/judge/`(判断の記憶・ルール) |
-| 出力 | `data/articles`(更新)、`public/data/`(表示用)、`update-report.md`(レポート)、`update-report.json`(機械可読のサマリ。自動マージ判定が読む)。レポート・サマリはgit管理外 |
+| 出力 | `data/articles`(更新)、`data/collected.json`(収集したときだけ。最後の収集時刻)、`public/data/`(表示用)、`update-report.md`(レポート)、`update-report.json`(機械可読のサマリ。自動マージ判定が読む)。レポート・サマリはgit管理外 |
 | 副作用 | 公式サイトへアクセスする(`--no-collect` 以外)。礼節は §4(間隔2秒以上・直列・429で即中断) |
 | 比較元 | 既定は実行前の `data/articles`。`--prev DIR` で別のディレクトリと比べられる(デモ・検証) |
 
@@ -148,7 +148,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 ## 13. ワークフローと必要なリポジトリ設定
 | ワークフロー | きっかけ | 内容 |
 |---|---|---|
-| `update.yml` | 毎週金曜 00:00 JST、手動実行 | `npm run update`(収集→判定→差分レポート)→ lint・テスト・公開データ生成 + `npm run check`(健全性) →ブランチ `update/<日時>` と PR(本文=差分レポート)。健全ならラベル『自動マージ』を付けて**マージし、`deploy.yml` を起動**。健全でなければラベル『要確認』+理由で待機。要対応があれば Issue。変更が無ければ何もしない。例外で落ちたら Issue「更新の失敗」 |
+| `update.yml` | 毎週金曜 00:00 JST、手動実行 | `npm run update`(収集→判定→差分レポート)→ lint・テスト・公開データ生成 + `npm run check`(健全性) →ブランチ `update/<日時>` と PR(本文=差分レポート)。健全ならラベル『自動マージ』を付けて**マージし、`deploy.yml` を起動**。健全でなければラベル『要確認』+理由で待機。要対応があれば Issue。収集時刻(`data/collected.json`)は収集のたびに変わるので、新着が無い週でも PR ができる(健全なら自動マージ)。例外で落ちたら Issue「更新の失敗」 |
 | `deploy.yml` | main への push(`data/articles`・`config`・`src`・`public`・設定ファイルの変更)、手動実行、`update.yml`・`apply.yml` の起動 | 正本と設定から表示用データを作り直し(`npm run update -- --no-collect`。収集しない)、公開サイトをビルドして GitHub Pages に公開 |
 | `apply.yml` | 要対応Issue(タイトルが「要対応」)に `/apply` とコメント(所有者・メンバー・共同作業者のみ。Issueの作者も更新ワークフローのbotか所有者のものだけ) | Issue本文のチェックを `npm run judge` で判断の記憶に取り込み、検証して PR→自動マージ→`deploy.yml` 起動→Issue を閉じる。検証が通らなければ『要確認』で待機 |
 | `manual.yml` | 手動実行のみ(Actions → manual → Run workflow) | 入力(操作・項目名・期間など)で `npm run manual` を実行 → 検証(lint・テスト・ビルド・`npm run check`) → `config/schedule/manual.json` を更新する PR → 健全なら自動マージして `deploy.yml` を起動。検証が通らなければ『要確認』で待機。手順は §14 |

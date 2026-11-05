@@ -42,8 +42,8 @@ export async function readAllRecords(dir: string): Promise<ArticleRecord[]> {
 }
 
 /** public/data/events/YYYY-MM.json と public/data/index.json を再生成（古い月ファイルは削除）。 */
-export async function writeExport(publicDir: string, records: ArticleRecord[], generatedAt: string): Promise<string[]> {
-  const { months, index } = buildExport(records, generatedAt);
+export async function writeExport(publicDir: string, records: ArticleRecord[], generatedAt: string, collectedAt: string | null = null): Promise<string[]> {
+  const { months, index } = buildExport(records, generatedAt, collectedAt);
   const eventsDir = join(publicDir, 'events');
   const keep = new Set(months.map((m) => `${m.month}.json`));
   // 正本が空(パス違い・読込失敗等)のときは既存exportを消さない
@@ -58,4 +58,19 @@ export async function writeExport(publicDir: string, records: ArticleRecord[], g
 export async function appendRunLog(path: string, entry: unknown): Promise<void> {
   await mkdir(dirname(path), { recursive: true });
   await appendFile(path, `${JSON.stringify(entry)}\n`);
+}
+
+/** 公式サイトから最後に収集した時刻(data/collected.json。git管理。無い・壊れているときは null)。 */
+export async function readCollectedAt(path: string): Promise<string | null> {
+  try {
+    const v = (JSON.parse(await readFile(path, 'utf8')) as { collected_at?: unknown }).collected_at;
+    return typeof v === 'string' && !Number.isNaN(Date.parse(v)) ? v : null;
+  } catch {
+    return null;
+  }
+}
+
+export async function writeCollectedAt(path: string, at: string): Promise<void> {
+  await mkdir(dirname(path), { recursive: true });
+  await writeFile(path, `${JSON.stringify({ collected_at: at }, null, 2)}\n`);
 }

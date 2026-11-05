@@ -12,11 +12,11 @@ showHelpIfRequested(`npm run collect [-- --pages N --since YYYY-MM-DD]  /  npm r
     --pages N           巡回するページ数(既定2)。--since 指定時は上限(既定200)
     --since YYYY-MM-DD  この公開日より古くなるまで巡回(初回・過去分用。公式サイトへの負荷が大きい)
   入力: collect=公式ニュース(ネットワーク)、rebuild=data/raw
-  出力: data/articles、public/data、data/runs.log(実行ログ。git管理外)、data/raw(collectのみ。git管理外)
+  出力: data/articles、data/collected.json(最後に収集した時刻。collectのみ・中断時は更新しない。git管理)、public/data、data/runs.log(実行ログ。git管理外)、data/raw(collectのみ。git管理外)
   副作用: collect は公式サイトへアクセスする。間隔2秒以上・直列・429で即中断(礼節。docs/operations.md §4)。`);
 
 if (process.argv[2] === '--rebuild') {
-  const r = await rebuild({ cache: new RawCache('data/raw'), articlesDir: 'data/articles', publicDir: 'public/data' });
+  const r = await rebuild({ cache: new RawCache('data/raw'), articlesDir: 'data/articles', publicDir: 'public/data', collectedFile: 'data/collected.json' });
   console.log(`records=${r.records} written=${r.written}`);
   process.exit(0);
 }
@@ -39,6 +39,7 @@ const s = await collect({
   articlesDir: 'data/articles',
   publicDir: 'public/data',
   runsLog: 'data/runs.log',
+  collectedFile: 'data/collected.json',
   log: console.log,
 });
 console.log(`items=${s.items} fetched=${s.fetched} written=${s.written} months=${s.months.length}`);

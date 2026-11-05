@@ -19,7 +19,8 @@ interface Selection {
 export interface AppState {
   today: string;
   events: ExportEvent[];
-  generatedAt: string;
+  /** 公式サイトから最後に収集した時刻。不明なら null */
+  collectedAt: string | null;
   selection: Selection | null;
   /** 毎月決まった日の項目の定義(config/schedule/monthly-days.json)。テストでは既定で空 */
   monthly: readonly MonthlyDef[];
@@ -59,7 +60,7 @@ export function initialState(today: string, events: ExportEvent[], index: IndexF
   return {
     today,
     events: mergeSameLabel(events),
-    generatedAt: index.generated_at,
+    collectedAt: index.collected_at ?? null,
     selection: null,
     monthly,
     view: 'week',
@@ -305,8 +306,8 @@ export function render(root: HTMLElement, state: AppState): void {
   root.replaceChildren();
 
   const header = el('header', 'bar');
-  const stamp = el('span', 'stamp', `データ更新: ${formatJst(state.generatedAt)} (JST)`);
-  stamp.dataset.testid = 'generated-at';
+  const stamp = el('span', 'stamp', `公式サイト収集: ${state.collectedAt ? `${formatJst(state.collectedAt)} (JST)` : '不明'}`);
+  stamp.dataset.testid = 'collected-at';
   header.append(el('h1', undefined, appTitle()), stamp);
 
   const nav = el('nav', 'view-nav');

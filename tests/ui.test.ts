@@ -29,7 +29,7 @@ const EVENTS = [
   ev('c#0', 'event', '2026-10-28T10:00:00+09:00', null),
   ev('far#0', 'event', '2026-12-01T00:00:00+09:00', '2026-12-02T00:00:00+09:00'),
 ];
-const INDEX: IndexFile = { generated_at: '2026-10-26T18:00:00+09:00', months: ['2026-10'], categories: ['campaign', 'event'] };
+const INDEX: IndexFile = { generated_at: '2026-10-27T09:00:00+09:00', collected_at: '2026-10-26T18:00:00+09:00', months: ['2026-10'], categories: ['campaign', 'event'] };
 
 let root: HTMLElement;
 let state: AppState;
@@ -153,8 +153,8 @@ describe('gantt week view', () => {
     expect([...(q('detail')?.querySelectorAll('.detail-block tbody tr') ?? [])].map((r) => [...r.querySelectorAll('td')].map((c) => c.textContent))).toEqual([['アルファ', '★6（獣神化前）', '火'], ['ベータ', '★5', '水']]);
   });
 
-  it('shows data generation time in JST', () => {
-    expect(q('generated-at')?.textContent).toContain('10/26(月) 18:00');
+  it('shows the last collection time in JST (not the generation time)', () => {
+    expect(q('collected-at')?.textContent).toContain('公式サイト収集: 10/26(月) 18:00');
   });
 
   it('footer: 自動収集の注意書きを出し、リポジトリURLが無ければIssueリンクは出さない', () => {

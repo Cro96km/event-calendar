@@ -51,6 +51,7 @@ describe('buildExport 月境界(ゲーム日4:00基準)', () => {
     expect(m).toHaveLength(1);
     expect(m[0]?.events[0]).toMatchObject({ id: 'a#0', article_id: '20261022_3', category: 'event', reward_until: null });
     expect(index).toEqual({ generated_at: 'G', months: ['2026-10'], categories: ['event'] });
+    expect(buildExport([rec({ events: e })], 'G', 'C').index.collected_at).toBe('C');
   });
 });
 
@@ -108,7 +109,7 @@ describe('collect', () => {
     });
     return collect({
       fetcher, cache: new RawCache(join(dir, 'raw')), pages: extra.pages ?? 2, since: extra.since,
-      articlesDir: join(dir, 'articles'), publicDir: join(dir, 'public'), runsLog: join(dir, 'runs.log'),
+      articlesDir: join(dir, 'articles'), publicDir: join(dir, 'public'), runsLog: join(dir, 'runs.log'), collectedFile: join(dir, 'collected.json'),
       now: () => new Date('2026-10-23T05:00:00Z'),
     });
   };
@@ -120,8 +121,10 @@ describe('collect', () => {
     expect(s.months).toEqual(['2026-10', '2026-11']);
     const art = JSON.parse(await readFile(join(dir, 'articles/2026/10/20261022_3.json'), 'utf8')) as ArticleRecord;
     expect(art.id).toBe('20261022_3');
-    const idx = JSON.parse(await readFile(join(dir, 'public/index.json'), 'utf8')) as { generated_at: string; categories: string[] };
+    const idx = JSON.parse(await readFile(join(dir, 'public/index.json'), 'utf8')) as { generated_at: string; collected_at?: string; categories: string[] };
     expect(idx.generated_at).toBe('2026-10-23T14:00:00+09:00');
+    expect(idx.collected_at).toBe('2026-10-23T14:00:00+09:00');
+    expect(JSON.parse(await readFile(join(dir, 'collected.json'), 'utf8'))).toEqual({ collected_at: '2026-10-23T14:00:00+09:00' });
     expect(await readdir(join(dir, 'public/events'))).toEqual(['2026-10.json', '2026-11.json']);
 
     const before = await readFile(join(dir, 'articles/2026/10/20261022_3.json'), 'utf8');
@@ -139,6 +142,7 @@ describe('collect', () => {
     expect(s.written).toBe(1);
     expect(await readdir(join(dir, 'articles/2026/10'))).toEqual(['20261022_3.json']);
     expect(JSON.parse((await readFile(join(dir, 'runs.log'), 'utf8')).trim()).aborted).toMatch(/RateLimited/);
+    await expect(readFile(join(dir, 'collected.json'), 'utf8')).rejects.toThrow(); // 中断では収集時刻を更新しない
   });
 
   it('--since: 公開日が since 以上の記事だけ対象にし、古いページで巡回を止める', async () => {
