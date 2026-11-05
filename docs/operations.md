@@ -35,7 +35,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 - `config/judge/decisions.json`・`config/judge/rules.json` はgit管理。`needs-review.md`・`selection.md`は管理外。
 
 ## 3. データ管理
-- 正本: `data/articles/<YYYY>/<id>.json`（git管理）。生HTML: `data/raw/`（git管理外、消えても再取得可）。
+- 正本: `data/articles/<YYYY>/<MM>/<id>.json`(月は記事IDの日付から)（git管理）。生HTML: `data/raw/`（git管理外、消えても再取得可）。
 - バックアップ: git履歴が正本のバックアップ。`data/raw/`は再取得可能なため許容(消えた場合はreparse不可→再取得)。誤削除は `git restore data/articles`。
 - 全再構築: `data/raw/` が残っていれば `reparse`、無ければ `collect --since` で再取得（間隔2秒のため時間がかかる）。
 - 保持: 正本は全件。公開用exportは直近12ヶ月に絞る。
