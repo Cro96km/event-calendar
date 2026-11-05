@@ -3,8 +3,8 @@ import type { ExportEvent, IndexFile } from './data/export';
 import { appTitle } from './app';
 import { monthlyEvents, type MonthlyDef } from './monthly';
 import { clampToWindow, windowRange } from './window';
-import { type BarSpan, addDays, campaignGroup, questGroup, maintenanceBars, maintenanceOnDay, addMonthsToDay, dayLabel, monthWindow, eventsForDay, formatJst, ganttSections, mergeSameLabel, rowLabel, periodText, slotRows, weekDays, weekdayOf } from './week';
-import { MAINTENANCE_CATEGORY, gachaGroup } from './sections';
+import { type BarSpan, addDays, isOnCalendarDay, campaignGroup, questGroup, maintenanceBars, maintenanceOnDay, addMonthsToDay, dayLabel, monthWindow, eventsForDay, formatJst, ganttSections, mergeSameLabel, rowLabel, periodText, slotRows, weekDays, weekdayOf } from './week';
+import { EVENT_QUEST_SUFFIX, MAINTENANCE_CATEGORY, gachaGroup } from './sections';
 import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
@@ -89,7 +89,13 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
   panel.dataset.testid = 'detail';
   const sel = state.selection;
   if (!sel) return panel;
-  const entries = eventsForDay([...state.events, ...monthlyEvents(addDays(sel.day, -1), addDays(sel.day, 1), state.monthly)], sel.day).filter((x) => !sel.eventId || x.event.id === sel.eventId);
+  const pool = [...state.events, ...monthlyEvents(addDays(sel.day, -1), addDays(sel.day, 1), state.monthly)];
+  // バーは暦日の列に描くので、バーを押したときは暦日で判定する(翌4:00終了などでも「イベントなし」にしない)
+  // イベントクエスト行のバーは、ガチャ由来の写し(id末尾 ~event)。詳細は元のガチャイベントを出す
+  const baseId = sel.eventId?.endsWith(EVENT_QUEST_SUFFIX) ? sel.eventId.slice(0, -EVENT_QUEST_SUFFIX.length) : sel.eventId;
+  const entries = sel.eventId
+    ? pool.filter((e) => e.id === baseId && isOnCalendarDay(e, sel.day)).map((event) => ({ event }))
+    : eventsForDay(pool, sel.day);
   // メンテナンス(帯)も、帯を選んだとき/日付を選んだときに出す
   const maint = state.events.filter((e) => (sel.eventId ? e.id === sel.eventId : true) && maintenanceOnDay(e, sel.day));
   const close = el('button', 'close', '×');

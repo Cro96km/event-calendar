@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ExportEvent, IndexFile } from '../src/data/export';
 import { dragShift, initialState, render, type AppState } from '../src/ui';
-import { periodText, addDays, addMonthsToDay, monthWindow, barSpan, campaignGroup, campaignRank, questGroup, eventsForDay, formatJst, ganttSections, mergeEvents, maintenanceBars, maintenanceOnDay, mergeSameLabel, monthDays, addMonths, slotRows, weekDays } from '../src/week';
+import { periodText, addDays, addMonthsToDay, monthWindow, barSpan, campaignGroup, campaignRank, questGroup, eventsForDay, formatJst, ganttSections, mergeEvents, maintenanceBars, maintenanceOnDay, isOnCalendarDay, mergeSameLabel, monthDays, addMonths, slotRows, weekDays } from '../src/week';
 import { gachaGroup, sectionOf, sectionOfEvent } from '../src/sections';
 import { applySelection } from '../src/selection';
 import { MONTHLY, monthlyDays, monthlyEvents } from '../src/monthly';
@@ -1256,6 +1256,23 @@ describe('ガチャセクション', () => {
     render(root, state);
     const order = [...root.querySelectorAll('.g-inner .g-rows > .g-group, .g-inner .g-rows > .g-row')].map((x) => (x.classList.contains('g-group') ? `H:${x.textContent}` : `R:${x.querySelector('.g-l1')?.textContent}`));
     expect(order).toEqual(['H:イベントクエスト', 'R:ギャラクシーアドベンチャー II', 'R:黄泉のツガイ', 'H:イベントガチャ', 'R:ギャラクシーアドベンチャー II', 'R:黄泉のツガイ', 'H:定例ガチャ', 'R:超・獣神祭', 'R:激・獣神祭', 'R:RED STARS', 'R:水の遊宴', 'R:ミッドナイト・パーティー', 'R:オリエンタル・トラベラーズ', 'R:モンコレDX', 'R:モンストジェネレーション', 'H:期間限定ガチャ', 'R:あいうえお', 'R:モンコレDX 〜ビナー編〜', 'R:集結、天下五剣']);
+  });
+
+  it('isOnCalendarDay: 翌4:00終了のイベントは終了日の暦日(バーの列)にもかかる', () => {
+    const e = { start: '2026-10-28T12:00:00+09:00', end: '2026-10-29T04:00:00+09:00' };
+    expect([isOnCalendarDay(e, '2026-10-28'), isOnCalendarDay(e, '2026-10-29'), isOnCalendarDay(e, '2026-10-30')]).toEqual([true, true, false]);
+  });
+
+  it('イベントクエスト行のバー(ガチャの写し)を押しても詳細が出る', () => {
+    const g = ev('g#0', 'event', '2026-10-27T12:00:00+09:00', '2026-10-29T04:00:00+09:00', { name: 'ガチャ「ギャラクシーアドベンチャー II」開催!', title: '新イベント「ギャラクシーアドベンチャー II」より開催！' });
+    state = initialState('2026-10-27', [g], INDEX);
+    state.collapsed = new Set(); // 他テストの折りたたみ状態に左右されない
+    render(root, state);
+    const b = bar('g#0~event');
+    expect(b).not.toBeNull();
+    click(b);
+    expect(q('detail')?.textContent).not.toContain('この日のイベントはありません');
+    expect(q('detail')?.textContent).toContain('ギャラクシーアドベンチャー');
   });
 
   it('periodText: 年をまたぐ場合だけ年を付ける。hide_start / hide_end', () => {

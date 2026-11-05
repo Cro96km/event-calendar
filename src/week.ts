@@ -88,6 +88,13 @@ export function eventsForDay(events: ExportEvent[], day: string): DayEntry[] {
     .map((event) => ({ event, continued: gameDayOf(new Date(event.start)) !== day, openEnded: event.end === null }));
 }
 
+/** イベントがその暦日(JST 0:00〜24:00)にかかるか。バー(列=暦日)を押したときの詳細に使う。ゲーム日(4:00区切り)とは境界が異なる。 */
+export function isOnCalendarDay(event: { start: string; end: string | null }, day: string): boolean {
+  const from = calStart(day);
+  const start = Date.parse(event.start);
+  return event.end === null ? start >= from && start < from + DAY : start < from + DAY && Date.parse(event.end) > from;
+}
+
 /** 日別枠 → 日付(JST暦日)ごとの時間帯。例: `8:00〜9:00` `12:00〜13:00`。日付をまたぐ枠は終了に日付を付ける。 */
 export function slotRows(slots: readonly Slot[]): { date: string; times: string[] }[] {
   const jst = (iso: string): string => new Date(Date.parse(iso) + JST_OFFSET_MS).toISOString();
