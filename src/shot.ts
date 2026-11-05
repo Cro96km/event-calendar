@@ -94,3 +94,10 @@ export function filterSummaryRows(sectionId: string, rows: BarSpan[][], groupOf:
   const max = cfg.max_rows[sectionId];
   return max === undefined ? out : out.slice(0, max);
 }
+
+/** 4:00(ゲーム日の境目。03:59 も含む)で終わるバーは、列の 1/6 しかなく端の矢印が入らない。撮影モードだけ、右端をこの割合まで伸ばす。 */
+export const SHOT_MIN_END_FRAC = 0.4;
+export function shotEndFrac(endFrac: number): number {
+  const fourAm = 4 / 24;
+  return endFrac > fourAm - 2 / 1440 && endFrac <= fourAm + 1e-9 ? SHOT_MIN_END_FRAC : endFrac;
+}

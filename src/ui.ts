@@ -9,7 +9,7 @@ import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
 import { isQuestNameBlock, questNameColor, withFixedFloors } from './quest-color';
-import { filterSummaryRows, summaryHasSection, type ShotKind } from './shot';
+import { filterSummaryRows, shotEndFrac, summaryHasSection, type ShotKind } from './shot';
 
 interface Selection {
   day: string;
@@ -509,7 +509,9 @@ export function render(root: HTMLElement, state: AppState): void {
         // 列内の開始/終了時刻(ゲーム日4:00基準)に応じて左右を詰める。マージン%は占有する列群の幅が基準
         const n = bar.to - bar.from + 1;
         if (!bar.clippedLeft && bar.startFrac > 0) b.style.marginLeft = `calc(${((bar.startFrac / n) * 100).toFixed(3)}% + 2px)`;
-        if (!bar.clippedRight && !bar.openEnded && bar.endFrac < 1) b.style.marginRight = `calc(${(((1 - bar.endFrac) / n) * 100).toFixed(3)}% + 2px)`;
+        // 撮影モードだけ、4:00終わりのバーを少し伸ばす(矢印が入るように)
+        const endFrac = state.shot ? shotEndFrac(bar.endFrac) : bar.endFrac;
+        if (!bar.clippedRight && !bar.openEnded && endFrac < 1) b.style.marginRight = `calc(${(((1 - endFrac) / n) * 100).toFixed(3)}% + 2px)`;
         if (bar.clippedLeft) b.classList.add('clip-l');
         if (bar.clippedRight) b.classList.add('clip-r');
         if (bar.openEnded) b.classList.add('open');

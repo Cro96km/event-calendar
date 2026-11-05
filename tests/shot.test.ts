@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import config from '../config/display/discord.json';
 import type { ExportEvent, IndexFile } from '../src/data/export';
 import { gachaGroup, groupDefs } from '../src/sections';
-import { SUMMARY, filterSummaryRows, isDay, parseShot, shotConfigProblems, type SummaryConfig } from '../src/shot';
+import { SUMMARY, SHOT_MIN_END_FRAC, shotEndFrac, filterSummaryRows, isDay, parseShot, shotConfigProblems, type SummaryConfig } from '../src/shot';
 import { initialState, render } from '../src/ui';
 import { campaignGroup, ganttSections, questGroup, weekDays } from '../src/week';
 
@@ -93,5 +93,27 @@ describe('撮影モードの描画', () => {
     expect(root.querySelector('.site-footer')).toBeNull();
     expect(root.querySelector('.shot-note')).toBeNull();
     expect(root.textContent).not.toContain('非公式');
+  });
+});
+
+describe('撮影モードの4:00終わりのバー', () => {
+  it('4:00(03:59含む)終わりだけ伸ばし、他の終わりは変えない', () => {
+    expect(shotEndFrac(4 / 24)).toBe(SHOT_MIN_END_FRAC);
+    expect(shotEndFrac((3 * 60 + 59) / 1440)).toBe(SHOT_MIN_END_FRAC);
+    expect(shotEndFrac(0.5)).toBe(0.5);
+    expect(shotEndFrac(1)).toBe(1);
+    expect(shotEndFrac(2 / 24)).toBe(2 / 24);
+  });
+  it('通常表示のバーは変えず、撮影モードだけ右の余白が小さくなる', () => {
+    const e = ev('x#0', 'campaign', 'テスト', '2026-11-04T04:00:00+09:00', '2026-11-05T04:00:00+09:00');
+    const margin = (shot: boolean): string => {
+      const root = document.createElement('div');
+      const state = initialState('2026-11-05', [e], INDEX);
+      if (shot) state.shot = 'campaign';
+      render(root, state);
+      return root.querySelector<HTMLElement>('.bar-ev')!.style.marginRight;
+    };
+    expect(margin(false)).toContain('83.333');
+    expect(margin(true)).toContain('60.000');
   });
 });
