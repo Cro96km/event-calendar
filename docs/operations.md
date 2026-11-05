@@ -222,7 +222,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 ## 18. Discord 用の画像 `npm run discord:images`
 週表示(基準日から7日)のカレンダーを PNG にする。**ローカルで画像を作るだけで、Discord には送らない**(送信は別の段階)。
 1. `npm run update`(または `npm run collect`)→ `npm run build:public` で `dist/` と `dist/data` を作る。
-2. `npm run discord:images` → `out/discord/` に5枚(`summary.png` 概要・`character.png`・`quest.png`・`campaign.png`・`gacha.png`)。`-- --date YYYY-MM-DD` で基準日を固定、`-- --only quest` で1枚だけ。`out/` は git に含めない。
+2. `npm run discord:images` → `out/discord/` に5枚。**ファイル名は画像に写る期間**: `2026-11-06_2026-11-12_summary.png`(概要)・`…_character.png`・`…_quest.png`・`…_campaign.png`・`…_gacha.png`。`-- --date YYYY-MM-DD` で基準日を固定、`-- --only quest` で1枚だけ。`out/` は git に含めない。
 - 初回は `npx playwright install chromium`。日本語フォント(Linux は `fonts-noto-cjk` など)が必要。ブラウザのタイムゾーンは Asia/Tokyo、ライト固定。
 - メンテナンスの帯は5枚とも出る。画像にはフッター(注記)を入れない。公式の画像・ロゴは使わない。公式サイト・公開サイトにはアクセスしない(`dist/` をローカルで配信して撮る)。
 - 画面でも `?shot=summary|character|quest|campaign|gacha`(と `&date=YYYY-MM-DD`)を付けると撮影モードで見られる(`npm run dev` / `npm run preview`)。
