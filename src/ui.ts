@@ -9,6 +9,7 @@ import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
 import { isQuestNameBlock, questNameColor, withFixedFloors } from './quest-color';
+import { applyTheme, currentTheme, saveTheme } from './theme';
 import { SHOT_4AM_FRAC, compactCharacterRows, filterSummaryRows, shotEndFrac, shotStartFrac, summaryHasSection, type ShotKind } from './shot';
 
 interface Selection {
@@ -398,6 +399,19 @@ export function render(root: HTMLElement, state: AppState): void {
       nav.append(m);
     }
   }
+  // 画面の色(ライト/ダーク)の切替(既定はライト。選んだ色は保存する)
+  const dark = currentTheme() === 'dark';
+  const themeBtn = el('button', 'vbtn theme-toggle', dark ? 'ライト' : 'ダーク');
+  themeBtn.dataset.testid = 'theme-toggle';
+  themeBtn.setAttribute('aria-label', dark ? 'ライト表示にする' : 'ダーク表示にする');
+  themeBtn.onclick = () => {
+    const next = dark ? 'light' : 'dark';
+    applyTheme(next);
+    saveTheme(next);
+    rerender();
+    root.querySelector<HTMLElement>('[data-testid="theme-toggle"]')?.focus();
+  };
+  nav.append(themeBtn);
   header.append(nav);
 
   const days = state.view === 'week' ? weekDays(state.weekStart) : monthWindow(state.monthStart);
