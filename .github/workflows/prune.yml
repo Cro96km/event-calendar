@@ -84,7 +84,7 @@ jobs:
           git commit -m "data: prune old articles"
           git push origin "$branch"
           gh label create "要確認" --color d93f0b 2>/dev/null || true
-          url=$(gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" --title "data: prune old articles" --body "表示範囲より前に終わった記事を削除します(git で戻せます)。判断の表(config/judge/selection/)は削除後の状態で作り直しています。検証: CI相当=$CI_RESULT / 点検=$CHECK_RESULT")
+          url=$(gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" --title "data: prune old articles" --body "表示範囲より前に終わった記事を削除します(git で戻せます)。台帳(config/judge/calendar/)は削除後の状態で作り直しています。検証: CI相当=$CI_RESULT / 点検=$CHECK_RESULT")
           if [ "$CI_RESULT" = "0" ] && [ "$CHECK_RESULT" = "0" ]; then
             gh pr merge "$url" --squash --delete-branch
             gh workflow run deploy.yml --ref "${{ github.event.repository.default_branch }}"

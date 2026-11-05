@@ -40,3 +40,30 @@ describe('台帳', () => {
     expect(files.has('2020-01')).toBe(false);
   });
 });
+
+describe('台帳: 判定(表示 / 非表示 / 要判断)', () => {
+  const hidden = [
+    { event: ev('h#0', '非表示の項目', '2026-11-04T00:00:00+09:00', '2026-11-06T00:00:00+09:00'), verdict: '非表示' as const, reason: 'ルール test' },
+    { event: ev('p#0', '判断待ちの項目', '2026-11-02T00:00:00+09:00', '2026-11-03T00:00:00+09:00'), verdict: '要判断' as const, reason: '未判断' },
+    { event: ev('far#0', '範囲外の非表示', '2026-09-01T00:00:00+09:00', '2026-09-02T00:00:00+09:00'), verdict: '非表示' as const, reason: 'x' },
+  ];
+  const rows = ledgerRows(events, '2026-11', { hidden, reasonOf: (e) => (e.id === 'a#0' ? '判断の記憶' : '') });
+  it('非表示・要判断の項目も、その月に掛かるものだけ載る', () => {
+    expect(rows.map((r) => r.id)).toContain('h#0');
+    expect(rows.map((r) => r.id)).toContain('p#0');
+    expect(rows.map((r) => r.id)).not.toContain('far#0');
+    expect(rows.find((r) => r.id === 'h#0')).toMatchObject({ verdict: '非表示', reason: 'ルール test' });
+    expect(rows.find((r) => r.id === 'p#0')?.verdict).toBe('要判断');
+  });
+  it('表示する項目に理由が付き、同じセクションでは表示が先・非表示は末尾(開始順)', () => {
+    expect(rows.find((r) => r.id === 'a#0')).toMatchObject({ verdict: '表示', reason: '判断の記憶' });
+    const quest = rows.filter((r) => r.section === 'クエスト' && r.source === '公式').map((r) => `${r.verdict}:${r.id}`);
+    expect(quest).toEqual(['表示:a#0', '表示:b#0', '要判断:p#0', '非表示:h#0']);
+  });
+  it('Markdown: 判定の列と件数', () => {
+    const text = renderLedger(events, '2026-11-05', { hidden }).get('2026-11') as string;
+    expect(text).toContain('| 判定 | セクション | 小見出し | 表示名 |');
+    expect(text).toMatch(/表示 \d+件 \/ 非表示 1件 \/ 要判断 1件/);
+    expect(text).toContain('| 非表示 | クエスト |');
+  });
+});

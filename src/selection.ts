@@ -1,4 +1,4 @@
-// 表示候補(記事内の項目を同種で集約したキー)と表示の判断の一覧(config/judge/selection/)の純関数。spec §4.5。
+// 表示候補(記事内の項目を同種で集約したキー)と表示の判断の純関数。spec §4.5。
 import type { ExportEvent } from './data/export';
 import type { ArticleRecord } from './data/record';
 import { eventUrl, type PeriodEvent } from './period';
