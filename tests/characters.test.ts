@@ -1,10 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { characterLabel, CHARACTER_CATEGORY, gachaPeriod, gameDayEnd, parseCharacters } from '../src/characters';
+import { attributeColor, calendarDay, characterLabel, CHARACTER_CATEGORY, gachaPeriod, parseCharacters } from '../src/characters';
 import { buildExport } from '../src/data/export';
 import type { ArticleRecord } from '../src/data/record';
 import { applySelection } from '../src/selection';
-import { sectionOfEvent, SECTIONS } from '../src/sections';
-import { ganttSections } from '../src/week';
+import { characterGroup, sectionOfEvent, SECTIONS } from '../src/sections';
+import { ganttSections, periodText, unlockText, whenText } from '../src/week';
 
 // 公式の本文そのものではなく、構造(見出し→▼解禁日時→日時)だけを写した最小の入力
 const evolutionLines = [
@@ -16,9 +16,11 @@ const evolutionLines = [
   '▼必要素材',
   '# 動画&プロフィール',
   '# 獣神化・改「オフィ」',
+  '水属性 ★6',
   '▼解禁日時',
   '2026年2月15日（日）12:00',
   '# 獣神化・改「桜」',
+  '闇属性 ★6',
   '▼解禁日時',
   '2026年2月17日（火）12:00',
   '# 漫画家描き下ろしデザインの「桜」も登場！',
@@ -27,19 +29,19 @@ const evolutionLines = [
 ];
 
 describe('parseCharacters 進化の解禁', () => {
-  it('見出しごとに名前・種別・解禁日時を取り、バーは解禁日のゲーム日1日分(翌4:00まで)', () => {
+  it('見出しごとに名前・種別・解禁日時・属性を取り、バーは解禁日の暦日1日分(罫線から罫線まで)。解禁の日時は at', () => {
     const r = parseCharacters({ title: '「キスキル」の真獣神化＆「桜」等3体の獣神化・改が解禁！', lines: evolutionLines }, null);
     expect(r).toEqual([
-      { name: 'キスキル', kind: '真獣神化', start: '2026-02-11T22:00:00+09:00', end: '2026-02-12T04:00:00+09:00' },
-      { name: 'オフィ', kind: '獣神化・改', start: '2026-02-15T12:00:00+09:00', end: '2026-02-16T04:00:00+09:00' },
-      { name: '桜', kind: '獣神化・改', start: '2026-02-17T12:00:00+09:00', end: '2026-02-18T04:00:00+09:00' },
+      { name: 'キスキル', kind: '真獣神化', start: '2026-02-11T00:00:00+09:00', end: '2026-02-12T00:00:00+09:00', at: '2026-02-11T22:00:00+09:00', attr: '光' },
+      { name: 'オフィ', kind: '獣神化・改', start: '2026-02-15T00:00:00+09:00', end: '2026-02-16T00:00:00+09:00', at: '2026-02-15T12:00:00+09:00', attr: '水' },
+      { name: '桜', kind: '獣神化・改', start: '2026-02-17T00:00:00+09:00', end: '2026-02-18T00:00:00+09:00', at: '2026-02-17T12:00:00+09:00', attr: '闇' },
     ]);
   });
 
   it('全員に共通の ▼解禁日時 が最初の見出しより前にある形', () => {
     const lines = ['▼解禁日時', '2025年11月18日（火）12:00', '# 獣神化・改「A」', '木属性 ★6', '# 獣神化・改「B」', '光属性 ★6'];
     const r = parseCharacters({ title: '「A」「B」の獣神化・改が11/18に解禁！', lines }, null);
-    expect(r.map((c) => [c.name, c.start])).toEqual([['A', '2025-11-18T12:00:00+09:00'], ['B', '2025-11-18T12:00:00+09:00']]);
+    expect(r.map((c) => [c.name, c.start])).toEqual([['A', '2025-11-18T00:00:00+09:00'], ['B', '2025-11-18T00:00:00+09:00']]);
   });
 
   it('1つの見出しに複数の名前(日時は共通)・見出しごとに別の日時', () => {
@@ -54,7 +56,7 @@ describe('parseCharacters 進化の解禁', () => {
 
   it('見出しが無い1体だけの記事は、名前をタイトルから・日時を唯一の ▼解禁日時 から', () => {
     const r = parseCharacters({ title: '「コロンブス」の獣神化・改が1/20に解禁！', lines: ['▼解禁日時', '2026年1月20日（火）12:00', '▼必要素材'] }, null);
-    expect(r).toEqual([{ name: 'コロンブス', kind: '獣神化・改', start: '2026-01-20T12:00:00+09:00', end: '2026-01-21T04:00:00+09:00' }]);
+    expect(r).toEqual([{ name: 'コロンブス', kind: '獣神化・改', start: '2026-01-20T00:00:00+09:00', end: '2026-01-21T00:00:00+09:00', at: '2026-01-20T12:00:00+09:00' }]);
   });
 
   it('見出しが無く日時が複数ある記事は作らない(どの日時か分からない)', () => {
@@ -70,9 +72,9 @@ describe('parseCharacters 進化の解禁', () => {
     expect(parseCharacters({ title: 't', lines: ['# 獣神化・改「桜」', '▼解禁日時', '近日'] }, null)).toEqual([]);
   });
 
-  it('0:00〜3:59 の解禁は前日のゲーム日に属する', () => {
+  it('バーは暦日(0:00〜翌0:00)。0:00〜3:59 の解禁もその暦日', () => {
     const ms = Date.parse('2026-02-11T02:00:00+09:00');
-    expect(gameDayEnd(ms)).toBe(Date.parse('2026-02-11T04:00:00+09:00'));
+    expect(calendarDay(ms)).toEqual({ start: Date.parse('2026-02-11T00:00:00+09:00'), end: Date.parse('2026-02-12T00:00:00+09:00') });
   });
 
   it('見出しの形でない「獣神化」(クエストの報酬など)は対象外', () => {
@@ -143,5 +145,83 @@ describe('gachaPeriod', () => {
     expect(gachaPeriod([ev('編成するとBGMが変更', 'a'), ev('ガチャ「超・獣神祭」開催!', 'b'), ev('先行販売', 'c')])?.start).toBe('b');
     expect(gachaPeriod([ev('X', 'a'), ev('Y', 'b')])?.start).toBe('a');
     expect(gachaPeriod([])).toBeNull();
+  });
+});
+
+describe('属性・実装ガチャ名・ラベル・色', () => {
+  it('名前の末尾の読み仮名の括弧は外す', () => {
+    const lines = ['新限定キャラクター「東方萌萌美人（オリエンタルキューティー）」が登場', '光属性 ★6', '東方萌萌美人'];
+    const r = parseCharacters({ title: '新限定「東方萌萌美人（オリエンタルキューティー）」登場', lines }, { start: 's', end: 'e', gacha: 'G' });
+    expect(r.map((c) => [c.name, c.attr])).toEqual([['東方萌萌美人', '光']]);
+  });
+
+  it('進化: 見出しの後の `X属性` を取る(1つの見出しに複数の名前なら、名前を含む行の属性)', () => {
+    const lines = ['# 獣神化・改「ポラリス」「ムー」', '▼解禁日時', '2026年7月13日（月）12:00', '木属性 ★6', '星の二つ名 ポラリス', '闇属性 ★6', '夢の二つ名 ムー'];
+    const r = parseCharacters({ title: 't', lines }, null);
+    expect(r.map((c) => [c.name, c.attr])).toEqual([['ポラリス', '木'], ['ムー', '闇']]);
+  });
+
+  it('新限定: `X属性` の次の行が名前のものを属性にし、実装ガチャ名を持つ', () => {
+    const lines = ['新限定キャラクター「カーミラ」「ツクモ」が登場', '火属性 ★6', 'カーミラ', '木属性 ★6', 'ツクモ'];
+    const r = parseCharacters({ title: 'ガチャの新限定キャラ2体が登場！', lines }, { start: 's', end: 'e', gacha: '彩・獣神祭' });
+    expect(r.map((c) => [c.name, c.attr, c.gacha])).toEqual([['カーミラ', '火', '彩・獣神祭'], ['ツクモ', '木', '彩・獣神祭']]);
+  });
+
+  it('gachaPeriod はガチャ名も返す', () => {
+    expect(gachaPeriod([{ name: 'モンストアニメ!ガチャ「新春 超・獣神祭」開催!', start: 'a', end: 'b' }])).toEqual({ start: 'a', end: 'b', gacha: '新春 超・獣神祭' });
+  });
+
+  it('ラベル: 新限定=名前（ガチャ名）、進化=名前（種別）', () => {
+    expect(characterLabel({ name: 'カーミラ', kind: '新限定', gacha: '彩・獣神祭' })).toBe('カーミラ（彩・獣神祭）');
+    expect(characterLabel({ name: '桜', kind: '獣神化・改' })).toBe('桜（獣神化・改）');
+  });
+
+  it('属性色は公式の属性色(火=赤・水=青・木=緑・光=黄・闇=紫)', () => {
+    expect(attributeColor('火')).toBe('#eb0043');
+    expect(attributeColor('闇')).toBe('#a237c3');
+    expect(attributeColor(undefined)).toBeUndefined();
+  });
+});
+
+describe('キャラクターの小見出し・並び・詳細', () => {
+  const evo = (name: string, at: string, attr?: '火') => ({ name, kind: '獣神化・改' as const, start: `${at.slice(0, 10)}T00:00:00+09:00`, end: `${at.slice(0, 10)}T23:59:00+09:00`, at, ...(attr ? { attr } : {}) });
+  const rec = record({
+    id: '20260301_1',
+    characters: [
+      evo('後', '2026-03-03T12:00:00+09:00'),
+      evo('同日の夜', '2026-03-02T22:00:00+09:00'),
+      evo('同日の昼', '2026-03-02T12:00:00+09:00', '火'),
+      { name: 'ガチャ組', kind: '新限定', start: '2026-03-02T12:00:00+09:00', end: '2026-03-05T11:59:00+09:00', gacha: '超・獣神祭' },
+    ],
+  });
+  const events = buildExport([rec], 'x').months.flatMap((m) => m.events);
+  const days = ['2026-03-01', '2026-03-02', '2026-03-03', '2026-03-04'];
+
+  it('新限定→進化の小見出し。それぞれ登場順(同じ日は解禁の時刻順)', () => {
+    const g = ganttSections(events, days)[0]!;
+    const names = g.rows.map((r) => r[0]!.event.name);
+    expect(names).toEqual(['ガチャ組（超・獣神祭）', '同日の昼（獣神化・改）', '同日の夜（獣神化・改）', '後（獣神化・改）']);
+    expect(g.rows.map((r) => characterGroup(r[0]!.event))).toEqual(['新限定', '進化', '進化', '進化']);
+  });
+
+  it('進化のバーは解禁日の1日分(列の左端から右端まで)', () => {
+    const e = events.find((x) => x.name.startsWith('同日の昼'))!;
+    const b = ganttSections([e], days)[0]!.rows[0]![0]!;
+    expect([b.from, b.to, b.startFrac]).toEqual([1, 1, 0]);
+  });
+
+  it('進化は開催期間を出さず、解禁の日時(12:00・22:00)を出す。新限定は開催期間のまま', () => {
+    const e = events.find((x) => x.name.startsWith('同日の夜'))!;
+    expect(periodText(e)).toBe('');
+    expect(unlockText(e)).toContain('22:00');
+    expect(whenText(e)).toMatch(/^解禁 .*22:00$/);
+    const n = events.find((x) => x.name.startsWith('ガチャ組'))!;
+    expect(unlockText(n)).toBe('');
+    expect(whenText(n)).toContain('〜');
+  });
+
+  it('属性色がラベルの色(color)になる。属性が取れなければ色なし', () => {
+    expect(events.find((x) => x.name.startsWith('同日の昼'))?.color).toBe('#eb0043');
+    expect(events.find((x) => x.name.startsWith('後'))?.color).toBeUndefined();
   });
 });

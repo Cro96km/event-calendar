@@ -1,6 +1,6 @@
 // 週表示の純ロジック（DOMなし）。spec §4.3。日付はゲーム日 YYYY-MM-DD(JST)。
 import { gameDayOf, isOnGameDay } from './gameday';
-import { GACHA_EVENT, GACHA_GROUPS, GACHA_REGULAR_GROUP, QUEST_DEFAULT, QUEST_EVENT, QUEST_GROUPS, QUEST_RAID, QUEST_SUPER, gachaEra, gachaGroup, matchGroup, regularGachaIndex, CAMPAIGN_ALIASES, CAMPAIGN_GROUPS, ROW_RULES, MAINTENANCE_CATEGORY, EVENT_QUEST_SUFFIX, SECTIONS, sectionOf, sectionOfEvent, type Section } from './sections';
+import { CHARACTER_GROUPS, characterGroup, GACHA_EVENT, GACHA_GROUPS, GACHA_REGULAR_GROUP, QUEST_DEFAULT, QUEST_EVENT, QUEST_GROUPS, QUEST_RAID, QUEST_SUPER, gachaEra, gachaGroup, matchGroup, regularGachaIndex, CAMPAIGN_ALIASES, CAMPAIGN_GROUPS, ROW_RULES, MAINTENANCE_CATEGORY, EVENT_QUEST_SUFFIX, SECTIONS, sectionOf, sectionOfEvent, type Section } from './sections';
 import type { ExportEvent } from './data/export';
 import { labelLines, shortLabel, superUltimateLabel, superUltimateParts } from './label';
 import { labelOverride } from './label-override';
@@ -113,13 +113,20 @@ export function slotRows(slots: readonly Slot[]): { date: string; times: string[
  * 期間表示。年をまたぐ場合だけ(表示する側に)年を付ける。
  * hide_start / hide_end の側は出さず、片方だけなら `〜 終了` / `開始 〜`、両方なら空文字(呼び出し側で行ごと出さない)。
  */
-export function periodText(e: { start: string; end: string | null; hide_start?: boolean; hide_end?: boolean }): string {
+export function periodText(e: { start: string; end: string | null; hide_start?: boolean; hide_end?: boolean; character?: { at?: string } }): string {
   if (e.hide_start && e.hide_end) return '';
+  if (e.character?.at !== undefined) return ''; // 進化の解禁は開催期間を出さない(バーは解禁日の1日分。解禁の日時は unlockText)
   const y = e.end !== null && jstYear(e.start) !== jstYear(e.end);
   const start = formatJst(e.start, y);
   const end = e.end === null ? '終了未定' : formatJst(e.end, y);
   return e.hide_start ? `〜 ${end}` : e.hide_end ? `${start} 〜` : `${start} 〜 ${end}`;
 }
+
+/** 進化の解禁の日時 `2/17(火) 12:00`(進化でなければ空)。 */
+export const unlockText = (e: { character?: { at?: string } }): string => (e.character?.at === undefined ? '' : formatJst(e.character.at));
+
+/** ツールチップ等の日時: 開催期間、進化の解禁は `解禁 2/17(火) 12:00`。 */
+export const whenText = (e: Parameters<typeof periodText>[0]): string => periodText(e) || (unlockText(e) === '' ? '' : `解禁 ${unlockText(e)}`);
 
 export interface BarSpan {
   event: ExportEvent;
@@ -424,7 +431,9 @@ export function ganttSections(events: ExportEvent[], days: string[]): GanttSecti
           (g.section.id === 'campaign'
             ? campaignRank(a.event) - campaignRank(b.event) || groupSortCmp(campaignGroup(a.event) ?? '', 'campaign', a.event, b.event)
             : 0) ||
+          (g.section.id === 'character' ? CHARACTER_GROUPS.indexOf(characterGroup(a.event) ?? '') - CHARACTER_GROUPS.indexOf(characterGroup(b.event) ?? '') : 0) ||
           Date.parse(a.event.start) - Date.parse(b.event.start) ||
+          (a.event.character?.at ?? '').localeCompare(b.event.character?.at ?? '') ||
           a.event.id.localeCompare(b.event.id),
       );
       const sameLabel = new Map<string, BarSpan[]>();

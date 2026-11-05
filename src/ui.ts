@@ -3,8 +3,8 @@ import type { ExportEvent, IndexFile } from './data/export';
 import { appTitle } from './app';
 import { monthlyEvents, type MonthlyDef } from './monthly';
 import { clampToWindow, windowRange } from './window';
-import { type BarSpan, addDays, isOnCalendarDay, campaignGroup, questGroup, maintenanceBars, maintenanceOnDay, addMonthsToDay, dayLabel, monthWindow, eventsForDay, formatJst, ganttSections, mergeSameLabel, rowLabel, periodText, slotRows, weekDays, weekdayOf } from './week';
-import { EVENT_QUEST_SUFFIX, MAINTENANCE_CATEGORY, gachaGroup, sectionOf } from './sections';
+import { type BarSpan, addDays, isOnCalendarDay, campaignGroup, questGroup, maintenanceBars, maintenanceOnDay, addMonthsToDay, dayLabel, monthWindow, eventsForDay, formatJst, ganttSections, mergeSameLabel, rowLabel, periodText, unlockText, whenText, slotRows, weekDays, weekdayOf } from './week';
+import { EVENT_QUEST_SUFFIX, MAINTENANCE_CATEGORY, characterGroup, gachaGroup, sectionOf } from './sections';
 import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
@@ -115,7 +115,9 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
   for (const event of [...maint, ...entries.map((x) => x.event)]) {
     const item = el('section', 'detail-item');
     item.append(el('h3', undefined, fullLabel(event.name)));
-    if (periodText(event) !== '') item.append(el('p', undefined, `${event.category === MAINTENANCE_CATEGORY ? '実施日程' : '開催期間'}: ${periodText(event)}`));
+    // 進化の解禁は開催期間でなく解禁の日時(12:00・22:00など)を出す
+    if (unlockText(event) !== '') item.append(el('p', undefined, `解禁日時: ${unlockText(event)}`));
+    else if (periodText(event) !== '') item.append(el('p', undefined, `${event.category === MAINTENANCE_CATEGORY ? '実施日程' : '開催期間'}: ${periodText(event)}`));
     // 報酬受取期限は表示しない(別記事の内容を取り込み大半が誤りのため)
     if (event.slots?.length) {
       const box = el('div', 'detail-block');
@@ -456,9 +458,9 @@ export function render(root: HTMLElement, state: AppState): void {
     for (const rowBars of rows) {
       const first = rowBars[0] as BarSpan;
       const event = first.event;
-      if (section.id === 'campaign' || section.id === 'quest' || section.id === 'gacha') {
+      if (section.id === 'campaign' || section.id === 'quest' || section.id === 'gacha' || section.id === 'character') {
         // キャンペーン: 先頭固定の月次項目(グループなし)には見出しを付けず、グループの後ろのグループなしは「その他」。クエスト・ガチャは全行が小見出しに属する
-        const g = section.id === 'quest' ? questGroup(event) : section.id === 'gacha' ? gachaGroup(event) : (campaignGroup(event) ?? (shown.size > 0 ? 'other' : null));
+        const g = section.id === 'character' ? characterGroup(event) : section.id === 'quest' ? questGroup(event) : section.id === 'gacha' ? gachaGroup(event) : (campaignGroup(event) ?? (shown.size > 0 ? 'other' : null));
         if (g !== null && !shown.has(g)) {
           shown.add(g);
           const sub = el('div', 'g-group', g === 'other' ? 'その他' : g);
@@ -518,8 +520,8 @@ export function render(root: HTMLElement, state: AppState): void {
         if (bar.clippedLeft) b.classList.add('clip-l');
         if (bar.clippedRight) b.classList.add('clip-r');
         if (bar.openEnded) b.classList.add('open');
-        b.title = [ev.name, periodText(ev)].filter(Boolean).join('\n');
-        b.setAttribute('aria-label', [ev.pickup ? ev.name : shortLabel(ev.name), periodText(ev)].filter(Boolean).join(' '));
+        b.title = [ev.name, whenText(ev)].filter(Boolean).join('\n');
+        b.setAttribute('aria-label', [ev.pickup ? ev.name : shortLabel(ev.name), whenText(ev)].filter(Boolean).join(' '));
         b.onclick = () => {
           state.selection = { day: days[bar.from] as string, eventId: ev.id };
           rerender();
@@ -541,8 +543,8 @@ export function render(root: HTMLElement, state: AppState): void {
       const n = bar.to - bar.from + 1;
       if (!bar.clippedLeft && bar.startFrac > 0) b.style.marginLeft = `${((bar.startFrac / n) * 100).toFixed(3)}%`;
       if (!bar.clippedRight && bar.endFrac < 1) b.style.marginRight = `${(((1 - bar.endFrac) / n) * 100).toFixed(3)}%`;
-      b.title = [fullLabel(ev.name), periodText(ev)].filter(Boolean).join('\n');
-      b.setAttribute('aria-label', [fullLabel(ev.name), periodText(ev)].filter(Boolean).join(' '));
+      b.title = [fullLabel(ev.name), whenText(ev)].filter(Boolean).join('\n');
+      b.setAttribute('aria-label', [fullLabel(ev.name), whenText(ev)].filter(Boolean).join(' '));
       b.onclick = () => {
         state.selection = { day: days[bar.from] as string, eventId: ev.id };
         rerender();

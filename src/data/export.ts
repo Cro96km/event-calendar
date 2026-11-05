@@ -1,5 +1,5 @@
 // 正本 → UI用の月別JSON。月境界はゲーム日(4:00 JST)基準。none を除く全件。spec §5.2。
-import { characterLabel, CHARACTER_CATEGORY } from '../characters';
+import { attributeColor, characterLabel, CHARACTER_CATEGORY, type CharacterKind } from '../characters';
 import { gameDayOf } from '../gameday';
 import { itemKey } from '../selection';
 import type { DetailBlock } from '../details';
@@ -35,6 +35,8 @@ export interface ExportEvent {
   group?: string;
   /** セクションの指定(手動の修正 config/schedule/overrides.json) */
   section?: string;
+  /** キャラクターの項目(新限定・進化の解禁。§4.13)。at=進化の解禁の日時(バーは解禁日の暦日1日分。詳細には開催期間でなくこれを出す)、gacha=新限定の実装ガチャ名 */
+  character?: { kind: CharacterKind; at?: string; gacha?: string };
   /** 手動の修正が入っている(config/schedule/overrides.json)。fields=直した項目、notes=詳細に出す注記、hide_blocks=詳細で出さないブロック */
   fix?: { fields: string[]; notes?: string[]; hide_blocks?: string[] };
 }
@@ -109,7 +111,12 @@ export function buildExport(records: ArticleRecord[], generatedAt: string, colle
       const start = Date.parse(c.start);
       const last = c.end === null ? start : Math.max(start, Date.parse(c.end) - 1);
       categories.add(CHARACTER_CATEGORY);
-      push({ id: `${r.id}#c${i}`, article_id: r.id, name: characterLabel(c), title: r.title, category: CHARACTER_CATEGORY, start: c.start, end: c.end, reward_until: null, url: r.url, item: `${CHARACTER_CATEGORY}:${c.kind}:${c.name}` }, start, last);
+      const color = attributeColor(c.attr);
+      push({
+        id: `${r.id}#c${i}`, article_id: r.id, name: characterLabel(c), title: r.title, category: CHARACTER_CATEGORY, start: c.start, end: c.end, reward_until: null, url: r.url, item: `${CHARACTER_CATEGORY}:${c.kind}:${c.name}`,
+        character: { kind: c.kind, ...(c.at ? { at: c.at } : {}), ...(c.gacha ? { gacha: c.gacha } : {}) },
+        ...(color ? { color } : {}),
+      }, start, last);
     });
   }
   const months = [...byMonth.keys()].sort();

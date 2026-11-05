@@ -42,6 +42,9 @@ export const QUEST_GROUPS: readonly string[] = namesOf('quest');
 export const CAMPAIGN_GROUPS: readonly string[] = namesOf('campaign');
 export const GACHA_GROUPS: readonly string[] = namesOf('gacha');
 /** 役割の小見出し(名前を変えても役割で引く)。 */
+export const CHARACTER_NEW = roleName('character', 'new');
+export const CHARACTER_EVOLUTION = roleName('character', 'evolution');
+export const CHARACTER_GROUPS: readonly string[] = namesOf('character');
 export const QUEST_EVENT = roleName('quest', 'event');
 export const QUEST_RAID = roleName('quest', 'raid');
 export const QUEST_SUPER = roleName('quest', 'super');
@@ -49,6 +52,9 @@ export const QUEST_DEFAULT = defaultName('quest');
 export const GACHA_EVENT = roleName('gacha', 'event');
 export const GACHA_REGULAR_GROUP = roleName('gacha', 'regular');
 export const GACHA_DEFAULT = defaultName('gacha');
+
+/** キャラクターの小見出し: 新限定=role new、進化(獣神化・獣神化改・真獣神化)=role evolution。キャラクターの項目でなければ null。 */
+export const characterGroup = (e: { character?: { kind: string } }): string | null => (e.character === undefined ? null : e.character.kind === '新限定' ? CHARACTER_NEW : CHARACTER_EVOLUTION);
 
 /** 名称に含む語で振り分けるキャンペーンの小見出し(match: "name")。セクション振り分け・2行表示の対象。 */
 export const CAMPAIGN_ORDER: readonly string[] = groupDefs('campaign').filter((g) => g.match === 'name').map((g) => g.name);
