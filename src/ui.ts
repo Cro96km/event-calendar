@@ -9,6 +9,7 @@ import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
 import { isQuestNameBlock, questNameColor, withFixedFloors } from './quest-color';
+import { icon } from './icons';
 import { applyTheme, currentTheme, saveTheme } from './theme';
 import { SHOT_4AM_FRAC, compactCharacterRows, shotEndFrac, shotStartFrac, summaryBlocks, type ShotKind } from './shot';
 
@@ -350,7 +351,11 @@ export function render(root: HTMLElement, state: AppState): void {
       state.view = 'week';
     }
   };
-  nav.append(btn(state.view === 'week' ? '月表示' : '週表示', 'view-toggle', toggleView));
+  // 週⇄月の切替は、切替先のカレンダーの記号(押すとどうなるかは aria-label・title)
+  const viewBtn = btn('', 'view-toggle', toggleView, undefined, state.view === 'week' ? '月表示にする' : '週表示にする');
+  viewBtn.classList.add('icon-btn');
+  viewBtn.append(icon(state.view === 'week' ? 'calendar-month' : 'calendar-week'));
+  nav.append(viewBtn);
   const month = state.view === 'month';
   nav.append(
     btn('<', 'nav-prev', () => (month ? (state.monthStart = clampToWindow(addMonthsToDay(state.monthStart, -1), state.today)) : (state.weekStart = clampToWindow(addDays(state.weekStart, -7), state.today))), undefined, month ? '前の月' : '前の週'),
@@ -362,6 +367,7 @@ export function render(root: HTMLElement, state: AppState): void {
   );
   const atBase = month ? state.monthStart === state.today : state.weekStart === state.today;
   (nav.querySelector('[data-testid="nav-today"]') as HTMLButtonElement).disabled = atBase;
+  (nav.querySelector('[data-testid="nav-today"]') as HTMLButtonElement).classList.add('dot-btn'); // ● を少し小さく
   // 表示範囲(過去・未来それぞれ config/display/window.json の月数)を超えて移動できない
   const range = windowRange(state.today);
   const cur = month ? state.monthStart : state.weekStart;
@@ -401,9 +407,12 @@ export function render(root: HTMLElement, state: AppState): void {
   }
   // 画面の色(ライト/ダーク)の切替(既定はライト。選んだ色は保存する)
   const dark = currentTheme() === 'dark';
-  const themeBtn = el('button', 'vbtn theme-toggle', dark ? 'ライト' : 'ダーク');
+  // 切替先の記号(ライト中は月=ダークにする、ダーク中は太陽=ライトにする)
+  const themeBtn = el('button', 'vbtn icon-btn theme-toggle');
+  themeBtn.append(icon(dark ? 'sun' : 'moon'));
   themeBtn.dataset.testid = 'theme-toggle';
   themeBtn.setAttribute('aria-label', dark ? 'ライト表示にする' : 'ダーク表示にする');
+  themeBtn.title = dark ? 'ライト表示にする' : 'ダーク表示にする';
   themeBtn.onclick = () => {
     const next = dark ? 'light' : 'dark';
     applyTheme(next);

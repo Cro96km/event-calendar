@@ -92,6 +92,9 @@ button { font: inherit; color: inherit; }
 
 .view-nav { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
 .vbtn { padding: 0.25rem 0.8rem; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: inherit; cursor: pointer; font: inherit; }
+.vbtn.icon-btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.25rem 0.55rem; }
+.vbtn.icon-btn .icon { display: block; }
+.vbtn.dot-btn { font-size: .7em; } /* 「今日に戻る」の ● は少し小さく(ボタンの大きさは他と同じ) */
 .vbtn.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
 .gantt.month .g-date .dnum { font-size: .8rem; }
 .gantt.month .g-date.today .dnum { padding: 0 .25rem; }
