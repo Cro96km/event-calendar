@@ -164,7 +164,7 @@
 - URL パラメータ `?shot=summary|quest|campaign|gacha` で撮影モード(`&date=YYYY-MM-DD` で基準日を固定。無ければ今日〈ゲーム日〉)。常に**週表示**(基準日から7日)。操作ボタン・詳細パネル・注意書き・ドラッグ・畳みは無く、日付ヘッダの行から始まり、フッター(「非公式・非営利」・収集時刻などの注記)は出さない。`.shot` が撮影の対象(ライト固定の幅760px)。
 - `quest` / `campaign` / `gacha` はそのセクションだけ(絞り込みなし)。`summary` は `config/display/discord.json` の `summary`(sections・hide_groups・hide_keywords・only_keywords・max_rows。初期値は絞らない)で行を絞る。判定順: 小見出しで外す→語で外す→only で残す→行数で切る。
 - メンテナンスの帯(§4.3.6)は4枚とも出る。
-- **4:00終わりのバー**(03:59含む)は、列の1/6しかなく端の矢印が入らないため、撮影モードだけ右端を列の0.4まで伸ばす(`shotEndFrac`。通常表示は変えない)。
+- **4:00終わりのバー**(03:59含む)は、列の1/6しかなく端の矢印が入らないため、撮影モードだけ右端を列の0.28まで伸ばす(`shotEndFrac`。通常表示は変えない)。
 - `npm run discord:images` が `dist/` をローカルで配信し、Playwright(Chromium・Asia/Tokyo・2倍解像度)で4枚の PNG を `out/discord/` に出す。送信は含まない。設定の点検は `npm run check`(`shotConfigProblems`)。
 
 ### 4.7 詳細パネルの内容(`src/details.ts` / `src/ui.ts` / `src/label.ts`)

@@ -114,6 +114,6 @@ describe('撮影モードの4:00終わりのバー', () => {
       return root.querySelector<HTMLElement>('.bar-ev')!.style.marginRight;
     };
     expect(margin(false)).toContain('83.333');
-    expect(margin(true)).toContain('60.000');
+    expect(margin(true)).toContain('72.000');
   });
 });
