@@ -20,6 +20,8 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 | 表示候補の更新(記憶・ルールで4区分に分類) | `npm run candidates` |
 | ルール一致率の確認 | `npm run candidates -- --report` |
 | 要判断のレビュー依頼(ドライラン) | `npm run candidates -- --review-issue`(発行は `--publish` 明示時のみ) |
+| 手動の調整(公式に無い項目の追加・項目の非表示) | `npm run manual -- add` / `hide` など(§14。Actions の manual からも) |
+| 不要データの削除 | `npm run prune`(確認だけ)/ `-- --apply`(§15。Actions の prune からも) |
 | 画面確認 | `npm run dev`(ヘッダの「更新」ボタンで collect+candidates。5分間隔制限) |
 - 想定頻度: 週1回。収集後に `data/articles/` の差分を確認する。
 
@@ -38,7 +40,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 - 正本: `data/articles/<YYYY>/<MM>/<id>.json`(月は記事IDの日付から)（git管理）。生HTML: `data/raw/`（git管理外、消えても再取得可）。
 - バックアップ: git履歴が正本のバックアップ。`data/raw/`は再取得可能なため許容(消えた場合はreparse不可→再取得)。誤削除は `git restore data/articles`。
 - 全再構築: `data/raw/` が残っていれば `reparse`、無ければ `collect --since` で再取得（間隔2秒のため時間がかかる）。
-- 保持: 正本は全件。公開用exportは直近12ヶ月に絞る。
+- 保持: 正本は全件(増えすぎたら §15 の prune で、表示範囲より前に終わった記事を削除する)。公開用exportは表示範囲(過去12か月・未来12か月。`config/display/window.json`)に絞る。
 
 ## 4. スクレイピング礼節・権利
 （本節が礼節の**正本**。他docは本節を参照する）
@@ -165,7 +167,8 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 1. Settings → Pages → Source: **GitHub Actions**。
 2. Settings → Actions → General → Workflow permissions: 既定の **Read repository contents** のままでよい(各ワークフローが `permissions:` で必要な権限を宣言している)。『**Allow GitHub Actions to create and approve pull requests**』にはチェックする。同じ画面の『Fork pull request workflows』は『**Require approval for all outside collaborators**』にする。
 3. main の保護(ルールセット): **PR 必須**(承認は0でよい)。ただし**ステータスチェックを必須にしない**: 自動更新の PR は `GITHUB_TOKEN` で作られるため `ci.yml` が走らず、必須にすると自動マージが止まる(代わりに `update.yml` / `apply.yml` が同等の検証をしてからマージする)。人が作る PR は `ci.yml` が走る。
-4. 外部からの PR は原則無視する。
+4. Settings → General → Pull Requests: **PR の作成をコラボレーターだけに制限**する(外部の人は fork から PR を作れない。自動更新の PR は `github-actions[bot]` が書き込み権限で作るので影響しない)。Wiki・Projects・Discussions は無効にする。Issue は有効のまま(更新の失敗通知と `/apply` が Issue で動く)。
+5. ルールセットは、PR 必須に加えて **force push と削除を禁止**する。外部の人の Issue は、必要なら Close する(「要対応」の題名で作られても、`apply.yml` は作者が bot か所有者の Issue しか対象にしない)。迷惑な書き込みが増えたら、Settings → Moderation → Interaction limits で一時的に外部の書き込みを止められる。
 
 **注意**: 定例の自動実行(schedule)は、リポジトリに60日間活動が無いと自動停止する。自動マージのコミット(週1回)が活動に数えられるので通常は止まらないが、停止の通知が来たらワークフローを手動で再有効化する。公式サイトの規約変更・運営からの要請があれば、`update.yml` の `schedule` を外して収集を止める(§4)。
 

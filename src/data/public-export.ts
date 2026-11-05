@@ -1,4 +1,4 @@
-// 公開用export: 選択状態で非表示の項目と、直近12ヶ月より前に終わった項目を除く。spec §5.2。
+// 公開用export: 選択状態で非表示の項目と、表示範囲(過去・未来それぞれ12か月。config/display/window.json)の外の項目を除く。spec §5.2。
 import { applySelection, type SelectionJson } from '../selection';
 import { jstDay, PAST_MONTHS, windowRange } from '../window';
 import type { ExportEvent, IndexFile, MonthFile } from './export';

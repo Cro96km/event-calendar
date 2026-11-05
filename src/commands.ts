@@ -20,7 +20,7 @@ export const COMMANDS: readonly CommandInfo[] = [
   { name: 'reparse', summary: 'data/raw から期間を抽出し直して結果を表示する(ファイルは書かない)', group: '保守・調査', cli: 'scripts/scrape.ts' },
   { name: 'candidates', summary: '表示候補の分類(定例/自動ON/自動OFF/要判断)と、要判断ファイルのローカルでの取り込み・評価', group: '保守・調査', cli: 'scripts/candidates.ts' },
   { name: 'report:unparsed', summary: '期間が取れなかった記事(none)を分類して表示(ファイルは書かない)', group: '保守・調査', cli: 'scripts/report-unparsed.ts' },
-  { name: 'build:public', summary: '公開用ビルド(dist/。直近12ヶ月・表示対象のみ)。update の後に実行', group: '保守・調査', cli: 'scripts/export-public.ts' },
+  { name: 'build:public', summary: '公開用ビルド(dist/。表示範囲=過去・未来12か月・表示対象のみ)。update の後に実行', group: '保守・調査', cli: 'scripts/export-public.ts' },
   { name: 'dev', summary: '開発サーバ(http://localhost:5173)。画面の「更新」ボタンで収集できる', group: '開発', cli: null },
   { name: 'build', summary: '型チェックとビルド', group: '開発', cli: null },
   { name: 'preview', summary: 'ビルド結果の確認用サーバ', group: '開発', cli: null },

@@ -41,7 +41,7 @@ export interface UpdateReport {
   newEvents: ReportEvent[];
   /** 期間・名前が変わった既存の項目 */
   changedEvents: { before: ReportEvent; after: ReportEvent }[];
-  /** 公開サイトで新しく見える/見えなくなる項目(判断・12か月の絞り込み前の、カレンダー表示ベース) */
+  /** 公開サイトで新しく見える/見えなくなる項目(判断・表示範囲の絞り込み前の、カレンダー表示ベース) */
   visibleAdded: ReportEvent[];
   visibleRemoved: ReportEvent[];
   /** 新規の要判断(前回に無かった候補の種類ごと) */
