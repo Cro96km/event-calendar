@@ -10,7 +10,7 @@ showHelpIfRequested(`npm run manual -- <add|remove|hide|unhide|list> [オプシ�
         add=公式ニュースに無い項目を足す / hide=項目(または記事ごと)を表示から外す(データは消さない)。
   使う場面: 公式に無い常設・臨時の項目を足すとき、中止になった項目などを外すとき。Actions の manual からも同じ処理が動く。
   コマンド:
-    add --name 名前 --category event|campaign --start "YYYY-MM-DD HH:MM" --end "YYYY-MM-DD HH:MM" [--group 小見出し] [--note メモ]
+    add --name 名前 --category event|campaign --start "YYYY-MM-DD HH:MM" --end "YYYY-MM-DD HH:MM" [--group 小見出し] [--hide-start] [--hide-end] [--note メモ]
           項目を足す(同じ name と start があれば置き換え)。event=クエスト、campaign=キャンペーン。時刻は JST。
     remove --name 名前          add の項目を取り除く
     hide --id ID [--note 理由]  項目ID(例 20261030_3#0)または記事ID(例 20261030_3)を表示から外す
@@ -49,6 +49,8 @@ switch (cmd) {
       start: need('--start'),
       end: need('--end'),
       ...(group !== undefined && group.trim() !== '' ? { group: group.trim() } : {}),
+      ...(process.argv.includes('--hide-start') ? { hide_start: true } : {}),
+      ...(process.argv.includes('--hide-end') ? { hide_end: true } : {}),
       ...(note !== undefined && note.trim() !== '' ? { note: note.trim() } : {}),
     };
     next = addEntry(cfg, a);

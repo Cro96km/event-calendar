@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ExportEvent, IndexFile } from '../src/data/export';
 import { dragShift, initialState, render, type AppState } from '../src/ui';
-import { addDays, addMonthsToDay, monthWindow, barSpan, campaignGroup, campaignRank, questGroup, eventsForDay, formatJst, ganttSections, mergeEvents, maintenanceBars, maintenanceOnDay, isOnCalendarDay, mergeSameLabel, monthDays, addMonths, slotRows, weekDays } from '../src/week';
+import { periodText, addDays, addMonthsToDay, monthWindow, barSpan, campaignGroup, campaignRank, questGroup, eventsForDay, formatJst, ganttSections, mergeEvents, maintenanceBars, maintenanceOnDay, isOnCalendarDay, mergeSameLabel, monthDays, addMonths, slotRows, weekDays } from '../src/week';
 import { gachaGroup, sectionOf, sectionOfEvent } from '../src/sections';
 import { applySelection } from '../src/selection';
 import { MONTHLY, monthlyDays, monthlyEvents } from '../src/monthly';
@@ -1272,6 +1272,27 @@ describe('ガチャセクション', () => {
     expect(b).not.toBeNull();
     click(b);
     expect(q('detail')?.textContent).not.toContain('この日のイベントはありません');
-    expect(q('detail')?.textContent).toContain('ギャラクシーアドベンチャー');
+    expect(q('detail')?.querySelector('h3')?.textContent).toBe('ギャラクシーアドベンチャー II'); // 行ラベルと同じ。「ガチャ」は付けない
+  });
+
+  it('periodText: 年をまたぐ場合だけ年を付ける。hide_start / hide_end', () => {
+    expect(periodText({ start: '2026-10-27T12:00:00+09:00', end: '2026-10-29T11:59:00+09:00' })).toBe('10/27(火) 12:00 〜 10/29(木) 11:59');
+    expect(periodText({ start: '2026-12-31T12:00:00+09:00', end: '2027-01-05T11:59:00+09:00' })).toBe('2026/12/31(木) 12:00 〜 2027/01/05(火) 11:59');
+    expect(periodText({ start: '2026-12-31T12:00:00+09:00', end: null })).toBe('12/31(木) 12:00 〜 終了未定');
+    const p = { start: '2026-12-31T12:00:00+09:00', end: '2027-01-05T11:59:00+09:00' };
+    expect(periodText({ ...p, hide_start: true })).toBe('〜 2027/01/05(火) 11:59');
+    expect(periodText({ ...p, hide_end: true })).toBe('2026/12/31(木) 12:00 〜');
+    expect(periodText({ ...p, hide_start: true, hide_end: true })).toBe('');
+  });
+
+  it('両方 hide の項目は詳細に開催期間の行を出さない', () => {
+    const h = ev('h#0', 'event', '2026-10-27T00:00:00+09:00', '2026-12-31T23:59:00+09:00', { name: '歴戦の跡地', hide_start: true, hide_end: true });
+    state = initialState('2026-10-27', [h], INDEX);
+    state.collapsed = new Set();
+    render(root, state);
+    click(bar('h#0'));
+    expect(q('detail')?.textContent).toContain('歴戦の跡地');
+    expect(q('detail')?.textContent).not.toContain('開催期間');
+    expect(bar('h#0').title).toBe('歴戦の跡地');
   });
 });

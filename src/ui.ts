@@ -91,10 +91,10 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
   if (!sel) return panel;
   const pool = [...state.events, ...monthlyEvents(addDays(sel.day, -1), addDays(sel.day, 1), state.monthly)];
   // バーは暦日の列に描くので、バーを押したときは暦日で判定する(翌4:00終了などでも「イベントなし」にしない)
-  // イベントクエスト行のバーは、ガチャ由来の写し(id末尾 ~event)。詳細は元のガチャイベントを出す
+  // イベントクエスト行のバーは、ガチャ由来の写し(id末尾 ~event)。詳細は元のガチャイベントを、タイトルは行ラベル(「ガチャ」なし)で出す
   const baseId = sel.eventId?.endsWith(EVENT_QUEST_SUFFIX) ? sel.eventId.slice(0, -EVENT_QUEST_SUFFIX.length) : sel.eventId;
   const entries = sel.eventId
-    ? pool.filter((e) => e.id === baseId && isOnCalendarDay(e, sel.day)).map((event) => ({ event }))
+    ? pool.filter((e) => e.id === baseId && isOnCalendarDay(e, sel.day)).map((e) => ({ event: baseId === sel.eventId ? e : { ...e, name: rowLabel('gacha', e).l1 } }))
     : eventsForDay(pool, sel.day);
   // メンテナンス(帯)も、帯を選んだとき/日付を選んだときに出す
   const maint = state.events.filter((e) => (sel.eventId ? e.id === sel.eventId : true) && maintenanceOnDay(e, sel.day));
@@ -111,7 +111,7 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
   for (const event of [...maint, ...entries.map((x) => x.event)]) {
     const item = el('section', 'detail-item');
     item.append(el('h3', undefined, fullLabel(event.name)));
-    item.append(el('p', undefined, `${event.category === MAINTENANCE_CATEGORY ? '実施日程' : '開催期間'}: ${periodText(event)}`));
+    if (periodText(event) !== '') item.append(el('p', undefined, `${event.category === MAINTENANCE_CATEGORY ? '実施日程' : '開催期間'}: ${periodText(event)}`));
     // 報酬受取期限は表示しない(別記事の内容を取り込み大半が誤りのため)
     if (event.slots?.length) {
       const box = el('div', 'detail-block');
@@ -505,8 +505,8 @@ export function render(root: HTMLElement, state: AppState): void {
         if (bar.clippedLeft) b.classList.add('clip-l');
         if (bar.clippedRight) b.classList.add('clip-r');
         if (bar.openEnded) b.classList.add('open');
-        b.title = `${ev.name}\n${periodText(ev)}`;
-        b.setAttribute('aria-label', `${ev.pickup ? ev.name : shortLabel(ev.name)} ${periodText(ev)}`);
+        b.title = [ev.name, periodText(ev)].filter(Boolean).join('\n');
+        b.setAttribute('aria-label', [ev.pickup ? ev.name : shortLabel(ev.name), periodText(ev)].filter(Boolean).join(' '));
         b.onclick = () => {
           state.selection = { day: days[bar.from] as string, eventId: ev.id };
           rerender();
@@ -528,8 +528,8 @@ export function render(root: HTMLElement, state: AppState): void {
       const n = bar.to - bar.from + 1;
       if (!bar.clippedLeft && bar.startFrac > 0) b.style.marginLeft = `${((bar.startFrac / n) * 100).toFixed(3)}%`;
       if (!bar.clippedRight && bar.endFrac < 1) b.style.marginRight = `${(((1 - bar.endFrac) / n) * 100).toFixed(3)}%`;
-      b.title = `${fullLabel(ev.name)}\n${periodText(ev)}`;
-      b.setAttribute('aria-label', `${fullLabel(ev.name)} ${periodText(ev)}`);
+      b.title = [fullLabel(ev.name), periodText(ev)].filter(Boolean).join('\n');
+      b.setAttribute('aria-label', [fullLabel(ev.name), periodText(ev)].filter(Boolean).join(' '));
       b.onclick = () => {
         state.selection = { day: days[bar.from] as string, eventId: ev.id };
         rerender();

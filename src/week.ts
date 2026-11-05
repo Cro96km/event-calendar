@@ -57,11 +57,13 @@ export function dayLabel(day: string): string {
   return `${day.slice(5, 7)}/${day.slice(8, 10)}(${weekdayOf(day)})`;
 }
 
-/** 瞬間(ISO) → JST の `M/D(曜) HH:mm`（ブラウザのTZに依存しない）。 */
-export function formatJst(iso: string): string {
+/** 瞬間(ISO) → JST の `M/D(曜) HH:mm`（ブラウザのTZに依存しない）。withYear なら `YYYY/` を前に付ける。 */
+export function formatJst(iso: string, withYear = false): string {
   const jst = new Date(Date.parse(iso) + JST_OFFSET_MS).toISOString();
-  return `${dayLabel(jst.slice(0, 10))} ${jst.slice(11, 16)}`;
+  return `${withYear ? `${jst.slice(0, 4)}/` : ''}${dayLabel(jst.slice(0, 10))} ${jst.slice(11, 16)}`;
 }
+
+const jstYear = (iso: string): string => new Date(Date.parse(iso) + JST_OFFSET_MS).toISOString().slice(0, 4);
 
 /** 複数月ファイルのeventを id で重複排除して結合。 */
 export function mergeEvents(lists: ExportEvent[][]): ExportEvent[] {
@@ -107,9 +109,16 @@ export function slotRows(slots: readonly Slot[]): { date: string; times: string[
   return [...rows].map(([day, times]) => ({ date: dayLabel(day), times }));
 }
 
-/** 期間表示。 */
-export function periodText(e: { start: string; end: string | null }): string {
-  return e.end === null ? `${formatJst(e.start)} 〜 終了未定` : `${formatJst(e.start)} 〜 ${formatJst(e.end)}`;
+/**
+ * 期間表示。年をまたぐ場合だけ(表示する側に)年を付ける。
+ * hide_start / hide_end の側は出さず、片方だけなら `〜 終了` / `開始 〜`、両方なら空文字(呼び出し側で行ごと出さない)。
+ */
+export function periodText(e: { start: string; end: string | null; hide_start?: boolean; hide_end?: boolean }): string {
+  if (e.hide_start && e.hide_end) return '';
+  const y = e.end !== null && jstYear(e.start) !== jstYear(e.end);
+  const start = formatJst(e.start, y);
+  const end = e.end === null ? '終了未定' : formatJst(e.end, y);
+  return e.hide_start ? `〜 ${end}` : e.hide_end ? `${start} 〜` : `${start} 〜 ${end}`;
 }
 
 export interface BarSpan {
