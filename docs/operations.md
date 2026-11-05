@@ -26,15 +26,15 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 - 想定頻度: 週1回。収集後に `data/articles/` の差分を確認する。
 
 ### 2.1 表示候補の運用手順(収集→candidates→要判断→反映)
-ユーザが日常的に見る/編集するのは **`config/judge/needs-review.md` だけ**(`config/judge/selection/` は読む用の自動生成物。編集しない)。
+ユーザが日常的に見る/編集するのは **`config/judge/needs-review.md` だけ**(`config/judge/calendar/`〈台帳〉は読む用の自動生成物。編集しない)。
 1. `npm run collect -- --pages 2`(収集)。`data/articles/` の差分を確認。
 2. `npm run candidates`: 新規候補が記憶・ルールで 定例/自動ON/自動OFF/要判断 に分類される。出力に区分ごとの件数と、要判断の行数が出る。
 3. 要判断が0なら終わり(ブラウザ再読み込み)。あれば `config/judge/needs-review.md` を開き、各行(同種を集約済み。件数・例示タイトル付き)を **表示なら `- [x]`、非表示なら `- [-]`** にする(迷うなら `- [ ]` のまま=非表示扱いで次回も残る)。この判断は「この種類は常に表示/非表示」として `config/judge/decisions.json` に記憶され、同種の以後の候補は自動で適用される。
 4. `npm run candidates` を再実行(判断を取り込み、`public/data/selection.json` を更新)→ ブラウザを再読み込み。
 5. (任意)依頼文が欲しいとき: `npm run candidates -- --review-issue`(ドライラン。要判断の集約行のみ。発行は `--publish` 明示時のみ)。
 6. (任意)`npm run candidates -- --report` でルールと記憶の一致率・不一致を見て `config/judge/rules.json` を改善。
-- **何が表示・非表示か**は `config/judge/selection/YYYY/MM.md`(記事の月ごと=`data/articles` と同じ分類の表。GitHub 上でも見られる。判定・項目・カテゴリ・期間・理由・記事リンクの列)を読む。カレンダーの表示範囲(`config/display/window.json`。過去12か月・未来12か月)の項目だけで、毎回作り直す。更新PRでは、変わった月の表だけに差分が出る。内容に不満があれば、生成物ではなく判断(Issue の `/apply`、`config/judge/decisions.json`、`config/judge/rules.json`)を直す。個別の項目だけ外したいときは §14 の `hide`。
-- `config/judge/decisions.json`・`config/judge/rules.json` はgit管理。`selection/`(読む用の月別の表)もgit管理(更新PRに含まれる)。`needs-review.md`は管理外。
+- **何が表示・非表示か**は `config/judge/calendar/YYYY/MM.md`(台帳。§16。GitHub 上でも見られる。判定〈表示/非表示/要判断〉・セクション・小見出し・表示名・期間・内容・理由・項目ID・記事リンクの列。**非表示・要判断の項目も載る**)を読む。カレンダーの表示範囲(`config/display/window.json`。過去12か月・未来12か月)の項目だけで、毎回作り直す。更新PRでは、変わった月の表だけに差分が出る。内容に不満があれば、生成物ではなく判断(Issue の `/apply`、`config/judge/decisions.json`、`config/judge/rules.json`)を直す。個別の項目だけ外したいときは §14 の `hide`。
+- `config/judge/decisions.json`・`config/judge/rules.json` はgit管理。`calendar/`(台帳。読む用)もgit管理(更新PRに含まれる)。`needs-review.md`は管理外。
 
 ## 3. データ管理
 - 正本: `data/articles/<YYYY>/<MM>/<id>.json`(月は記事IDの日付から)（git管理）。生HTML: `data/raw/`（git管理外、消えても再取得可）。
@@ -91,7 +91,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 
 | フォルダ | 役割 | ファイル(いつ直すか) |
 |---|---|---|
-| `config/judge/` | 表示・非表示の判断 | `rules.json`(自動判定のルール。上から最初の一致)、`decisions.json`(判断の記憶。`npm run candidates` が要判断ファイルから取り込む生成物なので、通常は手で編集しない)。`selection/YYYY/MM.md`(表示の判断の月別の表。記事の月ごと。自動生成・git管理・読む用)、`calendar/YYYY/MM.md`(カレンダーに出る項目の台帳。記事・期間・内容・項目ID。自動生成・git管理・読む用。§16)。ローカルの生成物 `needs-review.md`(要判断の一覧・編集する)はgit管理外 |
+| `config/judge/` | 表示・非表示の判断 | `rules.json`(自動判定のルール。上から最初の一致)、`decisions.json`(判断の記憶。`npm run candidates` が要判断ファイルから取り込む生成物なので、通常は手で編集しない)。`calendar/YYYY/MM.md`(台帳。収集した項目を判定〈表示/非表示/要判断〉・理由・期間・内容・項目IDつきで月別に出力。自動生成・git管理・読む用。§16)。ローカルの生成物 `needs-review.md`(要判断の一覧・編集する)はgit管理外 |
 | `config/display/` | 表記・並び・色・表示範囲 | `window.json`(カレンダーの表示範囲。過去・未来それぞれの月数。公開データ・移動の限界・判断の表・`npm run prune` が使う)、`label-overrides.json`(長いラベルを短くする)、`order.json`(**並び順の唯一の設定**。セクション・小見出し・行の並び方。spec §4.3.8。記入例は `order.md`)(分類は `classify`)、`quest-colors.json`(禁忌の獄の属性色と色の定義)、`recurring.json`(定例のラベル) |
 | `config/schedule/` | ニュースに載らない日程・事実 | `manual.json`(手動の調整。公式に無い項目の追加・項目の非表示。§14)、`overrides.json`(項目IDごとの修正。期間・名前・セクション・詳細の内容。§17)、`hakai.json`(星墓のクエスト名→色と、固定の階層。§8)、`monthly-days.json`(毎月決まった日に出る項目)、`normal-quest-attributes.json`(ノーマルクエストの曜日別の対象属性) |
 
@@ -196,8 +196,9 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 - 削除した古い記事は、`--since` で過去分を取り直すと再び入る。週1回の更新(最新2ページ)では入らない。
 
 ## 16. カレンダーの台帳 `config/judge/calendar/`
-カレンダーに実際に出る項目(表示の判断・手動の調整を適用後)を、月ごとの表(`YYYY/MM.md`)に出力している。**期間や内容の誤りを探す入口**で、画面と同じ順に、表示名・期間(年付きJST)・内容・出どころ・**項目ID**・記事リンクが並ぶ。
-- 誤りを見つけたら、項目IDを控える(公式の項目は `20261030_3#0` の形)。項目を表示から外すのは `npm run manual -- hide --id ID`(§14)。期間や内容そのものの修正は、`npm run override`(§17)で直す。
+収集した項目を、**判定(表示 / 非表示 / 要判断)と理由**つきで月ごとの表(`YYYY/MM.md`)に出力している。**期間・内容・表示の判断の誤りを探す入口**で、表示する項目は画面と同じ順(期間・内容は修正後の値)、非表示・要判断の項目は各セクションの末尾に、表示名・期間(年付きJST)・内容・出どころ・修正・理由・**項目ID**・記事リンクが並ぶ。以前の `config/judge/selection/`(表示の判断の月別の表)は、この台帳に統合して廃止した。
+- 表示の判断を直すときは、理由の列(判断の記憶 / ルール名)を見て、Issue の `/apply`・`decisions.json`・`rules.json`(§2.1)を直す。
+- 期間や内容の誤りは、項目IDを控える(公式の項目は `20261030_3#0` の形)。項目を表示から外すのは `npm run manual -- hide --id ID`(§14)。期間や内容そのものの修正は、`npm run override`(§17)で直す。
 - `npm run update`(週次の自動更新・manual・apply の各Actionsを含む)が毎回作り直す。編集しない。単独で作り直すときは `npm run ledger`(事前に `npm run update -- --no-collect` で `public/data` を作る)。
 - 表示範囲(`config/display/window.json`)の月だけで、範囲外の月は消える。
 

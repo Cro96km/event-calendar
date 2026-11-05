@@ -1,9 +1,11 @@
 // npm run candidates: 要判断ファイルの確定行を記憶(config/judge/decisions.json)に取り込み、収集済みデータの候補を
-// 定例/自動ON/自動OFF/要判断に分類して config/judge/needs-review.md(要判断・ユーザ編集)と config/judge/selection/YYYY/MM.md(表示の判断の月別の表・自動生成・git管理)を更新する。
+// 定例/自動ON/自動OFF/要判断に分類して config/judge/needs-review.md(要判断・ユーザ編集)と config/judge/calendar/YYYY/MM.md(カレンダーの台帳・自動生成・git管理)を更新する。
 //   --report        記憶(人の判断)を教師にルール(config/judge/rules.json)の一致率を表示(ファイルは変更しない)
 //   --review-issue  要判断(集約行)のレビュー依頼本文を表示(ドライラン。ファイルは変更しない)
 //     --publish     上記を gh issue create で実際に発行(明示指定時のみ)
 import { spawnSync } from 'node:child_process';
+import { existsSync } from 'node:fs';
+import { writeLedger } from '../src/data/ledger-store';
 import { readAllRecords } from '../src/data/store';
 import { readDecisions, readRules, readSelectionText, runCandidates } from '../src/data/selection-store';
 import { toJst } from '../src/data/record';
@@ -16,14 +18,14 @@ showHelpIfRequested(`npm run candidates [-- --report | --review-issue [--publish
   目的: 収集済みデータの表示候補を 定例/自動ON/自動OFF/要判断 に分類し、要判断ファイル(config/judge/needs-review.md)の確定行を判断の記憶(decisions.json)に取り込む。
   使う場面: ローカルで要判断ファイルを編集して取り込むとき。通常の運用は npm run update(判定の再生成)と npm run judge(取り込み)を使う。
   オプション:
-    (なし)          要判断ファイルの取り込み→分類→ config/judge/needs-review.md・selection/(月別の表)・public/data/selection.json を再生成
+    (なし)          要判断ファイルの取り込み→分類→ config/judge/needs-review.md・calendar/(台帳。public/data があるとき)・public/data/selection.json を再生成
     --report        判断の記憶を教師に、ルール(config/judge/rules.json)の一致率を表示(ファイルは変更しない)
     --review-issue  要判断のレビュー依頼本文を表示(ドライラン)。--publish を付けると gh issue create で実際に発行
   入力: data/articles、config/judge/(rules・decisions・needs-review.md)
-  出力: config/judge/decisions.json(取り込みがあれば更新)、needs-review.md(生成物・git管理外)・selection/(月別の表。生成物・git管理)、public/data/selection.json
+  出力: config/judge/decisions.json(取り込みがあれば更新)、needs-review.md(生成物・git管理外)・calendar/(台帳。生成物・git管理)、public/data/selection.json
   副作用: --review-issue --publish のときだけ GitHub に Issue を作る(gh が必要)。`);
 
-const PATHS = { selection: 'config/judge/selection', review: 'config/judge/needs-review.md', decisions: 'config/judge/decisions.json' };
+const PATHS = { review: 'config/judge/needs-review.md', decisions: 'config/judge/decisions.json' };
 const RULES = 'config/judge/rules.json';
 const args = new Set(process.argv.slice(2));
 if (args.has('--publish') && !args.has('--review-issue')) throw new Error('--publish は --review-issue と併用してください。');
@@ -52,6 +54,8 @@ if (args.has('--report') || args.has('--review-issue')) {
   const records = await readAllRecords('data/articles');
   if (records.length === 0) throw new Error('data/articles が空です。先に npm run collect を実行してください。');
   const r = await runCandidates(records, PATHS, 'public/data', toJst(Date.now()), rules);
+  // 台帳(判定・理由の列)も作り直す。表示用データ(public/data。npm run update が作る)があるときだけ
+  if (existsSync('public/data/index.json')) await writeLedger('public/data', 'config/judge/calendar', toJst(Date.now()), r.judged);
   const b = r.buckets;
   console.log(`候補 ${r.candidates} 件: 要判断 ${b.review}件(同種集約 ${r.reviewGroups}行) / 定例 ${b.recurring}件 / 自動ON ${b['auto-on']}件 / 自動OFF ${b['auto-off']}件。表示 ${r.selected} 件。`);
   if (r.imported > 0) console.log(`${PATHS.review} から ${r.imported} 種類の判断を記憶(${PATHS.decisions})に取り込みました。`);
