@@ -236,7 +236,7 @@ describe('撮影モードの行数対策(キャラクター)', () => {
     render(root, state);
     return root;
   };
-  it('撮影モード: 新限定はラベルがガチャ名で、名前(属性色)の下に両端矢印の線で期間を表す。進化は日付の枠に名前を縦に並べる(バーなし・種別ラベルに色なし)', () => {
+  it('撮影モード: 新限定はラベルがガチャ名で、名前(属性色)の下に平たい線で期間を表す。進化は日付の枠に名前を縦に並べる(バーなし・種別ラベルに色なし)', () => {
     const root = draw('character');
     const labels = [...root.querySelectorAll('.g-row:not(.g-dates) > .g-label')].map((x) => x.textContent);
     expect(labels).toEqual(['彩・獣神祭', 'グリーンファンタジー', '獣神化・改', '真獣神化']);
