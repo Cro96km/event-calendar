@@ -1,5 +1,5 @@
 {
-  "_doc": "表示順の唯一の設定(spec §4.3.8)。並びを変えるときはこのファイルだけを直す。sections=セクションの定義と表示順(上から)。id・label=見出し・hue=色相0〜359・categories=入る記事のカテゴリ。quest・campaign・gacha は必須(振り分けの判定がコードにある)。それ以外のセクションを足すこともでき、項目は config/schedule/overrides.json の section で振り分ける(小見出しは持たない)。groups=各セクション内の小見出しの表示順(上から。名前は固定で、全て揃えること。campaign の小見出しは名称に含まれる語でもあり、ミッションだけは語で振り分けない〈classify.campaign.extra_groups〉)。rows=小見出しごとの行の並び。sort: fixed=words の順(項目名に含む語を上から。一致しない行は \"*\" の位置、無ければ末尾。同順位は then に従う: name=表示ラベルの五十音順〈既定。Intl.Collator ja。漢字はJIS順相当〉/ start=開始順) / name=表示ラベルの五十音順 / start=開始順(既定。rows に無い小見出しも同じ) / builtin=コードの固定の並び(イベント=通常→コラボ、超究極=補足なし→補足→キャラ名。設定では変えられない)。定例クエスト・定例ガチャの words は、その小見出しに入れる項目の判定も兼ねる。 classify=どの小見出しに入れるかの分類(順序ではない)。campaign.extra_groups=語で振り分けず並びと小見出しにだけ使うグループ(ミッション。group_aliases・手動追加の group で入れる)/ campaign.group_aliases=「項目名にキーが含まれればそのグループ」(CM視聴→ミッション)/ gacha.event_title_prefixes=記事タイトルがこれで始まるガチャはイベントガチャ(新イベントに伴うガチャ。続けてコラボ記事のガチャ本体)、それ以外は期間限定ガチャ / gacha.not_gacha=名称に含めばガチャとして扱わない語。表示/非表示の判定は config/judge/rules.json。 記入例は同じフォルダの order.md。",
+  "_doc": "表示順と小見出しの唯一の設定(spec §4.3.8)。並びや小見出しを変えるときはこのファイルだけを直す(コードの変更は要らない。記入例は order.md)。sections=セクションの定義と順(上から)。id・label=見出し・hue=色相0〜359・categories=入る記事のカテゴリ。quest・campaign・gacha は必須(振り分けの判定がコードにある)。それ以外も足せて、項目は config/schedule/overrides.json の section で入れる(小見出しは持たない)。groups=セクション(quest・campaign・gacha)ごとの小見出し。**配列の順が表示順**で、名前(name)・個数は自由に変えられる(増減・改名・並べ替え)。各小見出しの項目: name=表示名 / role=コードが特別扱いする役割(quest: event=イベントガチャの写し・raid=降臨・super=超究極。gacha: event=イベント・regular=定例。名前を変えても役割は残る。各1つ必須) / match=どの項目が入るか(\"words\"=自分の words のどれかを項目名に含む / \"name\"=自分の name を項目名に含む / {\"includes\":[語…]} / {\"pattern\":\"正規表現\"}。無ければ名称では入らない=手動の group・aliases・role・default だけ) / words=sort が fixed のときの並びの語(上から。match が \"words\" なら入る項目の判定も兼ねる) / sort=行の並び方(fixed=words の順。項目名に含む語を上から、一致しない行は \"*\" の位置・無ければ末尾 / name=表示名の五十音順 / start=開始順〈既定〉/ builtin=コード固定〈role: event のイベント=通常→コラボ、role: super の超究極〉) / then=fixed の同順位(name〈既定〉か start) / aliases=項目名にこの語を含めばこの小見出し(キャンペーン用。例 CM視聴→ミッション) / late=他の小見出しの判定のあとで判定する(包括的な語用。例 期間限定クエストの「クエスト」) / default=どれにも入らない項目の小見出し(quest・gacha に1つ必須)。判定の順は、late でないものを配列の順に、次に late のもの、最後に default。classify.gacha=not_gacha(名称に含めばガチャ扱いしない語)・event_title_prefixes(記事タイトルがこれで始まるガチャはイベントガチャ)。",
   "sections": [
     {
       "id": "quest",
@@ -29,141 +29,172 @@
   ],
   "groups": {
     "quest": [
-      "イベントクエスト",
-      "定例クエスト",
-      "常設クエスト",
-      "絶級クエスト",
-      "期間限定クエスト",
-      "超究極クエスト",
-      "その他"
+      {
+        "name": "イベントクエスト",
+        "role": "event",
+        "sort": "builtin"
+      },
+      {
+        "name": "定例クエスト",
+        "match": "words",
+        "words": [
+          "覇者の塔",
+          "絶級トーナメント",
+          "禁忌の獄",
+          "破界の星墓",
+          "未開の幻洞"
+        ],
+        "sort": "fixed",
+        "then": "start"
+      },
+      {
+        "name": "常設クエスト"
+      },
+      {
+        "name": "絶級クエスト",
+        "role": "raid",
+        "match": {
+          "pattern": "^(轟絶|黎絶|滅絶) .+降臨$"
+        },
+        "words": [
+          "滅絶",
+          "黎絶",
+          "轟絶"
+        ],
+        "sort": "fixed"
+      },
+      {
+        "name": "期間限定クエスト",
+        "match": {
+          "includes": [
+            "クエスト"
+          ]
+        },
+        "sort": "name",
+        "late": true
+      },
+      {
+        "name": "超究極クエスト",
+        "role": "super",
+        "match": {
+          "includes": [
+            "超究極"
+          ]
+        },
+        "sort": "builtin"
+      },
+      {
+        "name": "その他",
+        "default": true
+      }
     ],
     "campaign": [
-      "ノーマルクエスト",
-      "強化進化クエスト",
-      "英雄の神殿",
-      "イベントクエスト",
-      "追憶の書庫",
-      "守護獣の森",
-      "モンスポット",
-      "モンストWebショップ",
-      "ミッション"
+      {
+        "name": "ノーマルクエスト",
+        "match": "name",
+        "sort": "start"
+      },
+      {
+        "name": "強化進化クエスト",
+        "match": "name",
+        "sort": "name"
+      },
+      {
+        "name": "英雄の神殿",
+        "match": "name",
+        "words": [
+          "ノーコン",
+          "タイムボーナス",
+          "消費スタミナ",
+          "チャンスバトル",
+          "特L"
+        ],
+        "sort": "fixed"
+      },
+      {
+        "name": "イベントクエスト",
+        "match": "name",
+        "sort": "start"
+      },
+      {
+        "name": "追憶の書庫",
+        "match": "name",
+        "words": [
+          "金卵",
+          "絶級",
+          "スコア報酬",
+          "書庫ポイント",
+          "アイテム"
+        ],
+        "sort": "fixed"
+      },
+      {
+        "name": "守護獣の森",
+        "match": "name",
+        "words": [
+          "排出量",
+          "スコア報酬"
+        ],
+        "sort": "fixed"
+      },
+      {
+        "name": "モンスポット",
+        "match": "name",
+        "words": [
+          "オーブ",
+          "*",
+          "ラッキーバルーン"
+        ],
+        "sort": "fixed"
+      },
+      {
+        "name": "モンストWebショップ",
+        "match": "name",
+        "sort": "start"
+      },
+      {
+        "name": "ミッション",
+        "sort": "name",
+        "aliases": [
+          "CM視聴"
+        ]
+      }
     ],
     "gacha": [
-      "イベントガチャ",
-      "定例ガチャ",
-      "期間限定ガチャ"
+      {
+        "name": "イベントガチャ",
+        "role": "event",
+        "sort": "builtin"
+      },
+      {
+        "name": "定例ガチャ",
+        "role": "regular",
+        "match": "words",
+        "words": [
+          "超・獣神祭",
+          "激・獣神祭",
+          "彩・獣神祭",
+          "RED STARS",
+          "水の遊宴",
+          "グリーンファンタジー",
+          "STARLIGHT MIRAGE",
+          "ミッドナイト・パーティー",
+          "オリエンタル・トラベラーズ",
+          "モンコレDX",
+          "モンストジェネレーション",
+          "破界に響く星歌"
+        ],
+        "sort": "fixed",
+        "then": "start"
+      },
+      {
+        "name": "期間限定ガチャ",
+        "sort": "name",
+        "default": true
+      }
     ]
   },
-  "rows": {
-    "イベントクエスト": {
-      "sort": "start"
-    },
-    "定例クエスト": {
-      "sort": "fixed",
-      "words": [
-        "覇者の塔",
-        "絶級トーナメント",
-        "禁忌の獄",
-        "破界の星墓",
-        "未開の幻洞"
-      ],
-      "then": "start"
-    },
-    "絶級クエスト": {
-      "sort": "fixed",
-      "words": [
-        "滅絶",
-        "黎絶",
-        "轟絶"
-      ]
-    },
-    "期間限定クエスト": {
-      "sort": "name"
-    },
-    "超究極クエスト": {
-      "sort": "builtin"
-    },
-    "ノーマルクエスト": {
-      "sort": "start"
-    },
-    "強化進化クエスト": {
-      "sort": "name"
-    },
-    "英雄の神殿": {
-      "sort": "fixed",
-      "words": [
-        "ノーコン",
-        "タイムボーナス",
-        "消費スタミナ",
-        "チャンスバトル",
-        "特L"
-      ]
-    },
-    "追憶の書庫": {
-      "sort": "fixed",
-      "words": [
-        "金卵",
-        "絶級",
-        "スコア報酬",
-        "書庫ポイント",
-        "アイテム"
-      ]
-    },
-    "守護獣の森": {
-      "sort": "fixed",
-      "words": [
-        "排出量",
-        "スコア報酬"
-      ]
-    },
-    "モンスポット": {
-      "sort": "fixed",
-      "words": [
-        "オーブ",
-        "*",
-        "ラッキーバルーン"
-      ]
-    },
-    "モンストWebショップ": {
-      "sort": "start"
-    },
-    "ミッション": {
-      "sort": "name"
-    },
-    "イベントガチャ": {
-      "sort": "builtin"
-    },
-    "定例ガチャ": {
-      "sort": "fixed",
-      "words": [
-        "超・獣神祭",
-        "激・獣神祭",
-        "彩・獣神祭",
-        "RED STARS",
-        "水の遊宴",
-        "グリーンファンタジー",
-        "STARLIGHT MIRAGE",
-        "ミッドナイト・パーティー",
-        "オリエンタル・トラベラーズ",
-        "モンコレDX",
-        "モンストジェネレーション",
-        "破界に響く星歌"
-      ],
-      "then": "start"
-    },
-    "期間限定ガチャ": {
-      "sort": "name"
-    }
-  },
   "classify": {
-    "campaign": {
-      "extra_groups": [
-        "ミッション"
-      ],
-      "group_aliases": {
-        "CM視聴": "ミッション"
-      }
-    },
     "gacha": {
       "event_title_prefixes": [
         "新イベント",
