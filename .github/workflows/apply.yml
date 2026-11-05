@@ -71,10 +71,10 @@ jobs:
           branch="judge/issue-$ISSUE_NUMBER-$(date -u +%Y%m%d%H%M)"
           git switch -c "$branch"
           git add config/judge/decisions.json
-          git commit -m "config: 判断の取り込み (#$ISSUE_NUMBER)"
+          git commit -m "config: apply judgments (#$ISSUE_NUMBER)"
           git push origin "$branch"
           gh label create "要確認" --color d93f0b 2>/dev/null || true
-          url=$(gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" --title "判断の取り込み (#$ISSUE_NUMBER)" --body "要対応Issue #$ISSUE_NUMBER の判断(チェック=表示、無し=非表示)を判断の記憶に取り込みます。検証: CI相当=$CI_RESULT / 点検=$CHECK_RESULT")
+          url=$(gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" --title "config: apply judgments (#$ISSUE_NUMBER)" --body "要対応Issue #$ISSUE_NUMBER の判断(チェック=表示、無し=非表示)を判断の記憶に取り込みます。検証: CI相当=$CI_RESULT / 点検=$CHECK_RESULT")
           if [ "$CI_RESULT" = "0" ] && [ "$CHECK_RESULT" = "0" ]; then
             gh pr merge "$url" --squash --delete-branch
             gh workflow run deploy.yml --ref "${{ github.event.repository.default_branch }}"

@@ -3,7 +3,7 @@
 ## 1. セットアップ
 前提確認: `node -v`(v24系。`.nvmrc`あり、`nvm use`)、`gh auth status`、`ssh -T git@github.com`(SSH未設定ならHTTPS cloneでも可)。`gh`はIssue/PR作成に使う。
 ```bash
-git clone <リポジトリURL> && cd monst-event-calendar   # ローカルの作業ディレクトリ名は任意
+git clone <リポジトリURL> && cd event-calendar   # ローカルの作業ディレクトリ名は任意
 npm install
 ```
 main への直接 push は GitHub のルールセットで禁止している(§13)。変更はブランチ→PR で行う。
