@@ -9,7 +9,7 @@ const ROLES: Record<string, readonly string[]> = { character: ['new', 'evolution
 const NEEDS_DEFAULT = ['quest', 'gacha'];
 
 export interface OrderConfig {
-  sections: { id: string; label: string; hue: number; categories: string[] }[];
+  sections: { id: string; label: string; hue: number; lit?: number; categories: string[] }[];
   groups: Record<string, GroupDef[]>;
 }
 
@@ -23,6 +23,7 @@ export function orderProblems(cfg: OrderConfig = order as unknown as OrderConfig
     if (!/^[a-z0-9][a-z0-9-]*$/.test(x.id)) p.push(`sections「${x.id}」: id は英小文字・数字・ハイフン`);
     if (x.label.trim() === '') p.push(`sections「${x.id}」: label が空です`);
     if (!Number.isInteger(x.hue) || x.hue < 0 || x.hue > 359) p.push(`sections「${x.id}」: hue は 0〜359 の整数`);
+    if (x.lit !== undefined && !(Number.isInteger(x.lit) && x.lit >= -15 && x.lit <= 15)) p.push(`sections「${x.id}」: lit は −15〜15 の整数`);
   }
   for (const sec of Object.keys(ROLES)) {
     const gs = cfg.groups[sec];
