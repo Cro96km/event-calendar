@@ -31,5 +31,5 @@ export function buildPublic(months: MonthFile[], index: IndexFile, selection: Se
     .map((m) => ({ month: m.month, events: applySelection(m.events, selection).filter(keep) }))
     .filter((m) => m.events.length > 0);
   const categories = new Set(out.flatMap((m) => m.events.map((e) => e.category)));
-  return { months: out, index: { generated_at: index.generated_at, months: out.map((m) => m.month), categories: [...categories].sort() } };
+  return { months: out, index: { generated_at: index.generated_at, ...(index.collected_at ? { collected_at: index.collected_at } : {}), months: out.map((m) => m.month), categories: [...categories].sort() } };
 }

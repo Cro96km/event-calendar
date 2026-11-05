@@ -4,7 +4,7 @@ import { dirname } from 'node:path';
 import { collect } from '../src/data/collect';
 import { writeLedger } from '../src/data/ledger-store';
 import { readDecisions, readRules, runCandidates } from '../src/data/selection-store';
-import { readAllRecords, writeExport } from '../src/data/store';
+import { readAllRecords, readCollectedAt, writeExport } from '../src/data/store';
 import { toJst } from '../src/data/record';
 import { emptyDecisions } from '../src/decisions';
 import { RawCache } from '../src/scraper/cache';
@@ -27,7 +27,7 @@ const HELP = `npm run update [-- オプション]
     --issue FILE     要対応Issueの本文の出力先(既定 update-issue.md。要対応がある時だけ作る。要判断はチェックボックス)
     --help           この説明
   入力: data/articles(正本)、config/judge/(判断の記憶・ルール)
-  出力: data/articles(更新)、public/data/(表示用。収集しなくても正本から作り直す)、config/judge/needs-review.md・calendar/(台帳。判定・理由・期間・内容つきの月別の表。生成物)、レポート・サマリ・要対応Issue本文
+  出力: data/articles(更新)、data/collected.json(最後の収集時刻。収集したときだけ)、public/data/(表示用。収集しなくても正本から作り直す)、config/judge/needs-review.md・calendar/(台帳。判定・理由・期間・内容つきの月別の表。生成物)、レポート・サマリ・要対応Issue本文
   副作用: 公式サイトへアクセスする(--no-collect 以外)。間隔2秒以上・直列・429で即中断(礼節。docs/operations.md §4)。`;
 
 const argv = process.argv.slice(2);
@@ -60,6 +60,7 @@ if (!noCollect) {
     articlesDir: 'data/articles',
     publicDir: 'public/data',
     runsLog: 'data/runs.log',
+    collectedFile: 'data/collected.json',
     log: console.log,
   });
   collectSummary = { aborted: s.aborted, fetched: s.fetched, written: s.written, none: s.total.none };
@@ -71,7 +72,7 @@ if (cur.length === 0) throw new Error('data/articles が空です。');
 const rules = await readRules('config/judge/rules.json');
 const generatedAt = toJst(Date.now());
 // 表示用データ(public/data)を正本から作り直す(収集しない場合や、デプロイ用の反映でも必要。収集した場合は collect が作ったものの再生成になるだけ)
-await writeExport('public/data', cur, generatedAt);
+await writeExport('public/data', cur, generatedAt, await readCollectedAt('data/collected.json'));
 const cands = await runCandidates(cur, { review: 'config/judge/needs-review.md', decisions: 'config/judge/decisions.json' }, 'public/data', generatedAt, rules);
 await writeLedger('public/data', 'config/judge/calendar', generatedAt, cands.judged);
 const decisions = (await readDecisions('config/judge/decisions.json')) ?? emptyDecisions();

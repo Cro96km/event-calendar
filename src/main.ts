@@ -29,7 +29,7 @@ async function refreshData(state: AppState): Promise<{ ok: boolean; message: str
   if (!res.ok || !body.ok) return { ok: false, message: `更新に失敗しました: ${body.error ?? body.log ?? res.status}` };
   const { index, events, selection } = await load();
   state.events = mergeSameLabel(applyManual(applyOverrides(applySelection(events, selection))));
-  state.generatedAt = index.generated_at;
+  state.collectedAt = index.collected_at ?? null;
   return { ok: true, message: '更新しました' };
 }
 

@@ -1,6 +1,6 @@
 // collect: scrape → 正本JSON → export。部分成功を保存し runs.log に記録。spec §4.1, §5, §6。
 import { toJst, buildRecord } from './record';
-import { appendRunLog, readAllRecords, readRecord, writeExport, writeRecord } from './store';
+import { appendRunLog, readAllRecords, readCollectedAt, readRecord, writeCollectedAt, writeExport, writeRecord } from './store';
 import type { RawCache } from '../scraper/cache';
 import type { Fetcher } from '../scraper/http';
 import { articlePath, scrape } from '../scraper/scrape';
@@ -13,6 +13,8 @@ export interface CollectOptions {
   articlesDir: string;
   publicDir: string;
   runsLog: string;
+  /** 最後に収集した時刻の保存先(data/collected.json)。収集が中断せず終わったときだけ更新する */
+  collectedFile: string;
   now?: () => Date;
   log?: (msg: string) => void;
 }
@@ -53,8 +55,9 @@ export async function collect(o: CollectOptions): Promise<CollectSummary> {
   }
 
   const all = await readAllRecords(o.articlesDir);
-  const months = await writeExport(o.publicDir, all, toJst(now().getTime()));
   const aborted = res.error ? `${res.error.constructor.name}: ${res.error.message}` : null;
+  if (!aborted) await writeCollectedAt(o.collectedFile, toJst(now().getTime()));
+  const months = await writeExport(o.publicDir, all, toJst(now().getTime()), await readCollectedAt(o.collectedFile));
   const summary: CollectSummary = {
     items: res.items.length,
     fetched: res.fetched.length,
@@ -69,7 +72,7 @@ export async function collect(o: CollectOptions): Promise<CollectSummary> {
 }
 
 /** キャッシュ済み生HTMLから正本を再生成する(再取得なし。パーサ変更後用)。変わった記事のみ書き、exportも更新する。 */
-export async function rebuild(o: Pick<CollectOptions, 'cache' | 'articlesDir' | 'publicDir' | 'now'>): Promise<{ records: number; written: number }> {
+export async function rebuild(o: Pick<CollectOptions, 'cache' | 'articlesDir' | 'publicDir' | 'collectedFile' | 'now'>): Promise<{ records: number; written: number }> {
   const now = o.now ?? (() => new Date());
   let written = 0;
   const prevs = await readAllRecords(o.articlesDir);
@@ -81,6 +84,6 @@ export async function rebuild(o: Pick<CollectOptions, 'cache' | 'articlesDir' | 
     const rec = buildRecord({ item, html, fetchedAtMs: at, prev });
     if (await writeRecord(o.articlesDir, rec, prev)) written++;
   }
-  await writeExport(o.publicDir, await readAllRecords(o.articlesDir), toJst(now().getTime()));
+  await writeExport(o.publicDir, await readAllRecords(o.articlesDir), toJst(now().getTime()), await readCollectedAt(o.collectedFile));
   return { records: prevs.length, written };
 }

@@ -44,7 +44,10 @@ export interface MonthFile {
 }
 
 export interface IndexFile {
+  /** この index を作った時刻(収集とは限らない) */
   generated_at: string;
+  /** 公式サイトから最後に収集した時刻(data/collected.json。未収集・不明なら無い) */
+  collected_at?: string;
   months: string[];
   categories: string[];
 }
@@ -62,7 +65,7 @@ function monthsBetween(first: string, last: string): string[] {
   return out;
 }
 
-export function buildExport(records: ArticleRecord[], generatedAt: string): { months: MonthFile[]; index: IndexFile } {
+export function buildExport(records: ArticleRecord[], generatedAt: string, collectedAt: string | null = null): { months: MonthFile[]; index: IndexFile } {
   const byMonth = new Map<string, ExportEvent[]>();
   const categories = new Set<string>();
   for (const r of records) {
@@ -103,6 +106,6 @@ export function buildExport(records: ArticleRecord[], generatedAt: string): { mo
       month,
       events: (byMonth.get(month) ?? []).sort((a, b) => a.start.localeCompare(b.start) || a.id.localeCompare(b.id)),
     })),
-    index: { generated_at: generatedAt, months, categories: [...categories].sort() },
+    index: { generated_at: generatedAt, ...(collectedAt ? { collected_at: collectedAt } : {}), months, categories: [...categories].sort() },
   };
 }
