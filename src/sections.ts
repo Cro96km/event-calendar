@@ -15,7 +15,7 @@ export const GROUP_SORT: Readonly<Record<string, readonly string[]>> = { ...sort
 /** クエストの並び順キーワード(config/display/quest-order.json)。spec §4.3.5。 */
 export const QUEST_ORDER: readonly string[] = questOrder.keywords;
 /** クエストの小見出し(判定用。0=定例〈総称は config/display/quest-order.json の monthly_label〉、1=イベント)。表示順は QUEST_GROUP_ORDER。spec §4.3.5。 */
-export const QUEST_GROUPS: readonly string[] = [questOrder.monthly_label, questOrder.event_label, '絶級クエスト', '期間限定クエスト', '超究極クエスト', 'その他'];
+export const QUEST_GROUPS: readonly string[] = [questOrder.monthly_label, questOrder.event_label, `常設クエスト`, '絶級クエスト', '期間限定クエスト', '超究極クエスト', 'その他'];
 /** イベントガチャの写しをクエストの「イベントクエスト」に出すためのイベントid接尾辞(week.ts ganttSections)。 */
 export const EVENT_QUEST_SUFFIX = '~event';
 /** ガチャの小見出し(判定用。0=定例、1=イベント〈コラボ含む〉、2=期間限定)と定例ガチャの語(config/display/gacha-order.json)。表示順は GACHA_GROUP_ORDER。spec §4.3.7。 */
