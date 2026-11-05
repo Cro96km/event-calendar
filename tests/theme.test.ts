@@ -39,15 +39,32 @@ describe('画面の色(ライト/ダーク)', () => {
 
   it('切替ボタン: 押すとダーク⇄ライトが切り替わり、保存され、ラベルが変わる', () => {
     const root = draw();
-    expect(btn(root).textContent).toBe('ダーク');
+    expect(btn(root).textContent).toBe(''); // 文字ではなく記号
+    expect(btn(root).querySelector('.icon-moon')).not.toBeNull(); // ライト中は「ダークにする」月の記号
+    expect(btn(root).getAttribute('aria-label')).toBe('ダーク表示にする');
     btn(root).click();
     expect(currentTheme()).toBe('dark');
     expect(loadTheme()).toBe('dark');
-    expect(btn(root).textContent).toBe('ライト');
+    expect(btn(root).querySelector('.icon-sun')).not.toBeNull(); // ダーク中は「ライトにする」太陽の記号
+    expect(btn(root).getAttribute('aria-label')).toBe('ライト表示にする');
+    expect(btn(root).title).toBe('ライト表示にする');
     btn(root).click();
     expect(currentTheme()).toBe('light');
     expect(loadTheme()).toBe('light');
-    expect(btn(root).textContent).toBe('ダーク');
+    expect(btn(root).querySelector('.icon-moon')).not.toBeNull();
+  });
+
+  it('週/月の切替も記号(切替先のカレンダー)。ラベルは aria-label・title', () => {
+    const root = draw();
+    const v = root.querySelector<HTMLButtonElement>('[data-testid="view-toggle"]') as HTMLButtonElement;
+    expect(v.textContent).toBe('');
+    expect(v.querySelector('.icon-calendar-month')).not.toBeNull();
+    expect(v.getAttribute('aria-label')).toBe('月表示にする');
+    v.click();
+    const v2 = root.querySelector<HTMLButtonElement>('[data-testid="view-toggle"]') as HTMLButtonElement;
+    expect(v2.querySelector('.icon-calendar-week')).not.toBeNull();
+    expect(v2.getAttribute('aria-label')).toBe('週表示にする');
+    expect(v2.title).toBe('週表示にする');
   });
 
   it('撮影モード(Discord の画像)には切替ボタンを出さない', () => {
