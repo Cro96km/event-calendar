@@ -89,7 +89,7 @@ jobs:
           branch="update/$day"
           git switch -c "$branch"
           git add data config
-          git commit -m "data: 更新 $day"
+          git commit -m "data: update $day"
           git push origin "$branch"
           gh label create "自動マージ" --color 0e8a16 --description "健全性チェックを通り自動でマージした更新" 2>/dev/null || true
           gh label create "要確認" --color d93f0b --description "健全性チェックを通らず、人の確認が必要な更新" 2>/dev/null || true
@@ -106,7 +106,7 @@ jobs:
               echo "- Actions のログ(Verify)で lint・テスト・ビルド・点検の結果を確認してください。"
             fi
           } > pr-body.md
-          url=$(gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" --title "更新 $day" --body-file pr-body.md)
+          url=$(gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" --title "data: update $day" --body-file pr-body.md)
           echo "pr_url=$url" >> "$GITHUB_OUTPUT"
           if [ "$healthy" = "true" ]; then
             gh pr edit "$url" --add-label "自動マージ"
