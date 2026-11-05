@@ -1,12 +1,12 @@
-// 選択ファイル(config/judge/selection.md)の読み書きと public/data/selection.json の同期。
-import { mkdir, rm, writeFile } from 'node:fs/promises';
+// 表示の判断(判断の記憶・ルール)の適用と、結果の書き出し(config/judge/selection.md=読む用の一覧、public/data/selection.json=カレンダー用)。
+import { mkdir, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { parseRules, type Rule } from '../classify';
 import { countBuckets, emptyDecisions, importReview, judgeAll, parseDecisions, parseReview, renderReference, renderReview, reviewGroups, serializeDecisions, type Bucket, type Decisions } from '../decisions';
-import { buildCandidates, parseSelection, selectionJson } from '../selection';
+import { buildCandidates, selectionJson } from '../selection';
+import { publicCutoff } from './public-export';
 import { readTextIfExists as readText } from '../read-text';
 import type { ArticleRecord } from './record';
-
 
 /** 自動分類ルール。ファイルが無ければ空(=自動判定なし。従来どおり新規は全て未選択)。不正な設定は投げる。 */
 export async function readRules(path: string): Promise<Rule[] | null> {
@@ -16,21 +16,8 @@ export async function readRules(path: string): Promise<Rule[] | null> {
 
 export const readSelectionText = (path: string): Promise<string | null> => readText(path);
 
-/** 選択ファイルがあれば selection.json を書き、無ければ(古い)selection.json を消す。 */
-export async function syncSelectionJson(publicDir: string, selectionPath: string, generatedAt: string): Promise<boolean> {
-  const out = join(publicDir, 'selection.json');
-  const md = await readText(selectionPath);
-  if (md === null) {
-    await rm(out, { force: true });
-    return false;
-  }
-  await mkdir(publicDir, { recursive: true });
-  await writeFile(out, `${JSON.stringify(selectionJson(parseSelection(md), generatedAt), null, 2)}\n`);
-  return true;
-}
-
 export interface Paths {
-  /** 参照用の生成物(config/judge/selection.md) */
+  /** 表示の判断の一覧(config/judge/selection.md。自動生成。git管理) */
   selection: string;
   /** 要判断(ユーザが編集する唯一のファイル) */
   review: string;
@@ -70,8 +57,12 @@ export async function runCandidates(records: ArticleRecord[], paths: Paths, publ
   await mkdir(dirname(paths.decisions), { recursive: true });
   if (imported > 0 || (await readText(paths.decisions)) === null) await writeFile(paths.decisions, serializeDecisions(decisions));
   await writeFile(paths.review, renderReview(groups));
-  await writeFile(paths.selection, renderReference(js));
-  await syncSelectionJson(publicDir, paths.selection, generatedAt);
-  const now = parseSelection(await readText(paths.selection) as string);
-  return { candidates: cands.length, selected: [...now.values()].filter(Boolean).length, buckets: countBuckets(js), reviewGroups: groups.length, imported, unrecognized: rv.unrecognized };
+  // 読む用の一覧は、カレンダーに出る期間(直近12ヶ月の月初以降に終わる項目)だけ。日時が解釈できない(テスト)ときは全件
+  const nowMs = Date.parse(generatedAt);
+  await writeFile(paths.selection, renderReference(js, Number.isNaN(nowMs) ? null : publicCutoff(nowMs).slice(0, 7)));
+  // カレンダー用は全件の判断から直接作る(読む用の一覧を読み戻さない)
+  await mkdir(publicDir, { recursive: true });
+  const sel = new Map(js.map((j) => [j.cand.key, j.decision === 'on'] as const));
+  await writeFile(join(publicDir, 'selection.json'), `${JSON.stringify(selectionJson(sel, generatedAt), null, 2)}\n`);
+  return { candidates: cands.length, selected: [...sel.values()].filter(Boolean).length, buckets: countBuckets(js), reviewGroups: groups.length, imported, unrecognized: rv.unrecognized };
 }

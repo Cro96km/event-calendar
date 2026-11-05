@@ -24,15 +24,15 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 - 想定頻度: 週1回。収集後に `data/articles/` の差分を確認する。
 
 ### 2.1 表示候補の運用手順(収集→candidates→要判断→反映)
-ユーザが日常的に見る/編集するのは **`config/judge/needs-review.md` だけ**(`config/judge/selection.md` は参照用の自動生成物。編集しない)。
+ユーザが日常的に見る/編集するのは **`config/judge/needs-review.md` だけ**(`config/judge/selection.md` は読む用の自動生成物。編集しない)。
 1. `npm run collect -- --pages 2`(収集)。`data/articles/` の差分を確認。
 2. `npm run candidates`: 新規候補が記憶・ルールで 定例/自動ON/自動OFF/要判断 に分類される。出力に区分ごとの件数と、要判断の行数が出る。
 3. 要判断が0なら終わり(ブラウザ再読み込み)。あれば `config/judge/needs-review.md` を開き、各行(同種を集約済み。件数・例示タイトル付き)を **表示なら `- [x]`、非表示なら `- [-]`** にする(迷うなら `- [ ]` のまま=非表示扱いで次回も残る)。この判断は「この種類は常に表示/非表示」として `config/judge/decisions.json` に記憶され、同種の以後の候補は自動で適用される。
 4. `npm run candidates` を再実行(判断を取り込み、`public/data/selection.json` を更新)→ ブラウザを再読み込み。
 5. (任意)依頼文が欲しいとき: `npm run candidates -- --review-issue`(ドライラン。要判断の集約行のみ。発行は `--publish` 明示時のみ)。
 6. (任意)`npm run candidates -- --report` でルールと記憶の一致率・不一致を見て `config/judge/rules.json` を改善。
-- 全体を確認したいときだけ `config/judge/selection.md`(区分見出し付き、`[x]`=表示)を読む。誤った判断を直すときは `config/judge/decisions.json` の該当 `kinds`/`items` を編集(または削除して再度要判断に出す)。
-- `config/judge/decisions.json`・`config/judge/rules.json` はgit管理。`needs-review.md`・`selection.md`は管理外。
+- **何が表示・非表示か**は `config/judge/selection.md` を読む(GitHub 上でも見られる。要判断→表示→非表示の順で、各行に理由。カレンダーに出る期間の項目だけで、毎回現在の状態を作り直すので差分は見なくてよい)。誤った判断を直すときは `config/judge/decisions.json` の該当 `kinds`/`items` を編集(または削除して再度要判断に出す)。
+- `config/judge/decisions.json`・`config/judge/rules.json` はgit管理。`selection.md`(読む用の一覧)もgit管理(更新PRに含まれる)。`needs-review.md`は管理外。
 
 ## 3. データ管理
 - 正本: `data/articles/<YYYY>/<MM>/<id>.json`(月は記事IDの日付から)（git管理）。生HTML: `data/raw/`（git管理外、消えても再取得可）。
@@ -89,7 +89,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 
 | フォルダ | 役割 | ファイル(いつ直すか) |
 |---|---|---|
-| `config/judge/` | 表示・非表示の判断 | `rules.json`(自動判定のルール。上から最初の一致)、`decisions.json`(判断の記憶。`npm run candidates` が要判断ファイルから取り込む生成物なので、通常は手で編集しない)。ローカルの生成物 `needs-review.md`(要判断の一覧・編集する)・`selection.md`(参照用)はgit管理外 |
+| `config/judge/` | 表示・非表示の判断 | `rules.json`(自動判定のルール。上から最初の一致)、`decisions.json`(判断の記憶。`npm run candidates` が要判断ファイルから取り込む生成物なので、通常は手で編集しない)。`selection.md`(表示の判断の一覧。自動生成・git管理・読む用)。ローカルの生成物 `needs-review.md`(要判断の一覧・編集する)はgit管理外 |
 | `config/display/` | 表記・並び・色 | `label-overrides.json`(長いラベルを短くする)、`sort-order.json`・`gacha-order.json`・`campaign-order.json`・`quest-order.json`(並び順・小見出し)、`quest-colors.json`(禁忌の獄の属性色と色の定義)、`recurring.json`(定例のラベル) |
 | `config/schedule/` | ニュースに載らない日程・事実 | `manual.json`(手動の調整。公式に無い項目の追加・項目の非表示。§14)、`hakai.json`(星墓のクエスト名→色と、固定の階層。§8)、`monthly-days.json`(毎月決まった日に出る項目)、`normal-quest-attributes.json`(ノーマルクエストの曜日別の対象属性) |
 

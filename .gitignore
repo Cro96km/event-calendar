@@ -5,7 +5,6 @@ data/raw/
 *.log
 .env
 public/data/
-config/judge/selection.md
 config/judge/needs-review.md
 update-report.md
 update-report.json

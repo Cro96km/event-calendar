@@ -4,10 +4,10 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { Rule } from '../src/classify';
 import type { ArticleRecord } from '../src/data/record';
-import { runCandidates, syncSelectionJson } from '../src/data/selection-store';
+import { runCandidates } from '../src/data/selection-store';
 import { emptyDecisions, importReview, judgeAll, kindId, kindKey, parseDecisions, parseReview, renderReference, renderReview, reviewGroups, selectedKeys, serializeDecisions } from '../src/decisions';
 import { buildReviewIssue, evaluate, formatEvaluation } from '../src/review-issue';
-import { buildCandidates, parseSelection } from '../src/selection';
+import { buildCandidates } from '../src/selection';
 
 // 合成データのみ(実タイトル・本文は含めない)
 const rules: Rule[] = [
@@ -129,19 +129,42 @@ describe('runCandidates と評価', () => {
       const r3 = await runCandidates(recs, paths, pub, 'G', rules);
       expect(r3.imported).toBe(0);
       expect(await readFile(paths.selection, 'utf8')).toBe(text);
-      expect(parseSelection(text).get('mystery')).toBe(true);
+      expect(text).toContain('## 表示(2件)');
+      expect(text).not.toContain('## 要判断(1件)');
       expect(renderReference(judgeAll(buildCandidates(recs), JSON.parse(await readFile(paths.decisions, 'utf8')), rules))).toBe(text);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
   });
-  it('selection.md が無ければ selection.json は作らない', async () => {
+  it('読む用の一覧(selection.md)は、直近12ヶ月の月初以降に終わる項目だけ。日時を含まず、判断が変わらなければ同じ内容', async () => {
     const dir = await mkdtemp(join(tmpdir(), 'dec-'));
     try {
-      expect(await syncSelectionJson(join(dir, 'pub'), join(dir, 'none.md'), 'G')).toBe(false);
+      const paths = { selection: join(dir, 'selection.md'), review: join(dir, 'r.md'), decisions: join(dir, 'd.json') };
+      const recs = [rec('1_1', 'BBB x'), rec('2_1', 'mystery'), rec('3_1', 'AAA y')];
+      const at = '2026-11-05T12:00:00+09:00';
+      await runCandidates(recs, paths, join(dir, 'pub'), at, rules);
+      const text = await readFile(paths.selection, 'utf8');
+      expect(text).toContain('# 表示の判断の一覧(自動生成)');
+      expect(text).toContain('2025-11 以降に終わる項目');
+      expect(text.indexOf('## 要判断')).toBeLessThan(text.indexOf('## 表示'));
+      expect(text.indexOf('## 表示')).toBeLessThan(text.indexOf('## 非表示'));
+      expect(text).not.toContain(at);
+      await runCandidates(recs, paths, join(dir, 'pub'), '2026-11-06T09:00:00+09:00', rules);
+      expect(await readFile(paths.selection, 'utf8')).toBe(text);
+      // カレンダー用の selection.json は、一覧の窓に関係なく全件の判断から作る
+      expect(JSON.parse(await readFile(join(dir, 'pub/selection.json'), 'utf8')).total).toBe(3);
     } finally {
       await rm(dir, { recursive: true, force: true });
     }
+  });
+  it('一覧: 窓より前に終わった項目は載せず、窓内は要判断・表示・非表示に分ける(窓なしなら全件)', () => {
+    const old = { ...rec('9_1', 'BBB old'), events: [{ ...rec('9_1', 'BBB old').events[0]!, start: '2024-01-01T12:00:00+09:00', end: '2024-01-05T11:59:00+09:00' }] };
+    const js = judgeAll(buildCandidates([rec('1_1', 'BBB x'), rec('2_1', 'mystery'), old]), emptyDecisions(), rules);
+    const win = renderReference(js, '2025-11');
+    expect(win).toContain('BBB x');
+    expect(win).not.toContain('BBB old');
+    expect(renderReference(js)).toContain('BBB old');
+    expect(win).toMatch(/## 要判断\(1件\)/);
   });
   it('一致率: 記憶を教師にルール単独の判定を比較', () => {
     const d = emptyDecisions();

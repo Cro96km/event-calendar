@@ -16,7 +16,7 @@ showHelpIfRequested(`npm run collect [-- --pages N --since YYYY-MM-DD]  /  npm r
   副作用: collect は公式サイトへアクセスする。間隔2秒以上・直列・429で即中断(礼節。docs/operations.md §4)。`);
 
 if (process.argv[2] === '--rebuild') {
-  const r = await rebuild({ cache: new RawCache('data/raw'), articlesDir: 'data/articles', publicDir: 'public/data', selectionPath: 'config/judge/selection.md' });
+  const r = await rebuild({ cache: new RawCache('data/raw'), articlesDir: 'data/articles', publicDir: 'public/data' });
   console.log(`records=${r.records} written=${r.written}`);
   process.exit(0);
 }
@@ -38,7 +38,6 @@ const s = await collect({
   since,
   articlesDir: 'data/articles',
   publicDir: 'public/data',
-  selectionPath: 'config/judge/selection.md',
   runsLog: 'data/runs.log',
   log: console.log,
 });

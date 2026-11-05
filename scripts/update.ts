@@ -58,7 +58,6 @@ if (!noCollect) {
     since,
     articlesDir: 'data/articles',
     publicDir: 'public/data',
-    selectionPath: 'config/judge/selection.md',
     runsLog: 'data/runs.log',
     log: console.log,
   });

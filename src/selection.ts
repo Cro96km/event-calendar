@@ -81,18 +81,6 @@ export function buildCandidates(records: ArticleRecord[]): Candidate[] {
     .map(({ _s, ...c }) => { void _s; return c; });
 }
 
-export const LINE = /^- \[([ xX])\] (.+?)(?: \| .*)?$/;
-
-/** 選択ファイル → キー→選択状態。候補行以外(見出し・説明)は無視。 */
-export function parseSelection(md: string): Map<string, boolean> {
-  const out = new Map<string, boolean>();
-  for (const line of md.split(/\r?\n/)) {
-    const m = LINE.exec(line);
-    if (m) out.set((m[2] as string).trim(), m[1] !== ' ');
-  }
-  return out;
-}
-
 /** 項目自身に期間が無く記事の期間を継承していることを示す(選択ファイル・UI共通) */
 export const INHERIT_MARK = '(記事期間を継承)';
 

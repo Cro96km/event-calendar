@@ -39,7 +39,6 @@ export function kindKey(key: string): string {
 export const kindId = (category: string, key: string): string => `${category}::${kindKey(key)}`;
 
 export type Bucket = 'recurring' | 'auto-on' | 'auto-off' | 'review';
-const BUCKET_LABEL: Record<Bucket, string> = { recurring: '定例', 'auto-on': '自動ON', 'auto-off': '自動OFF', review: '要判断' };
 
 export interface Judged {
   cand: Candidate;
@@ -197,18 +196,47 @@ export function serializeDecisions(d: Decisions): string {
 
 export const GENERATED_MARK = '<!-- generated: npm run candidates -->';
 
-const SECTION_ORDER: Bucket[] = ['review', 'recurring', 'auto-on', 'auto-off'];
+/** 候補の期間 `YYYY-MM-DD〜YYYY-MM-DD`(終了未定は `〜` のみ)の終了日(未定なら開始日)。 */
+const endDay = (latest: string): string => {
+  const [start = '', end = ''] = latest.split('〜');
+  return end !== '' ? end : start;
+};
 
-/** 参照用の生成物(config/judge/selection.md)。編集不要。行形式は `- [x|空] キー | …` で selection.json の元にもなる。 */
-export function renderReference(js: Judged[]): string {
-  const how = (j: Judged): string => (j.source === 'memory' ? '記憶' : j.source === 'rule' ? `ルール:${j.rule}` : '未判断');
-  const body = SECTION_ORDER.map((b) => {
-    const rows = js.filter((j) => j.bucket === b);
-    const label = BUCKET_LABEL[b];
-    const lines = rows.map((j) => `- [${j.decision === 'on' ? 'x' : ' '}] ${j.cand.key} | ${j.cand.category} | ${j.cand.count}件 | ${j.cand.latest}${j.cand.inherited ? INHERIT_MARK : ''} | ${j.cand.url} | ${how(j)}`);
-    return `## ${label}(${rows.length}件)\n\n${lines.join('\n')}${lines.length ? '\n' : ''}`;
-  });
-  return `${GENERATED_MARK}\n# 表示候補の分類(自動生成・参照用)\n\nこのファイルは \`npm run candidates\` が毎回作り直します。**編集しないでください**(編集は config/judge/needs-review.md の要判断のみ)。\n区分: 要判断(未選択) / 定例(同種が複数記事に出現し判断済み) / 自動ON / 自動OFF。\`[x]\`が表示。\n\n${body.join('\n')}`;
+/**
+ * 表示の判断の一覧(config/judge/selection.md。自動生成)。毎回、現在の状態を作り直す(追記ではない)ので、このファイル1つで判断できる。
+ * fromMonth(YYYY-MM)以降に終わる項目だけを載せる(カレンダーに出る期間。null なら全件)。日時を含めないので、判断が変わらない限り差分は出ない。
+ * 並びは 要判断 → 表示 → 非表示。各区分は開始が新しい順。
+ */
+export function renderReference(js: Judged[], fromMonth: string | null = null): string {
+  const how = (j: Judged): string => {
+    const base = j.source === 'memory' ? '判断の記憶' : j.source === 'rule' ? `ルール ${j.rule}` : '未判断';
+    return j.bucket === 'recurring' ? `${base}(定例)` : base;
+  };
+  const rows = js.filter((j) => fromMonth === null || endDay(j.cand.latest).slice(0, 7) >= fromMonth);
+  const row = (j: Judged): string => `- ${j.cand.key} | ${j.cand.category} | ${j.cand.latest}${j.cand.inherited ? INHERIT_MARK : ''} | ${how(j)} | ${j.cand.url}`;
+  const newestFirst = (a: Judged, b: Judged): number => b.cand.latest.localeCompare(a.cand.latest) || a.cand.key.localeCompare(b.cand.key);
+  const part = (title: string, note: string, list: Judged[]): string => {
+    const lines = [...list].sort(newestFirst).map(row);
+    return `## ${title}(${list.length}件)\n\n${note}\n\n${lines.join('\n')}${lines.length ? '\n' : ''}`;
+  };
+  const review = rows.filter((j) => j.decision === null);
+  const on = rows.filter((j) => j.decision === 'on');
+  const off = rows.filter((j) => j.decision === 'off');
+  const range = fromMonth === null ? 'すべての項目' : `${fromMonth} 以降に終わる項目(カレンダーに出る期間)`;
+  return [
+    GENERATED_MARK,
+    '# 表示の判断の一覧(自動生成)',
+    '',
+    `${range}について、カレンダーに**表示するか・しないか**と、その理由を並べています。このファイルを見るだけで判断できます(差分は見なくて構いません)。`,
+    '',
+    '- **編集しないでください**(`npm run update` が毎回作り直します)。判断を変えるときは、要対応の Issue のチェック(`/apply`)か、`config/judge/decisions.json`(種類・項目の記憶)、`config/judge/rules.json`(自動ルール)を直します。',
+    '- 並びは「要判断 → 表示 → 非表示」。各区分は開始が新しい順。理由は「判断の記憶」「ルール 名前」「未判断」。(定例)は同種が複数の記事に出ているもの。',
+    '- メンテナンスと、手動の調整(`config/schedule/manual.json`)の項目は、ここには載りません。',
+    '',
+    part('要判断', '未判断の項目です。判断するまで**非表示**です。', review),
+    part('表示', 'カレンダーに表示します。', on),
+    part('非表示', 'カレンダーに表示しません。', off),
+  ].join('\n');
 }
 
 export const countBuckets = (js: Judged[]): Record<Bucket, number> => {
