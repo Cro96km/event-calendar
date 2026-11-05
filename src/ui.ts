@@ -2,8 +2,8 @@
 import type { ExportEvent, IndexFile } from './data/export';
 import { appTitle } from './app';
 import { monthlyEvents, type MonthlyDef } from './monthly';
+import { clampToWindow, windowRange } from './window';
 import { type BarSpan, addDays, campaignGroup, questGroup, maintenanceBars, maintenanceOnDay, addMonthsToDay, dayLabel, monthWindow, eventsForDay, formatJst, ganttSections, mergeSameLabel, rowLabel, periodText, slotRows, weekDays, weekdayOf } from './week';
-import { INHERIT_MARK } from './selection';
 import { MAINTENANCE_CATEGORY, gachaGroup } from './sections';
 import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
@@ -105,7 +105,7 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
   for (const event of [...maint, ...entries.map((x) => x.event)]) {
     const item = el('section', 'detail-item');
     item.append(el('h3', undefined, fullLabel(event.name)));
-    item.append(el('p', undefined, `${event.category === MAINTENANCE_CATEGORY ? '実施日程' : '開催期間'}: ${periodText(event)}${event.inherited ? INHERIT_MARK : ''}`));
+    item.append(el('p', undefined, `${event.category === MAINTENANCE_CATEGORY ? '実施日程' : '開催期間'}: ${periodText(event)}`));
     // 報酬受取期限は表示しない(別記事の内容を取り込み大半が誤りのため)
     if (event.slots?.length) {
       const box = el('div', 'detail-block');
@@ -232,8 +232,8 @@ function attachDrag(grid: HTMLElement, state: AppState, rerender: () => void): v
       drag.moved = true;
       suppressClick = true;
       const n = dragShift(dx, drag.colWidth);
-      const weekStart = addDays(drag.baseWeekStart, n);
-      const monthStart = addDays(drag.baseMonthStart, n);
+      const weekStart = clampToWindow(addDays(drag.baseWeekStart, n), state.today);
+      const monthStart = clampToWindow(addDays(drag.baseMonthStart, n), state.today);
       if (state.view === 'week' ? weekStart === state.weekStart : monthStart === state.monthStart) return;
       if (state.view === 'week') state.weekStart = weekStart;
       else state.monthStart = monthStart;
@@ -332,15 +332,20 @@ export function render(root: HTMLElement, state: AppState): void {
   nav.append(btn(state.view === 'week' ? '月表示' : '週表示', 'view-toggle', toggleView));
   const month = state.view === 'month';
   nav.append(
-    btn('<', 'nav-prev', () => (month ? (state.monthStart = addMonthsToDay(state.monthStart, -1)) : (state.weekStart = addDays(state.weekStart, -7))), undefined, month ? '前の月' : '前の週'),
+    btn('<', 'nav-prev', () => (month ? (state.monthStart = clampToWindow(addMonthsToDay(state.monthStart, -1), state.today)) : (state.weekStart = clampToWindow(addDays(state.weekStart, -7), state.today))), undefined, month ? '前の月' : '前の週'),
     btn('●', 'nav-today', () => {
       state.weekStart = state.today;
       state.monthStart = state.today;
     }, undefined, month ? '今月に戻る' : '今日に戻る'),
-    btn('>', 'nav-next', () => (month ? (state.monthStart = addMonthsToDay(state.monthStart, 1)) : (state.weekStart = addDays(state.weekStart, 7))), undefined, month ? '次の月' : '次の週'),
+    btn('>', 'nav-next', () => (month ? (state.monthStart = clampToWindow(addMonthsToDay(state.monthStart, 1), state.today)) : (state.weekStart = clampToWindow(addDays(state.weekStart, 7), state.today))), undefined, month ? '次の月' : '次の週'),
   );
   const atBase = month ? state.monthStart === state.today : state.weekStart === state.today;
   (nav.querySelector('[data-testid="nav-today"]') as HTMLButtonElement).disabled = atBase;
+  // 表示範囲(過去・未来それぞれ config/display/window.json の月数)を超えて移動できない
+  const range = windowRange(state.today);
+  const cur = month ? state.monthStart : state.weekStart;
+  (nav.querySelector('[data-testid="nav-prev"]') as HTMLButtonElement).disabled = cur <= range.from;
+  (nav.querySelector('[data-testid="nav-next"]') as HTMLButtonElement).disabled = cur >= range.to;
   if (state.refresh) {
     const refresh = state.refresh;
     const ub = el('button', 'vbtn', state.updating ? '更新中…' : '更新');
@@ -388,13 +393,13 @@ export function render(root: HTMLElement, state: AppState): void {
   const rowsBox = el('div', 'g-rows');
   grid.append(body);
   const dateRow = el('div', 'g-row g-dates');
-  dateRow.append(el('div', 'g-label', `${Number((state.view === 'week' ? state.weekStart : state.monthStart).slice(5, 7))}月`));
+  dateRow.append(el('div', 'g-label', ((d: string) => `${d.slice(0, 4)}年${Number(d.slice(5, 7))}月`)(state.view === 'week' ? state.weekStart : state.monthStart)));
   for (const day of days) {
     const wd = weekdayOf(day);
     const cls = ['day', 'g-date', wd === '土' ? 'sat' : wd === '日' ? 'sun' : '', day === state.today ? 'today' : ''].filter(Boolean).join(' ');
     const head = el('button', cls);
     head.dataset.day = day;
-    if (day.endsWith('-01') && day !== state.today) head.append(el('span', 'dmon', `${Number(day.slice(5, 7))}月`));
+    if (day.endsWith('-01') && day !== state.today) head.append(el('span', 'dmon', day.endsWith('-01-01') ? `${day.slice(0, 4)}年1月` : `${Number(day.slice(5, 7))}月`));
     head.append(el('span', 'dnum', String(Number(day.slice(8, 10)))), el('span', 'dwd', wd));
     head.title = dayLabel(day);
     head.onclick = () => {

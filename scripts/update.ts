@@ -26,7 +26,7 @@ const HELP = `npm run update [-- オプション]
     --issue FILE     要対応Issueの本文の出力先(既定 update-issue.md。要対応がある時だけ作る。要判断はチェックボックス)
     --help           この説明
   入力: data/articles(正本)、config/judge/(判断の記憶・ルール)
-  出力: data/articles(更新)、public/data/(表示用。収集しなくても正本から作り直す)、config/judge/needs-review.md・selection.md(生成物)、レポート・サマリ・要対応Issue本文
+  出力: data/articles(更新)、public/data/(表示用。収集しなくても正本から作り直す)、config/judge/needs-review.md・selection/(月別の表。生成物)、レポート・サマリ・要対応Issue本文
   副作用: 公式サイトへアクセスする(--no-collect 以外)。間隔2秒以上・直列・429で即中断(礼節。docs/operations.md §4)。`;
 
 const argv = process.argv.slice(2);
@@ -58,7 +58,6 @@ if (!noCollect) {
     since,
     articlesDir: 'data/articles',
     publicDir: 'public/data',
-    selectionPath: 'config/judge/selection.md',
     runsLog: 'data/runs.log',
     log: console.log,
   });
@@ -72,7 +71,7 @@ const rules = await readRules('config/judge/rules.json');
 const generatedAt = toJst(Date.now());
 // 表示用データ(public/data)を正本から作り直す(収集しない場合や、デプロイ用の反映でも必要。収集した場合は collect が作ったものの再生成になるだけ)
 await writeExport('public/data', cur, generatedAt);
-await runCandidates(cur, { selection: 'config/judge/selection.md', review: 'config/judge/needs-review.md', decisions: 'config/judge/decisions.json' }, 'public/data', generatedAt, rules);
+await runCandidates(cur, { selection: 'config/judge/selection', review: 'config/judge/needs-review.md', decisions: 'config/judge/decisions.json' }, 'public/data', generatedAt, rules);
 const decisions = (await readDecisions('config/judge/decisions.json')) ?? emptyDecisions();
 
 const report = buildUpdateReport({ prev, cur, decisions, rules });

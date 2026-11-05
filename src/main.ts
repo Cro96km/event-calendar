@@ -15,7 +15,7 @@ async function load(): Promise<{ index: IndexFile; events: ExportEvent[]; select
   };
   const index = await get<IndexFile>('data/index.json');
   const months = await Promise.all(index.months.map((m) => get<MonthFile>(`data/events/${m}.json`)));
-  // 選択ファイル(config/judge/selection.md)由来。無い(404/JSONでない応答)ときは全件表示(spec §4.5)
+  // 表示の判断(public/data/selection.json。判断の記憶とルールから作る)。無い(404/JSONでない応答)ときは全件表示(spec §4.5)
   const selection = await get<SelectionJson>('data/selection.json').catch(() => null);
   return { index, events: mergeEvents(months.map((m) => m.events)), selection };
 }

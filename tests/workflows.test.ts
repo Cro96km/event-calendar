@@ -7,8 +7,8 @@ const files = readdirSync(DIR).filter((f) => f.endsWith('.yml'));
 const text = (f: string): string => readFileSync(new URL(f, DIR), 'utf8');
 
 describe('GitHub Actions ワークフローの不変条件', () => {
-  it('ワークフローが存在する(update / deploy / apply / manual / ci)', () => {
-    expect(files).toEqual(expect.arrayContaining(['update.yml', 'deploy.yml', 'apply.yml', 'manual.yml', 'ci.yml']));
+  it('ワークフローが存在する(update / deploy / apply / manual / prune / ci)', () => {
+    expect(files).toEqual(expect.arrayContaining(['update.yml', 'deploy.yml', 'apply.yml', 'manual.yml', 'prune.yml', 'ci.yml']));
   });
 
   it.each(files)('%s: 使うアクションはすべてコミットSHAで固定(サプライチェーン対策)', (f) => {
@@ -48,6 +48,19 @@ describe('GitHub Actions ワークフローの不変条件', () => {
     expect(t).toContain('npm run check');
     expect(t).toContain('gh workflow run deploy.yml');
     // 入力(github.event.inputs.*)は env: にだけ書く。run: に直接展開しない
+    const runs = t.split(/\n(?=\s*-?\s*(?:name|run|id|uses|env|if|with):)/).filter((blk) => /^\s*-?\s*run:/.test(blk));
+    for (const blk of runs) expect(blk).not.toMatch(/\$\{\{\s*github\.event\.inputs\./);
+  });
+
+  it('prune.yml: 手動実行だけ。既定は確認だけ(削除しない)で、apply=true のときだけ削除→検証→自動マージ→deploy。入力は env 経由', () => {
+    const t = text('prune.yml');
+    expect(t).toMatch(/on:\n\s+workflow_dispatch:/);
+    expect(t).not.toMatch(/^\s+(push|pull_request|schedule|issue_comment|issues):/m);
+    expect(t).toMatch(/apply:[\s\S]*?default: false/);
+    expect(t).toContain('npm run --silent prune --');
+    // 削除・検証・PRの各工程は apply=true のときだけ
+    for (const step of ['Regenerate data', 'Verify', 'PR and merge']) expect(t, step).toMatch(new RegExp(`name: ${step}\\n\\s+if: github.event.inputs.apply == 'true'`));
+    expect(t).toContain('gh workflow run deploy.yml');
     const runs = t.split(/\n(?=\s*-?\s*(?:name|run|id|uses|env|if|with):)/).filter((blk) => /^\s*-?\s*run:/.test(blk));
     for (const blk of runs) expect(blk).not.toMatch(/\$\{\{\s*github\.event\.inputs\./);
   });

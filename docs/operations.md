@@ -24,15 +24,15 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 - 想定頻度: 週1回。収集後に `data/articles/` の差分を確認する。
 
 ### 2.1 表示候補の運用手順(収集→candidates→要判断→反映)
-ユーザが日常的に見る/編集するのは **`config/judge/needs-review.md` だけ**(`config/judge/selection.md` は参照用の自動生成物。編集しない)。
+ユーザが日常的に見る/編集するのは **`config/judge/needs-review.md` だけ**(`config/judge/selection/` は読む用の自動生成物。編集しない)。
 1. `npm run collect -- --pages 2`(収集)。`data/articles/` の差分を確認。
 2. `npm run candidates`: 新規候補が記憶・ルールで 定例/自動ON/自動OFF/要判断 に分類される。出力に区分ごとの件数と、要判断の行数が出る。
 3. 要判断が0なら終わり(ブラウザ再読み込み)。あれば `config/judge/needs-review.md` を開き、各行(同種を集約済み。件数・例示タイトル付き)を **表示なら `- [x]`、非表示なら `- [-]`** にする(迷うなら `- [ ]` のまま=非表示扱いで次回も残る)。この判断は「この種類は常に表示/非表示」として `config/judge/decisions.json` に記憶され、同種の以後の候補は自動で適用される。
 4. `npm run candidates` を再実行(判断を取り込み、`public/data/selection.json` を更新)→ ブラウザを再読み込み。
 5. (任意)依頼文が欲しいとき: `npm run candidates -- --review-issue`(ドライラン。要判断の集約行のみ。発行は `--publish` 明示時のみ)。
 6. (任意)`npm run candidates -- --report` でルールと記憶の一致率・不一致を見て `config/judge/rules.json` を改善。
-- 全体を確認したいときだけ `config/judge/selection.md`(区分見出し付き、`[x]`=表示)を読む。誤った判断を直すときは `config/judge/decisions.json` の該当 `kinds`/`items` を編集(または削除して再度要判断に出す)。
-- `config/judge/decisions.json`・`config/judge/rules.json` はgit管理。`needs-review.md`・`selection.md`は管理外。
+- **何が表示・非表示か**は `config/judge/selection/YYYY/MM.md`(記事の月ごと=`data/articles` と同じ分類の表。GitHub 上でも見られる。判定・項目・カテゴリ・期間・理由・記事リンクの列)を読む。カレンダーの表示範囲(`config/display/window.json`。過去12か月・未来12か月)の項目だけで、毎回作り直す。更新PRでは、変わった月の表だけに差分が出る。内容に不満があれば、生成物ではなく判断(Issue の `/apply`、`config/judge/decisions.json`、`config/judge/rules.json`)を直す。個別の項目だけ外したいときは §14 の `hide`。
+- `config/judge/decisions.json`・`config/judge/rules.json` はgit管理。`selection/`(読む用の月別の表)もgit管理(更新PRに含まれる)。`needs-review.md`は管理外。
 
 ## 3. データ管理
 - 正本: `data/articles/<YYYY>/<MM>/<id>.json`(月は記事IDの日付から)（git管理）。生HTML: `data/raw/`（git管理外、消えても再取得可）。
@@ -89,8 +89,8 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 
 | フォルダ | 役割 | ファイル(いつ直すか) |
 |---|---|---|
-| `config/judge/` | 表示・非表示の判断 | `rules.json`(自動判定のルール。上から最初の一致)、`decisions.json`(判断の記憶。`npm run candidates` が要判断ファイルから取り込む生成物なので、通常は手で編集しない)。ローカルの生成物 `needs-review.md`(要判断の一覧・編集する)・`selection.md`(参照用)はgit管理外 |
-| `config/display/` | 表記・並び・色 | `label-overrides.json`(長いラベルを短くする)、`sort-order.json`・`gacha-order.json`・`campaign-order.json`・`quest-order.json`(並び順・小見出し)、`quest-colors.json`(禁忌の獄の属性色と色の定義)、`recurring.json`(定例のラベル) |
+| `config/judge/` | 表示・非表示の判断 | `rules.json`(自動判定のルール。上から最初の一致)、`decisions.json`(判断の記憶。`npm run candidates` が要判断ファイルから取り込む生成物なので、通常は手で編集しない)。`selection/YYYY/MM.md`(表示の判断の月別の表。記事の月ごと。自動生成・git管理・読む用)。ローカルの生成物 `needs-review.md`(要判断の一覧・編集する)はgit管理外 |
+| `config/display/` | 表記・並び・色・表示範囲 | `window.json`(カレンダーの表示範囲。過去・未来それぞれの月数。公開データ・移動の限界・判断の表・`npm run prune` が使う)、`label-overrides.json`(長いラベルを短くする)、`sort-order.json`・`gacha-order.json`・`campaign-order.json`・`quest-order.json`(並び順・小見出し)、`quest-colors.json`(禁忌の獄の属性色と色の定義)、`recurring.json`(定例のラベル) |
 | `config/schedule/` | ニュースに載らない日程・事実 | `manual.json`(手動の調整。公式に無い項目の追加・項目の非表示。§14)、`hakai.json`(星墓のクエスト名→色と、固定の階層。§8)、`monthly-days.json`(毎月決まった日に出る項目)、`normal-quest-attributes.json`(ノーマルクエストの曜日別の対象属性) |
 
 過去記事を全体から判断し直す仕組み(`npm run review-year`・`config/review/`)は廃止した。更新ごとの差分で判断する(運用の再設計。。
@@ -150,6 +150,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 | `deploy.yml` | main への push(`data/articles`・`config`・`src`・`public`・設定ファイルの変更)、手動実行、`update.yml`・`apply.yml` の起動 | 正本と設定から表示用データを作り直し(`npm run update -- --no-collect`。収集しない)、公開サイトをビルドして GitHub Pages に公開 |
 | `apply.yml` | 要対応Issue(タイトルが「要対応」)に `/apply` とコメント(所有者・メンバー・共同作業者のみ。Issueの作者も更新ワークフローのbotか所有者のものだけ) | Issue本文のチェックを `npm run judge` で判断の記憶に取り込み、検証して PR→自動マージ→`deploy.yml` 起動→Issue を閉じる。検証が通らなければ『要確認』で待機 |
 | `manual.yml` | 手動実行のみ(Actions → manual → Run workflow) | 入力(操作・項目名・期間など)で `npm run manual` を実行 → 検証(lint・テスト・ビルド・`npm run check`) → `config/schedule/manual.json` を更新する PR → 健全なら自動マージして `deploy.yml` を起動。検証が通らなければ『要確認』で待機。手順は §14 |
+| `prune.yml` | 手動実行のみ(Actions → prune → Run workflow) | 既定は確認だけ(`npm run prune`。対象の件数と月別の内訳を実行結果の概要に出す)。`apply=true` のときだけ、削除 → 表示用データの作り直し → 検証 → `data: prune old articles` の PR → 健全なら自動マージして `deploy.yml` を起動。手順は §15 |
 | `ci.yml` | PR、main への push | lint・テスト・ビルド(人が作る PR 用) |
 
 **手動実行の入力(update.yml)**: `collect`(false にすると収集せず、設定の変更だけを反映して判定とレポートを作り直す)、`pages`(既定2)、`since`(初回・過去分用。公式サイトへの負荷が大きい)。
@@ -184,3 +185,9 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 - **JSON を直接編集**(GitHub の Web エディタでもよい)。
 
 反映は main への変更後の `deploy.yml`(収集は不要)。常設・期間付きの `add` は、`end` を過ぎると表示されなくなるので、延長するときは `end` を直す。
+
+## 15. 表示範囲と不要データの削除 `npm run prune`
+- カレンダーの表示範囲は **`config/display/window.json`**(`past_months`=過去12、`future_months`=未来12。今日を基準)。公開サイトのデータ、画面の移動(< > とドラッグ。範囲の端で < > が無効になる)、`config/judge/selection/` の表が、この値を使う。変えるときはこの2つだけを直す。
+- 表示範囲より前に終わった記事は、正本(`data/articles`)に残っていても画面には出ない。増えすぎたら **`npm run prune`**(既定は確認だけ。削除しない)で対象の件数と月別の内訳を見て、`npm run prune -- --apply` で削除する。基準の日を変えるときは `--before YYYY-MM-DD`。削除は PR にして、マージで反映する(git で戻せる)。**Actions の prune** からも同じことができる(パソコンの環境が要らない): Actions → prune → Run workflow。`apply` を付けないと確認だけ(件数と内訳が実行結果の概要に出る)。`apply` を付けると、削除の PR が作られ、検証が通れば自動でマージされて反映される。
+- 対象は、最も遅い項目の終了(未定は開始。項目が無い記事は公開日)が基準の日より前の記事だけ。範囲の中まで続く記事は残る。判断の記憶(`decisions.json`)は変えない。
+- 削除した古い記事は、`--since` で過去分を取り直すと再び入る。週1回の更新(最新2ページ)では入らない。

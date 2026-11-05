@@ -14,6 +14,7 @@ export const COMMANDS: readonly CommandInfo[] = [
   { name: 'manual', summary: '手動の調整(公式に無い項目の追加・項目の非表示)を manual.json に書式を守って反映する', group: '日常の運用', cli: 'scripts/manual.ts' },
   { name: 'check', summary: '設定と収集データの点検。終了コードで自動マージ可否を返す(0=可 / 1=要確認)', group: '日常の運用', cli: 'scripts/check.ts' },
   { name: 'collect', summary: '収集だけ(判定・レポートなし)。通常は update を使う', group: '保守・調査', cli: 'scripts/collect.ts' },
+  { name: 'prune', summary: '表示範囲より前に終わった古い記事(data/articles)を削除する。既定は確認だけ、--apply で削除', group: '保守・調査', cli: 'scripts/prune.ts' },
   { name: 'rebuild', summary: 'キャッシュ済みの生HTML(data/raw)から正本を作り直す(再取得なし。パーサを直した後)', group: '保守・調査', cli: 'scripts/collect.ts' },
   { name: 'scrape', summary: '公式ニュースの生HTMLを data/raw に保存するだけ(正本は作らない)', group: '保守・調査', cli: 'scripts/scrape.ts' },
   { name: 'reparse', summary: 'data/raw から期間を抽出し直して結果を表示する(ファイルは書かない)', group: '保守・調査', cli: 'scripts/scrape.ts' },

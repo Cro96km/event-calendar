@@ -1,6 +1,5 @@
 // collect: scrape → 正本JSON → export。部分成功を保存し runs.log に記録。spec §4.1, §5, §6。
 import { toJst, buildRecord } from './record';
-import { syncSelectionJson } from './selection-store';
 import { appendRunLog, readAllRecords, readRecord, writeExport, writeRecord } from './store';
 import type { RawCache } from '../scraper/cache';
 import type { Fetcher } from '../scraper/http';
@@ -13,8 +12,6 @@ export interface CollectOptions {
   since?: string;
   articlesDir: string;
   publicDir: string;
-  /** 選択ファイル(config/judge/selection.md)。指定時は selection.json を同期する(選択は書き換えない) */
-  selectionPath?: string;
   runsLog: string;
   now?: () => Date;
   log?: (msg: string) => void;
@@ -57,7 +54,6 @@ export async function collect(o: CollectOptions): Promise<CollectSummary> {
 
   const all = await readAllRecords(o.articlesDir);
   const months = await writeExport(o.publicDir, all, toJst(now().getTime()));
-  if (o.selectionPath) await syncSelectionJson(o.publicDir, o.selectionPath, toJst(now().getTime()));
   const aborted = res.error ? `${res.error.constructor.name}: ${res.error.message}` : null;
   const summary: CollectSummary = {
     items: res.items.length,
@@ -73,7 +69,7 @@ export async function collect(o: CollectOptions): Promise<CollectSummary> {
 }
 
 /** キャッシュ済み生HTMLから正本を再生成する(再取得なし。パーサ変更後用)。変わった記事のみ書き、exportも更新する。 */
-export async function rebuild(o: Pick<CollectOptions, 'cache' | 'articlesDir' | 'publicDir' | 'selectionPath' | 'now'>): Promise<{ records: number; written: number }> {
+export async function rebuild(o: Pick<CollectOptions, 'cache' | 'articlesDir' | 'publicDir' | 'now'>): Promise<{ records: number; written: number }> {
   const now = o.now ?? (() => new Date());
   let written = 0;
   const prevs = await readAllRecords(o.articlesDir);
@@ -86,6 +82,5 @@ export async function rebuild(o: Pick<CollectOptions, 'cache' | 'articlesDir' | 
     if (await writeRecord(o.articlesDir, rec, prev)) written++;
   }
   await writeExport(o.publicDir, await readAllRecords(o.articlesDir), toJst(now().getTime()));
-  if (o.selectionPath) await syncSelectionJson(o.publicDir, o.selectionPath, toJst(now().getTime()));
   return { records: prevs.length, written };
 }

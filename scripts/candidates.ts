@@ -1,5 +1,5 @@
 // npm run candidates: 要判断ファイルの確定行を記憶(config/judge/decisions.json)に取り込み、収集済みデータの候補を
-// 定例/自動ON/自動OFF/要判断に分類して config/judge/needs-review.md(要判断・ユーザ編集)と config/judge/selection.md(参照用・自動生成)を更新する。
+// 定例/自動ON/自動OFF/要判断に分類して config/judge/needs-review.md(要判断・ユーザ編集)と config/judge/selection/YYYY/MM.md(表示の判断の月別の表・自動生成・git管理)を更新する。
 //   --report        記憶(人の判断)を教師にルール(config/judge/rules.json)の一致率を表示(ファイルは変更しない)
 //   --review-issue  要判断(集約行)のレビュー依頼本文を表示(ドライラン。ファイルは変更しない)
 //     --publish     上記を gh issue create で実際に発行(明示指定時のみ)
@@ -16,14 +16,14 @@ showHelpIfRequested(`npm run candidates [-- --report | --review-issue [--publish
   目的: 収集済みデータの表示候補を 定例/自動ON/自動OFF/要判断 に分類し、要判断ファイル(config/judge/needs-review.md)の確定行を判断の記憶(decisions.json)に取り込む。
   使う場面: ローカルで要判断ファイルを編集して取り込むとき。通常の運用は npm run update(判定の再生成)と npm run judge(取り込み)を使う。
   オプション:
-    (なし)          要判断ファイルの取り込み→分類→ config/judge/needs-review.md・selection.md・public/data/selection.json を再生成
+    (なし)          要判断ファイルの取り込み→分類→ config/judge/needs-review.md・selection/(月別の表)・public/data/selection.json を再生成
     --report        判断の記憶を教師に、ルール(config/judge/rules.json)の一致率を表示(ファイルは変更しない)
     --review-issue  要判断のレビュー依頼本文を表示(ドライラン)。--publish を付けると gh issue create で実際に発行
   入力: data/articles、config/judge/(rules・decisions・needs-review.md)
-  出力: config/judge/decisions.json(取り込みがあれば更新)、needs-review.md・selection.md(生成物・git管理外)、public/data/selection.json
+  出力: config/judge/decisions.json(取り込みがあれば更新)、needs-review.md(生成物・git管理外)・selection/(月別の表。生成物・git管理)、public/data/selection.json
   副作用: --review-issue --publish のときだけ GitHub に Issue を作る(gh が必要)。`);
 
-const PATHS = { selection: 'config/judge/selection.md', review: 'config/judge/needs-review.md', decisions: 'config/judge/decisions.json' };
+const PATHS = { selection: 'config/judge/selection', review: 'config/judge/needs-review.md', decisions: 'config/judge/decisions.json' };
 const RULES = 'config/judge/rules.json';
 const args = new Set(process.argv.slice(2));
 if (args.has('--publish') && !args.has('--review-issue')) throw new Error('--publish は --review-issue と併用してください。');
