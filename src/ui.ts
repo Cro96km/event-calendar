@@ -429,7 +429,8 @@ export function render(root: HTMLElement, state: AppState): void {
     if (state.shot && state.shot !== 'summary' && state.shot !== section.id) continue;
     if (state.shot === 'summary' && !summaryHasSection(section.id)) continue;
     // 撮影モード: 概要だけ設定(config/display/discord.json)で絞る。畳みは無視する
-    const rows = state.shot === 'summary' ? filterSummaryRows(section.id, allRows, (e) => (section.id === 'quest' ? questGroup(e) : section.id === 'gacha' ? gachaGroup(e) : campaignGroup(e))) : allRows;
+    const rows = state.shot === 'summary' ? filterSummaryRows(section.id, allRows, (e) => (section.id === 'character' ? characterGroup(e) : section.id === 'quest' ? questGroup(e) : section.id === 'gacha' ? gachaGroup(e) : campaignGroup(e))) : allRows;
+    if (state.shot === 'summary' && rows.length === 0) continue; // 絞り込みで行が無くなったセクションは、見出しだけを出さない
     const folded = !state.shot && state.collapsed.has(section.id);
     const h = el('div', 'g-section', folded ? `${section.label}(${rows.length})` : section.label);
     h.dataset.section = section.id;

@@ -1,4 +1,4 @@
-// npm run discord:images — 週表示のカレンダー画像(概要・クエスト・キャンペーン・ガチャの4枚)をローカルに作る。Discord には送らない。
+// npm run discord:images — 週表示のカレンダー画像(概要・キャラクター・クエスト・キャンペーン・ガチャの5枚)をローカルに作る。Discord には送らない。
 import { createServer } from 'node:http';
 import { mkdir, readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve, sep } from 'node:path';
@@ -7,11 +7,11 @@ import { SHOT_KINDS, isDay, type ShotKind } from '../src/shot';
 import { showHelpIfRequested } from './_help';
 
 showHelpIfRequested(`npm run discord:images [-- --dist DIR] [--out DIR] [--date YYYY-MM-DD] [--only KIND]
-  目的: Discord 用に、週表示(基準日から7日)のカレンダーを PNG にする。概要(summary)・クエスト(quest)・キャンペーン(campaign)・ガチャ(gacha)の4枚。メンテナンスの帯は4枚とも出る。
+  目的: Discord 用に、週表示(基準日から7日)のカレンダーを PNG にする。概要(summary)・キャラクター(character)・クエスト(quest)・キャンペーン(campaign)・ガチャ(gacha)の5枚。メンテナンスの帯は5枚とも出る。
   使う場面: 画像の見た目や、概要の絞り込み(config/display/discord.json)を確認するとき。
-  オプション: --dist DIR(ビルド結果。既定 dist)、--out DIR(出力先。既定 out/discord)、--date(基準日。既定=今日〈ゲーム日〉)、--only KIND(summary/quest/campaign/gacha のどれか1枚だけ)
+  オプション: --dist DIR(ビルド結果。既定 dist)、--out DIR(出力先。既定 out/discord)、--date(基準日。既定=今日〈ゲーム日〉)、--only KIND(summary/character/quest/campaign/gacha のどれか1枚だけ)
   入力: npm run build:public の出力(dist/ と dist/data)。ローカルで配信して撮る。公式サイトにも公開サイトにもアクセスしない。ブラウザは Playwright の Chromium(初回は npx playwright install chromium。日本語フォント fonts-noto-cjk などが必要)。
-  出力: <out>/<kind>.png(summary.png など)。標準出力に各ファイルのサイズ。画像は git に含めない(out/ は ignore)。
+  出力: <out>/<開始日>_<終了日>_<kind>.png(例: 2026-11-06_2026-11-12_summary.png。ファイル名の日付は、画像に写る7日間の期間)。標準出力に各ファイルのサイズ。画像は git に含めない(out/ は ignore)。
   副作用: out の同名ファイルを上書き。ローカルのポートを一時的に使う。ネットワークには出ない。`);
 
 const argv = process.argv.slice(2);
@@ -60,7 +60,12 @@ try {
     await page.goto(`http://127.0.0.1:${port}/?shot=${kind}${date ? `&date=${date}` : ''}`);
     await page.waitForSelector('[data-testid="shot"]', { timeout: 15000 });
     await page.evaluate(() => document.fonts.ready);
-    const file = join(outDir, `${kind}.png`);
+    // ファイル名は画像に写る期間(日付ヘッダの最初と最後の日)
+    const days = await page.locator('.day[data-day]').evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.day ?? ''));
+    const first = days[0];
+    const last = days[days.length - 1];
+    if (!first || !last) throw new Error('日付ヘッダから期間を読めませんでした');
+    const file = join(outDir, `${first}_${last}_${kind}.png`);
     await page.locator('[data-testid="shot"]').screenshot({ path: file });
     console.log(`${file} (${((await stat(file)).size / 1024).toFixed(0)} KB)`);
     await page.close();

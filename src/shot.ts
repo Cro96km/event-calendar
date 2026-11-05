@@ -3,8 +3,8 @@ import config from '../config/display/discord.json';
 import { SECTIONS } from './sections';
 import type { BarSpan } from './week';
 
-/** 撮影の種類。summary=概要(絞り込みあり)、他はそのセクションだけ(絞り込みなし)。 */
-export const SHOT_KINDS = ['summary', 'quest', 'campaign', 'gacha'] as const;
+/** 撮影の種類。summary=概要(絞り込みあり)、他(character=キャラクター・quest・campaign・gacha)はそのセクションだけ(絞り込みなし)。 */
+export const SHOT_KINDS = ['summary', 'character', 'quest', 'campaign', 'gacha'] as const;
 export type ShotKind = (typeof SHOT_KINDS)[number];
 
 export interface ShotParams {
@@ -32,9 +32,14 @@ export function parseShot(search: string): ShotParams | null {
 /** 概要の絞り込み設定(config/display/discord.json の summary)。 */
 export interface SummaryConfig {
   sections: string[];
+  /** セクションid → 外す小見出し */
   hide_groups: Record<string, string[]>;
-  hide_keywords: string[];
-  only_keywords: string[];
+  /** セクションid → 項目名にこの語を含む行を外す */
+  hide_keywords: Record<string, string[]>;
+  /** セクションid → 空でなければ、項目名にこの語のどれかを含む行だけ残す */
+  only_keywords: Record<string, string[]>;
+  /** セクションid → 開催日だけ出す小見出し(その週に始まるものを、開始日の列だけに描く。それ以前に始まったものは出さない) */
+  start_day_only: Record<string, string[]>;
   max_rows: Record<string, number>;
 }
 export const SUMMARY: SummaryConfig = config.summary as SummaryConfig;
@@ -50,17 +55,26 @@ export function shotConfigProblems(cfg: SummaryConfig = SUMMARY, sectionIds: rea
   }
   for (const key of ['hide_keywords', 'only_keywords'] as const) {
     const v: unknown = cfg[key];
-    if (!isStrs(v)) p.push(`summary.${key} は文字列の配列`);
-    else if (v.some((x) => x.trim() === '')) p.push(`summary.${key}: 空の語があります`);
+    if (typeof v !== 'object' || v === null || Array.isArray(v)) p.push(`summary.${key} はオブジェクト(セクションid → 語の配列)`);
+    else {
+      for (const [sec, words] of Object.entries(v)) {
+        if (!sectionIds.includes(sec)) p.push(`summary.${key}: 「${sec}」は order.json にないセクションです`);
+        else if (!isStrs(words)) p.push(`summary.${key}.${sec} は文字列の配列`);
+        else if (words.some((x) => x.trim() === '')) p.push(`summary.${key}.${sec}: 空の語があります`);
+      }
+    }
   }
-  if (typeof cfg.hide_groups !== 'object' || cfg.hide_groups === null || Array.isArray(cfg.hide_groups)) p.push('summary.hide_groups はオブジェクト(セクションid → 小見出しの配列)');
-  else {
-    for (const [sec, names] of Object.entries(cfg.hide_groups)) {
-      if (!sectionIds.includes(sec)) p.push(`summary.hide_groups: 「${sec}」は order.json にないセクションです`);
-      else if (!isStrs(names)) p.push(`summary.hide_groups.${sec} は小見出しの名前の配列`);
-      else {
-        const known = groupNames(sec);
-        for (const n of names) if (known.length > 0 && !known.includes(n)) p.push(`summary.hide_groups.${sec}: 「${n}」は order.json の小見出しにありません(${known.join(' / ')})`);
+  for (const key of ['hide_groups', 'start_day_only'] as const) {
+    const v: unknown = cfg[key];
+    if (typeof v !== 'object' || v === null || Array.isArray(v)) p.push(`summary.${key} はオブジェクト(セクションid → 小見出しの配列)`);
+    else {
+      for (const [sec, names] of Object.entries(v)) {
+        if (!sectionIds.includes(sec)) p.push(`summary.${key}: 「${sec}」は order.json にないセクションです`);
+        else if (!isStrs(names)) p.push(`summary.${key}.${sec} は小見出しの名前の配列`);
+        else {
+          const known = groupNames(sec);
+          for (const n of names) if (known.length > 0 && !known.includes(n)) p.push(`summary.${key}.${sec}: 「${n}」は order.json の小見出しにありません(${known.join(' / ')})`);
+        }
       }
     }
   }
@@ -79,20 +93,35 @@ export const summaryHasSection = (sectionId: string, cfg: SummaryConfig = SUMMAR
 
 /**
  * 概要の絞り込み。rows=1セクションの行(上から順)。groupOf=行の小見出し(無ければ null)。
- * 順: 小見出しで外す → 語で外す → only_keywords で残す → 行数で切る。
+ * 順: 小見出しで外す → 語で外す → only_keywords で残す → 開催日だけ(start_day_only) → 行数で切る。
+ * 語・小見出し・行数の指定は、すべてセクションごと。
  */
 export function filterSummaryRows(sectionId: string, rows: BarSpan[][], groupOf: (e: BarSpan['event']) => string | null, cfg: SummaryConfig = SUMMARY): BarSpan[][] {
   const hideGroups = cfg.hide_groups[sectionId] ?? [];
-  const out = rows.filter((bars) => {
+  const hideWords = cfg.hide_keywords[sectionId] ?? [];
+  const onlyWords = cfg.only_keywords[sectionId] ?? [];
+  const dayOnly = cfg.start_day_only[sectionId] ?? [];
+  const out: BarSpan[][] = [];
+  for (const bars of rows) {
     const e = (bars[0] as BarSpan).event;
     const g = groupOf(e);
-    if (g !== null && hideGroups.includes(g)) return false;
-    if (cfg.hide_keywords.some((k) => e.name.includes(k))) return false;
-    if (cfg.only_keywords.length > 0 && !cfg.only_keywords.some((k) => e.name.includes(k))) return false;
-    return true;
-  });
+    if (g !== null && hideGroups.includes(g)) continue;
+    if (hideWords.some((k) => e.name.includes(k))) continue;
+    if (onlyWords.length > 0 && !onlyWords.some((k) => e.name.includes(k))) continue;
+    if (g !== null && dayOnly.includes(g)) {
+      const days = startDayBars(bars);
+      if (days.length > 0) out.push(days);
+      continue;
+    }
+    out.push(bars);
+  }
   const max = cfg.max_rows[sectionId];
   return max === undefined ? out : out.slice(0, max);
+}
+
+/** 開催日だけの表示: その表示期間に始まるバーを、開始日の列1日分(罫線から罫線まで。開始時刻は問わない)にする。表示期間より前に始まったものは出さない。 */
+export function startDayBars(bars: BarSpan[]): BarSpan[] {
+  return bars.filter((b) => !b.clippedLeft).map((b) => ({ ...b, to: b.from, startFrac: 0, endFrac: 1, clippedRight: false, openEnded: false }));
 }
 
 const FOUR_AM = 4 / 24;
