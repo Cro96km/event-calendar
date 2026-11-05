@@ -10,7 +10,7 @@ import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } fr
 import { padDateTime } from './jst';
 import { isQuestNameBlock, questNameColor, withFixedFloors } from './quest-color';
 import { applyTheme, currentTheme, saveTheme } from './theme';
-import { SHOT_4AM_FRAC, compactCharacterRows, filterSummaryRows, shotEndFrac, shotStartFrac, summaryHasSection, type ShotKind } from './shot';
+import { SHOT_4AM_FRAC, compactCharacterRows, shotEndFrac, shotStartFrac, summaryBlocks, type ShotKind } from './shot';
 
 interface Selection {
   day: string;
@@ -445,42 +445,47 @@ export function render(root: HTMLElement, state: AppState): void {
   body.append(dateRow, rowsBox);
   const sections = ganttSections([...state.events, ...monthlyEvents(days[0] as string, days[days.length - 1] as string, state.monthly)], days);
   if (sections.length === 0) rowsBox.append(el('p', 'empty', state.view === 'week' ? '今日から7日間に表示するイベントはありません' : 'この月に表示するイベントはありません'));
-  for (const { section, rows: allRows } of sections) {
-    if (state.shot && state.shot !== 'summary' && state.shot !== section.id) continue;
-    if (state.shot === 'summary' && !summaryHasSection(section.id)) continue;
-    // 撮影モード: 概要だけ設定(config/display/discord.json)で絞る。畳みは無視する
-    const filtered = state.shot === 'summary' ? filterSummaryRows(section.id, allRows, (e) => (section.id === 'character' ? characterGroup(e) : section.id === 'quest' ? questGroup(e) : section.id === 'gacha' ? gachaGroup(e) : campaignGroup(e))) : allRows;
-    // 撮影モードだけ、キャラクターの行を詰める(同じガチャ・期間の新限定を1行に、進化を種別ごと1行に)
-    const rows = state.shot && section.id === 'character' ? compactCharacterRows(filtered) : filtered;
-    if (state.shot === 'summary' && rows.length === 0) continue; // 絞り込みで行が無くなったセクションは、見出しだけを出さない
-    const folded = !state.shot && state.collapsed.has(section.id);
-    const h = el('div', 'g-section', folded ? `${section.label}(${rows.length})` : section.label);
-    h.dataset.section = section.id;
-    paintSection(h, section);
-    h.setAttribute('role', 'button');
-    h.setAttribute('aria-expanded', String(!folded));
-    h.tabIndex = 0;
-    const toggle = () => {
-      if (folded) state.collapsed.delete(section.id);
-      else state.collapsed.add(section.id);
-      saveCollapsed(state.collapsed);
-      rerender();
-    };
-    h.onclick = toggle;
-    h.onkeydown = (ev) => {
-      if (ev.key === 'Enter' || ev.key === ' ') {
-        ev.preventDefault();
-        toggle();
-        // 再描画で見出しが作り直されるため、キーボード操作ではフォーカスを戻す
-        root.querySelector<HTMLElement>(`.g-section[data-section="${section.id}"]`)?.focus();
-      }
-    };
-    rowsBox.append(h);
+  // 描く単位: 概要(撮影)は設定の blocks の順(セクションの大見出しなし)、ほかはセクションごと(大見出しあり)
+  const sectionGroup = (sectionId: string, e: ExportEvent): string | null =>
+    sectionId === 'character' ? characterGroup(e) : sectionId === 'quest' ? questGroup(e) : sectionId === 'gacha' ? gachaGroup(e) : campaignGroup(e);
+  const entries: { section: (typeof sections)[number]['section']; rows: BarSpan[][]; header: boolean; headings: boolean }[] =
+    state.shot === 'summary'
+      ? summaryBlocks(sections, sectionGroup).map((b) => ({ ...b, header: false }))
+      : sections
+          .filter((x) => !state.shot || state.shot === x.section.id)
+          // 撮影モードだけ、キャラクターの行を詰める(同じガチャ・期間の新限定を1行に、進化を種別ごと1行に)
+          .map((x) => ({ section: x.section, rows: state.shot && x.section.id === 'character' ? compactCharacterRows(x.rows) : x.rows, header: true, headings: true }));
+  for (const { section, rows, header, headings } of entries) {
+    const folded = header && !state.shot && state.collapsed.has(section.id);
+    if (header) {
+      const h = el('div', 'g-section', folded ? `${section.label}(${rows.length})` : section.label);
+      h.dataset.section = section.id;
+      paintSection(h, section);
+      h.setAttribute('role', 'button');
+      h.setAttribute('aria-expanded', String(!folded));
+      h.tabIndex = 0;
+      const toggle = () => {
+        if (folded) state.collapsed.delete(section.id);
+        else state.collapsed.add(section.id);
+        saveCollapsed(state.collapsed);
+        rerender();
+      };
+      h.onclick = toggle;
+      h.onkeydown = (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') {
+          ev.preventDefault();
+          toggle();
+          // 再描画で見出しが作り直されるため、キーボード操作ではフォーカスを戻す
+          root.querySelector<HTMLElement>(`.g-section[data-section="${section.id}"]`)?.focus();
+        }
+      };
+      rowsBox.append(h);
+    }
     if (folded) continue;
     const shown = new Set<string>(); // 出した小見出し(同じ見出しを重複して出さない)
     // 小見出し(キャンペーン: 先頭固定の月次項目〈グループなし〉には見出しを付けず、グループの後ろのグループなしは「その他」。ほかは全行が小見出しに属する)
     const groupOf = (event: ExportEvent, shownCount: number): string | null =>
-      section.id === 'character' ? characterGroup(event) : section.id === 'quest' ? questGroup(event) : section.id === 'gacha' ? gachaGroup(event) : (campaignGroup(event) ?? (shownCount > 0 ? 'other' : null));
+      !headings ? null : section.id === 'character' ? characterGroup(event) : section.id === 'quest' ? questGroup(event) : section.id === 'gacha' ? gachaGroup(event) : (campaignGroup(event) ?? (shownCount > 0 ? 'other' : null));
     const groupRows = new Map<string, number>();
     {
       const seen = new Set<string>();
