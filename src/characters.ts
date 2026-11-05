@@ -115,8 +115,9 @@ function evolutions(title: string, lines: readonly string[]): CharacterEntry[] {
 }
 
 const NAMES = /((?:「[^」]+」)+)/;
-/** 「」の中の名前。末尾の読み仮名の括弧 `東方萌萌美人（オリエンタル…）` は付けない(ラベルの括弧と区別できなくなるため)。 */
-const namesOf = (s: string): string[] => [...s.matchAll(/「([^」]+)」/g)].map((m) => (m[1] as string).replace(/[（(][^）)]*[）)]$/, '').trim());
+/** 「」の中の名前。名前の中の括弧(読み仮名 `東方萌萌美人（オリエンタル…）` など)は中身ごと消す(ラベルの括弧と区別できなくなるため)。 */
+export const cleanName = (s: string): string => s.replace(/[（(][^）)]*[）)]/g, '').trim();
+const namesOf = (s: string): string[] => [...s.matchAll(/「([^」]+)」/g)].map((m) => cleanName(m[1] as string));
 
 /** 新限定キャラの名前。本文の `新限定キャラクター「A」「B」` を優先し、無ければタイトルの `新限定(キャラ)「A」`。 */
 function newLimitedNames({ title, lines }: CharacterInput): string[] {
@@ -143,15 +144,31 @@ export interface GachaPeriod {
  * - 新限定: タイトルに「新限定」を含む記事だけ。バーはガチャの開催期間(gacha)、ラベルに実装ガチャ名。ガチャの期間が無ければ作らない。
  * 日時が取れないものは作らない(推測した日付を載せない)。
  */
-export function parseCharacters(input: CharacterInput, gacha: GachaPeriod | null): CharacterEntry[] {
+export function parseCharacters(input: CharacterInput, gacha: GachaPeriod | null, regularGacha: readonly string[] = []): CharacterEntry[] {
   const out = evolutions(input.title, input.lines);
   if (input.title.includes('新限定') && gacha !== null) {
+    const gachaName = gacha.gacha === undefined ? undefined : regularGachaName(gacha.gacha, input.lines, regularGacha);
     for (const name of newLimitedNames(input)) {
       const attr = newLimitedAttr(input.lines, name);
-      out.push({ name, kind: '新限定', start: gacha.start, end: gacha.end, ...(attr ? { attr } : {}), ...(gacha.gacha ? { gacha: gacha.gacha } : {}) });
+      out.push({ name, kind: '新限定', start: gacha.start, end: gacha.end, ...(attr ? { attr } : {}), ...(gachaName ? { gacha: gachaName } : {}) });
     }
   }
   return out;
+}
+
+/**
+ * 実装ガチャの名前。新限定のガチャは、通常のガチャ名から変わることが多い(例: `新春!特別おまけ付き 超・獣神祭`・`Ultra Charismatic LIVE!!`)が、中身は定例ガチャと同じことがある。
+ * 定例ガチャ(regular)の名前があればそちらを使う: ① ガチャ名がその語を含む ② 本文に `ガチャ「ガチャ名」は、「定例の名前」の限定キャラクターを含む…` のように書かれている。無ければガチャ名のまま。
+ */
+export function regularGachaName(gacha: string, lines: readonly string[], regular: readonly string[]): string {
+  const inName = regular.find((k) => gacha.includes(k));
+  if (inName) return inName;
+  for (const l of lines) {
+    if (!l.includes(`ガチャ「${gacha}」`)) continue;
+    const hit = regular.find((k) => l.includes(`「${k}」の限定キャラクター`));
+    if (hit) return hit;
+  }
+  return gacha;
 }
 
 /** 新限定キャラの属性: `X属性 ★6` の次の行がそのキャラの名前(または「二つ名 名前」)のもの。 */

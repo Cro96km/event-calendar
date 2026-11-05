@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { attributeColor, calendarDay, characterLabel, CHARACTER_CATEGORY, gachaPeriod, parseCharacters } from '../src/characters';
+import { attributeColor, calendarDay, characterLabel, CHARACTER_CATEGORY, gachaPeriod, parseCharacters, regularGachaName } from '../src/characters';
 import { buildExport } from '../src/data/export';
 import type { ArticleRecord } from '../src/data/record';
 import { applySelection } from '../src/selection';
@@ -149,6 +149,25 @@ describe('gachaPeriod', () => {
 });
 
 describe('属性・実装ガチャ名・ラベル・色', () => {
+  it('名前の括弧は中身ごと完全に消す(末尾以外も)', () => {
+    const r = parseCharacters({ title: '新限定「A（あ）B」', lines: ['新限定キャラクター「A（あ）B」「C(c)」が登場'] }, { start: 's', end: 'e' });
+    expect(r.map((c) => c.name)).toEqual(['AB', 'C']);
+  });
+
+  it('実装ガチャ名: 定例ガチャの語を含むガチャ名はその定例名(新春!特別おまけ付き 超・獣神祭 → 超・獣神祭)', () => {
+    expect(regularGachaName('新春!特別おまけ付き 超・獣神祭', [], ['超・獣神祭', '激・獣神祭'])).toBe('超・獣神祭');
+  });
+  it('実装ガチャ名: 本文に「ガチャ「X」は、「定例名」の限定キャラクターを含む」とあれば定例名。無ければガチャ名のまま', () => {
+    const lines = ['ガチャ「Ultra LIVE!!」は、「グリーンファンタジー」の限定キャラクターを含む木属性キャラクターが排出対象！'];
+    expect(regularGachaName('Ultra LIVE!!', lines, ['グリーンファンタジー'])).toBe('グリーンファンタジー');
+    expect(regularGachaName('Other LIVE!!', lines, ['グリーンファンタジー'])).toBe('Other LIVE!!');
+    expect(regularGachaName('Ultra LIVE!!', ['ガチャ「Ultra LIVE!!」は、「グリーンファンタジー」の限定キャラクターも'], [])).toBe('Ultra LIVE!!');
+  });
+  it('parseCharacters は、定例ガチャの名前を実装ガチャ名にする', () => {
+    const r = parseCharacters({ title: '新限定「A」', lines: ['ガチャ「X LIVE」は、「RED STARS」の限定キャラクターを含む'] }, { start: 's', end: 'e', gacha: 'X LIVE' }, ['RED STARS']);
+    expect(r[0]?.gacha).toBe('RED STARS');
+  });
+
   it('名前の末尾の読み仮名の括弧は外す', () => {
     const lines = ['新限定キャラクター「東方萌萌美人（オリエンタルキューティー）」が登場', '光属性 ★6', '東方萌萌美人'];
     const r = parseCharacters({ title: '新限定「東方萌萌美人（オリエンタルキューティー）」登場', lines }, { start: 's', end: 'e', gacha: 'G' });

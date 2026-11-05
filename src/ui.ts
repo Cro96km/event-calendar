@@ -455,20 +455,57 @@ export function render(root: HTMLElement, state: AppState): void {
     rowsBox.append(h);
     if (folded) continue;
     const shown = new Set<string>(); // 出した小見出し(同じ見出しを重複して出さない)
+    // 小見出し(キャンペーン: 先頭固定の月次項目〈グループなし〉には見出しを付けず、グループの後ろのグループなしは「その他」。ほかは全行が小見出しに属する)
+    const groupOf = (event: ExportEvent, shownCount: number): string | null =>
+      section.id === 'character' ? characterGroup(event) : section.id === 'quest' ? questGroup(event) : section.id === 'gacha' ? gachaGroup(event) : (campaignGroup(event) ?? (shownCount > 0 ? 'other' : null));
+    const groupRows = new Map<string, number>();
+    {
+      const seen = new Set<string>();
+      for (const r of rows) {
+        const g = groupOf((r[0] as BarSpan).event, seen.size);
+        if (g !== null) {
+          seen.add(g);
+          groupRows.set(g, (groupRows.get(g) ?? 0) + 1);
+        }
+      }
+    }
     for (const rowBars of rows) {
       const first = rowBars[0] as BarSpan;
       const event = first.event;
-      if (section.id === 'campaign' || section.id === 'quest' || section.id === 'gacha' || section.id === 'character') {
-        // キャンペーン: 先頭固定の月次項目(グループなし)には見出しを付けず、グループの後ろのグループなしは「その他」。クエスト・ガチャは全行が小見出しに属する
-        const g = section.id === 'character' ? characterGroup(event) : section.id === 'quest' ? questGroup(event) : section.id === 'gacha' ? gachaGroup(event) : (campaignGroup(event) ?? (shown.size > 0 ? 'other' : null));
-        if (g !== null && !shown.has(g)) {
-          shown.add(g);
-          const sub = el('div', 'g-group', g === 'other' ? 'その他' : g);
-          sub.dataset.group = g;
-          sub.style.setProperty('--hue', String(section.hue));
-          rowsBox.append(sub);
+      const g = groupOf(event, shown.size);
+      // 小見出しもセクションと同じく畳める(畳んだ状態は同じ保存先。撮影モードでは畳まない)
+      const groupKey = `${section.id}/${g ?? ''}`;
+      const groupFolded = g !== null && !state.shot && state.collapsed.has(groupKey);
+      if (g !== null && !shown.has(g)) {
+        shown.add(g);
+        const title = g === 'other' ? 'その他' : g;
+        const sub = el('div', 'g-group', groupFolded ? `${title}(${groupRows.get(g) ?? 0})` : title);
+        sub.dataset.group = g;
+        sub.dataset.groupKey = groupKey;
+        sub.style.setProperty('--hue', String(section.hue));
+        if (!state.shot) {
+          sub.setAttribute('role', 'button');
+          sub.setAttribute('aria-expanded', String(!groupFolded));
+          sub.tabIndex = 0;
+          const toggleGroup = () => {
+            if (groupFolded) state.collapsed.delete(groupKey);
+            else state.collapsed.add(groupKey);
+            saveCollapsed(state.collapsed);
+            rerender();
+          };
+          sub.onclick = toggleGroup;
+          sub.onkeydown = (ev) => {
+            if (ev.key === 'Enter' || ev.key === ' ') {
+              ev.preventDefault();
+              toggleGroup();
+              // 再描画で見出しが作り直されるため、キーボード操作ではフォーカスを戻す
+              Array.from(root.querySelectorAll<HTMLElement>('.g-group')).find((x) => x.dataset.groupKey === groupKey)?.focus();
+            }
+          };
         }
+        rowsBox.append(sub);
       }
+      if (groupFolded) continue;
       const row = el('div', 'g-row');
       row.style.setProperty('--hue', String(section.hue));
       const label = el('div', 'g-label');

@@ -1304,3 +1304,37 @@ describe('ガチャセクション', () => {
     expect(q('detail')?.querySelectorAll('.detail-item')).toHaveLength(1);
   });
 });
+
+describe('小見出しの開閉', () => {
+  const chara = (id: string, kind: '新限定' | '獣神化・改', name: string, day: string): ExportEvent =>
+    ev(id, 'character', `${day}T00:00:00+09:00`, `${day.slice(0, 8)}${String(Number(day.slice(8)) + 1).padStart(2, '0')}T00:00:00+09:00`, { name, character: { kind } });
+  const evs = [chara('x#c0', '新限定', 'A（G）', '2026-10-27'), chara('x#c1', '獣神化・改', 'B（獣神化・改）', '2026-10-28'), chara('x#c2', '獣神化・改', 'C（獣神化・改）', '2026-10-29')];
+  const groupBtn = (g: string) => [...root.querySelectorAll<HTMLElement>('.g-group')].find((x) => x.dataset.group === g) as HTMLElement;
+  const rowsOf = () => root.querySelectorAll('.g-row:not(.g-dates) .g-label').length;
+  beforeEach(() => {
+    state = initialState('2026-10-27', evs, INDEX);
+    state.collapsed.clear();
+    render(root, state);
+  });
+
+  it('小見出しを押すとその小見出しの行だけ畳まれ、件数が出る。もう一度で開く', () => {
+    expect(rowsOf()).toBe(3);
+    click(groupBtn('進化'));
+    expect(rowsOf()).toBe(1);
+    expect(groupBtn('進化').textContent).toBe('進化(2)');
+    expect(groupBtn('進化').getAttribute('aria-expanded')).toBe('false');
+    expect(groupBtn('新限定').getAttribute('aria-expanded')).toBe('true');
+    click(groupBtn('進化'));
+    expect(rowsOf()).toBe(3);
+    expect(groupBtn('進化').textContent).toBe('進化');
+  });
+
+  it('セクションを畳んで開いても、小見出しの畳みは保たれる。キーボード(Enter)でも開閉できる', () => {
+    groupBtn('新限定').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(rowsOf()).toBe(2);
+    click(root.querySelector('.g-section'));
+    click(root.querySelector('.g-section'));
+    expect(rowsOf()).toBe(2);
+    expect(groupBtn('新限定').getAttribute('aria-expanded')).toBe('false');
+  });
+});

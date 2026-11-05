@@ -4,6 +4,7 @@ import { parseDetail } from '../scraper/detail';
 import type { ListItem } from '../scraper/list';
 import { parseArticle, type ParseStatus, type PeriodEvent } from '../period';
 import { JST_OFFSET_MS } from '../jst';
+import { GACHA_REGULAR } from '../sections';
 import { gachaPeriod, parseCharacters, type CharacterEntry } from '../characters';
 
 export interface ArticleRecord {
@@ -43,7 +44,7 @@ export interface BuildInput {
 export function buildRecord({ item, html, fetchedAtMs, lastmod, prev }: BuildInput): ArticleRecord {
   const input = parseDetail(item.id, html);
   const parsed = input ? parseArticle(input) : null;
-  const characters = input ? parseCharacters({ title: item.title, lines: input.lines }, gachaPeriod(parsed?.events ?? [])) : [];
+  const characters = input ? parseCharacters({ title: item.title, lines: input.lines }, gachaPeriod(parsed?.events ?? []), GACHA_REGULAR) : [];
   const next: ArticleRecord = {
     id: item.id,
     url: item.url,
