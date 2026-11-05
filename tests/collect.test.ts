@@ -118,16 +118,16 @@ describe('collect', () => {
     expect(s.items).toBe(4);
     expect(s.total).toEqual({ ok: 3, partial: 0, none: 0 });
     expect(s.months).toEqual(['2026-10', '2026-11']);
-    const art = JSON.parse(await readFile(join(dir, 'articles/2026/20261022_3.json'), 'utf8')) as ArticleRecord;
+    const art = JSON.parse(await readFile(join(dir, 'articles/2026/10/20261022_3.json'), 'utf8')) as ArticleRecord;
     expect(art.id).toBe('20261022_3');
     const idx = JSON.parse(await readFile(join(dir, 'public/index.json'), 'utf8')) as { generated_at: string; categories: string[] };
     expect(idx.generated_at).toBe('2026-10-23T14:00:00+09:00');
     expect(await readdir(join(dir, 'public/events'))).toEqual(['2026-10.json', '2026-11.json']);
 
-    const before = await readFile(join(dir, 'articles/2026/20261022_3.json'), 'utf8');
+    const before = await readFile(join(dir, 'articles/2026/10/20261022_3.json'), 'utf8');
     const s2 = await run(site);
     expect(s2.written).toBe(0);
-    expect(await readFile(join(dir, 'articles/2026/20261022_3.json'), 'utf8')).toBe(before);
+    expect(await readFile(join(dir, 'articles/2026/10/20261022_3.json'), 'utf8')).toBe(before);
     const log = (await readFile(join(dir, 'runs.log'), 'utf8')).trim().split('\n');
     expect(log).toHaveLength(2);
     expect(JSON.parse(log[0]!)).toMatchObject({ items: 4, aborted: null, notFound: ['20261021_1'] });
@@ -137,7 +137,7 @@ describe('collect', () => {
     const s = await run({ ...site, '/news/20261022_4.html': 429 });
     expect(s.aborted).toMatch(/^RateLimitedError/);
     expect(s.written).toBe(1);
-    expect(await readdir(join(dir, 'articles/2026'))).toEqual(['20261022_3.json']);
+    expect(await readdir(join(dir, 'articles/2026/10'))).toEqual(['20261022_3.json']);
     expect(JSON.parse((await readFile(join(dir, 'runs.log'), 'utf8')).trim()).aborted).toMatch(/RateLimited/);
   });
 

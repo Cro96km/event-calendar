@@ -12,7 +12,7 @@ const writeJson = async (path: string, value: unknown): Promise<void> => {
   await rename(tmp, path);
 };
 
-const articlePath = (dir: string, id: string): string => join(dir, id.slice(0, 4), `${id}.json`);
+const articlePath = (dir: string, id: string): string => join(dir, id.slice(0, 4), id.slice(4, 6), `${id}.json`);
 
 export async function readRecord(dir: string, id: string): Promise<ArticleRecord | null> {
   const text = await readTextIfExists(articlePath(dir, id));
@@ -32,8 +32,10 @@ export async function writeRecord(dir: string, rec: ArticleRecord, prev: Article
 export async function readAllRecords(dir: string): Promise<ArticleRecord[]> {
   const out: ArticleRecord[] = [];
   for (const year of await readdir(dir).catch(() => [])) {
-    for (const f of await readdir(join(dir, year)).catch(() => [])) {
-      if (f.endsWith('.json')) out.push(JSON.parse(await readFile(join(dir, year, f), 'utf8')) as ArticleRecord);
+    for (const month of await readdir(join(dir, year)).catch(() => [])) {
+      for (const f of await readdir(join(dir, year, month)).catch(() => [])) {
+        if (f.endsWith('.json')) out.push(JSON.parse(await readFile(join(dir, year, month, f), 'utf8')) as ArticleRecord);
+      }
     }
   }
   return out.sort((a, b) => a.id.localeCompare(b.id));

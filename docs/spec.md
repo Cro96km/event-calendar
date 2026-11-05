@@ -203,7 +203,7 @@
 
 ## 5. データ
 ### 5.1 正本(git管理可・JSON)
-`data/articles/<YYYY>/<id>.json`（記事1件1ファイル。差分が読めるため）
+`data/articles/<YYYY>/<MM>/<id>.json`（記事1件1ファイル。差分が読めるため）
 ```json
 {
   "id": "20261022_3", "url": "https://www.monster-strike.com/news/20261022_3.html",
