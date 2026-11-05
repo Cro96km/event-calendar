@@ -121,9 +121,9 @@ describe('撮影モードのバーの端', () => {
     const a = '2026-11-05T04:00:00+09:00';
     const b = '2026-11-06T04:00:00+09:00';
     expect(margins(false, a, b).l).toContain('8.333');
-    expect(margins(true, a, b).l).toContain('10.000');
+    expect(margins(true, a, b).l).toBe('calc(10.000%)');
     expect(margins(false, a, b).r).toContain('41.667');
-    expect(margins(true, a, b).r).toContain('40.000');
+    expect(margins(true, a, b).r).toBe('calc(40.000%)');
   });
   it('撮影モードの0:00開始・24:00終了は余白なしで罫線に接する(通常表示は従来のまま)', () => {
     const a = '2026-11-06T00:00:00+09:00';

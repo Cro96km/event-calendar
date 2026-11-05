@@ -9,7 +9,7 @@ import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
 import { isQuestNameBlock, questNameColor, withFixedFloors } from './quest-color';
-import { filterSummaryRows, shotEndFrac, shotStartFrac, summaryHasSection, type ShotKind } from './shot';
+import { SHOT_4AM_FRAC, filterSummaryRows, shotEndFrac, shotStartFrac, summaryHasSection, type ShotKind } from './shot';
 
 interface Selection {
   day: string;
@@ -510,10 +510,10 @@ export function render(root: HTMLElement, state: AppState): void {
         const n = bar.to - bar.from + 1;
         // 撮影モードだけ: 4:00 開始・終了のバーを同じ幅だけ伸ばし(矢印が入るように)、0:00 開始・24:00 終了は余白を付けず罫線に接する
         const startFrac = state.shot ? shotStartFrac(bar.startFrac) : bar.startFrac;
-        if (!bar.clippedLeft && startFrac > 0) b.style.marginLeft = `calc(${((startFrac / n) * 100).toFixed(3)}% + 2px)`;
+        if (!bar.clippedLeft && startFrac > 0) b.style.marginLeft = `calc(${((startFrac / n) * 100).toFixed(3)}%${state.shot && startFrac === SHOT_4AM_FRAC ? '' : ' + 2px'})`; // 4:00 の位置は開始・終了とも同じ線(余白なし)
         else if (state.shot && !bar.clippedLeft) b.style.marginLeft = '0';
         const endFrac = state.shot ? shotEndFrac(bar.endFrac) : bar.endFrac;
-        if (!bar.clippedRight && !bar.openEnded && endFrac < 1) b.style.marginRight = `calc(${(((1 - endFrac) / n) * 100).toFixed(3)}% + 2px)`;
+        if (!bar.clippedRight && !bar.openEnded && endFrac < 1) b.style.marginRight = `calc(${(((1 - endFrac) / n) * 100).toFixed(3)}%${state.shot && endFrac === SHOT_4AM_FRAC ? '' : ' + 2px'})`;
         else if (state.shot && !bar.clippedRight && !bar.openEnded) b.style.marginRight = '0';
         if (bar.clippedLeft) b.classList.add('clip-l');
         if (bar.clippedRight) b.classList.add('clip-r');
