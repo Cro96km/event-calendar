@@ -7,10 +7,18 @@
     "update"
   ],
   "published": "2026-10-01",
-  "fetched_at": "2026-11-05T12:57:16+09:00",
+  "fetched_at": "2026-11-05T23:38:13+09:00",
   "lastmod": "2026-10-01T17:36:08+09:00",
-  "content_hash": "sha256:5aab63e9baf28b40dcbfab3e8115ef3c0e8f311615a6f7011689212b5a7015bc",
+  "content_hash": "sha256:424d6cd7890a1c058283eb356b0833d0d148464befe4b60c6c55b3364931478b",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "パック",
+      "kind": "獣神化・改",
+      "start": "2026-10-06T12:00:00+09:00",
+      "end": "2026-10-07T04:00:00+09:00"
+    }
+  ]
 }

@@ -7,10 +7,24 @@
     "update"
   ],
   "published": "2026-03-05",
-  "fetched_at": "2026-10-24T17:21:09+09:00",
+  "fetched_at": "2026-11-05T23:36:56+09:00",
   "lastmod": null,
-  "content_hash": "sha256:b464b1cd0fcababca346e70675610deb9e5cdf410b17a88c71b464fcce76e7e0",
+  "content_hash": "sha256:a8c474d209af079662891c647decfe4ef600a4d7e0cb3085ba9abf93c4e9ea8c",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "ジークフリート",
+      "kind": "真獣神化",
+      "start": "2026-03-10T12:00:00+09:00",
+      "end": "2026-03-11T04:00:00+09:00"
+    },
+    {
+      "name": "モグディガー",
+      "kind": "獣神化・改",
+      "start": "2026-03-10T12:00:00+09:00",
+      "end": "2026-03-11T04:00:00+09:00"
+    }
+  ]
 }

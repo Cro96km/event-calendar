@@ -1,6 +1,7 @@
 // 表示候補(記事内の項目を同種で集約したキー)と表示の判断の純関数。spec §4.5。
 import type { ExportEvent } from './data/export';
 import type { ArticleRecord } from './data/record';
+import { CHARACTER_CATEGORY } from './characters';
 import { eventUrl, type PeriodEvent } from './period';
 import { MAINTENANCE_CATEGORY, sectionOf } from './sections';
 
@@ -89,6 +90,6 @@ export function selectionJson(sel: Map<string, boolean>, generatedAt: string): S
 export function applySelection(events: ExportEvent[], sel: SelectionJson | null): ExportEvent[] {
   if (!sel) return events;
   const on = new Set(sel.selected);
-  // メンテナンスは選択の対象外(常に表示)
-  return events.filter((e) => e.category === MAINTENANCE_CATEGORY || on.has(e.item ?? normalizeTitle(e.title)));
+  // メンテナンス・キャラクターは選択の対象外(常に表示)
+  return events.filter((e) => e.category === MAINTENANCE_CATEGORY || e.category === CHARACTER_CATEGORY || on.has(e.item ?? normalizeTitle(e.title)));
 }

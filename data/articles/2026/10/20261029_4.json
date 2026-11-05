@@ -7,10 +7,18 @@
     "update"
   ],
   "published": "2026-10-29",
-  "fetched_at": "2026-11-05T16:48:59+09:00",
+  "fetched_at": "2026-11-05T23:38:23+09:00",
   "lastmod": "2026-10-29T17:38:21+09:00",
   "content_hash": "sha256:4c472cb58aba568c093ceb2c4b55f5a8c85087a65bc383168381bb454c43a7c9",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "レグルス",
+      "kind": "獣神化・改",
+      "start": "2026-11-03T12:00:00+09:00",
+      "end": "2026-11-04T04:00:00+09:00"
+    }
+  ]
 }

@@ -227,3 +227,10 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 - メンテナンスの帯は4枚とも出る。画像にはフッター(注記)を入れない。公式の画像・ロゴは使わない。公式サイト・公開サイトにはアクセスしない(`dist/` をローカルで配信して撮る)。
 - 画面でも `?shot=summary|quest|campaign|gacha`(と `&date=YYYY-MM-DD`)を付けると撮影モードで見られる(`npm run dev` / `npm run preview`)。
 - **概要の絞り込みは `config/display/discord.json` の `summary` だけを直す**(コード変更は要らない)。`sections`(出すセクション)・`hide_groups`(外す小見出し)・`hide_keywords`(項目名にこの語を含む行を外す)・`only_keywords`(空でなければこの語を含む行だけ残す)・`max_rows`(セクションごとの最大行数)。初期値は絞らない。クエスト・キャンペーン・ガチャの画像は絞らない。書式は `npm run check` が点検する。
+
+## 19. キャラクターのセクション(新限定・獣神化・獣神化改・真獣神化)
+通常のカレンダーの**キャラクター**セクション(クエストの上。1キャラ=1行。仕様は docs/spec.md §4.13)。
+- **自動**: 収集(`npm run update`)が、記事の本文から「名前・種別・日時」だけを `data/articles/` の `characters` に書く。進化は解禁日のゲーム日1日、新限定はガチャの開催期間のバー。表示/非表示の判断(`config/judge/`)の対象外で、常に表示する。
+- **直す・外す**: 行の項目IDは `<記事ID>#c<連番>`(台帳 `config/judge/calendar/` に出る)。外すのは `npm run manual -- hide --id 20260211_4#c0`、期間・名前の修正は `npm run override`(§17)。収集の結果(`data/articles/`)は手で直さない。
+- **足りない行**: 日時が本文から取れなかった記事や取りこぼしは、行にならない(推測した日付を載せない)。手動で足す仕組みはまだない(`manual.json` の add は event / campaign のみ)。必要になったら、抽出の対応を `src/characters.ts` に足す。
+- **既存の記事に反映する**: 抽出は収集時に走る。すでに収集済みの記事に反映するには、対象の記事の生HTMLを `data/raw/articles/<記事ID>.html` に取得して(礼節は §4。間隔2秒以上・直列・429で即中断)、`npm run rebuild` を実行する。

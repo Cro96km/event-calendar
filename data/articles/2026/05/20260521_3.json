@@ -7,10 +7,18 @@
     "update"
   ],
   "published": "2026-05-21",
-  "fetched_at": "2026-10-24T17:18:09+09:00",
+  "fetched_at": "2026-11-05T23:37:21+09:00",
   "lastmod": null,
-  "content_hash": "sha256:e74cb48baa4f376ae6d8c076c120c5786b9a6b61cb591fe841c6b1deb5396d22",
+  "content_hash": "sha256:d3113851c595ad2be563b317c4b563cac1d66bc9efff4b06e297c3834ba1693a",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "螢光院ヒカリ",
+      "kind": "真獣神化",
+      "start": "2026-05-26T12:00:00+09:00",
+      "end": "2026-05-27T04:00:00+09:00"
+    }
+  ]
 }

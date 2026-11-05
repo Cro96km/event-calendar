@@ -7,9 +7,9 @@
     "event"
   ],
   "published": "2025-11-06",
-  "fetched_at": "2026-10-24T17:27:07+09:00",
+  "fetched_at": "2026-11-05T23:36:08+09:00",
   "lastmod": null,
-  "content_hash": "sha256:af46aa6bc2dbf1d41819ce041d5814d09a06e954bcb564a412bcb9c747f3fa86",
+  "content_hash": "sha256:382620e66dd723ab904b82ec2c0f0e1968796786acb269b1be35a0988a6e4c8e",
   "parse_status": "ok",
   "events": [
     {
@@ -31,5 +31,13 @@
       "inherited": true
     }
   ],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "アガスティア",
+      "kind": "新限定",
+      "start": "2025-11-08T12:00:00+09:00",
+      "end": "2025-11-10T11:59:00+09:00"
+    }
+  ]
 }

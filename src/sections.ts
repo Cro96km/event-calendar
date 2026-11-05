@@ -1,5 +1,6 @@
 // カテゴリ → カレンダーのセクション対応。表示の調整はこのファイルだけで行う。spec §4.3。
 import order from '../config/display/order.json';
+import { CHARACTER_CATEGORY } from './characters';
 
 /** 小見出しの定義(config/display/order.json の groups。配列の順が表示順)。 */
 export interface GroupDef {
@@ -120,6 +121,8 @@ export function sectionOfEvent(e: { category: string; name: string; title?: stri
     const forced = SECTIONS.find((s) => s.id === e.section);
     if (forced) return forced;
   }
+  // キャラクターは名称に関わらずキャラクターのセクション(ガチャ等と取り違えない)
+  if (e.category === CHARACTER_CATEGORY) return SECTIONS.find((s) => s.id === 'character') ?? null;
   if (!EXCLUDED_CATEGORIES.includes(e.category) && gachaGroup(e) !== null) return SECTIONS.find((s) => s.id === 'gacha') ?? null;
   if (e.category === 'collab') return null; // collab はガチャ本体のみ表示(付随項目は出さない)
   if (e.category === 'event' && (CAMPAIGN_ORDER.some((k) => e.name.includes(k)))) return SECTIONS.find((s) => s.id === 'campaign') ?? null;

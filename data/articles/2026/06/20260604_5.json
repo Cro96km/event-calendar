@@ -7,10 +7,18 @@
     "update"
   ],
   "published": "2026-06-04",
-  "fetched_at": "2026-10-24T17:17:34+09:00",
+  "fetched_at": "2026-11-05T23:37:25+09:00",
   "lastmod": null,
-  "content_hash": "sha256:88f740aa783c4f42b4e0a3e4fb2ce2a15a98abe606cefc57eb0ea5ab2e22200c",
+  "content_hash": "sha256:6a41278f1675623b1973286dc5b5540b1c1fc18a721eb67e909d08ba53c7fd67",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "ポルトス",
+      "kind": "真獣神化",
+      "start": "2026-06-09T12:00:00+09:00",
+      "end": "2026-06-10T04:00:00+09:00"
+    }
+  ]
 }

@@ -1,4 +1,5 @@
 // 正本 → UI用の月別JSON。月境界はゲーム日(4:00 JST)基準。none を除く全件。spec §5.2。
+import { characterLabel, CHARACTER_CATEGORY } from '../characters';
 import { gameDayOf } from '../gameday';
 import { itemKey } from '../selection';
 import type { DetailBlock } from '../details';
@@ -68,9 +69,17 @@ function monthsBetween(first: string, last: string): string[] {
 export function buildExport(records: ArticleRecord[], generatedAt: string, collectedAt: string | null = null): { months: MonthFile[]; index: IndexFile } {
   const byMonth = new Map<string, ExportEvent[]>();
   const categories = new Set<string>();
+  const push = (ev: ExportEvent, start: number, last: number): void => {
+    for (const m of monthsBetween(monthOf(start), monthOf(last))) {
+      const list = byMonth.get(m) ?? [];
+      list.push(ev);
+      byMonth.set(m, list);
+    }
+  };
   for (const r of records) {
-    if (r.parse_status === 'none') continue;
-    for (const e of r.events) {
+    // 期間が取れなかった記事(none)でも、キャラクターは本文の見出しから取れる
+    if (r.parse_status === 'none' && (r.characters ?? []).length === 0) continue;
+    for (const e of r.parse_status === 'none' ? [] : r.events) {
       const start = Date.parse(e.start);
       // 終了が丁度ゲーム日の境界(4:00)なら、その直前の瞬間が属する月までとする
       const last = e.end === null ? start : Math.max(start, Date.parse(e.end) - 1);
@@ -93,12 +102,15 @@ export function buildExport(records: ArticleRecord[], generatedAt: string, colle
         ...(e.color ? { color: e.color } : {}),
       };
       categories.add(r.category);
-      for (const m of monthsBetween(monthOf(start), monthOf(last))) {
-        const list = byMonth.get(m) ?? [];
-        list.push(ev);
-        byMonth.set(m, list);
-      }
+      push(ev, start, last);
     }
+    // キャラクター(新限定・進化の解禁)。記事の判定(表示/非表示)とは別に、常に表示する(選択の対象外)
+    (r.characters ?? []).forEach((c, i) => {
+      const start = Date.parse(c.start);
+      const last = c.end === null ? start : Math.max(start, Date.parse(c.end) - 1);
+      categories.add(CHARACTER_CATEGORY);
+      push({ id: `${r.id}#c${i}`, article_id: r.id, name: characterLabel(c), title: r.title, category: CHARACTER_CATEGORY, start: c.start, end: c.end, reward_until: null, url: r.url, item: `${CHARACTER_CATEGORY}:${c.kind}:${c.name}` }, start, last);
+    });
   }
   const months = [...byMonth.keys()].sort();
   return {

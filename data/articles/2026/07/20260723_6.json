@@ -7,10 +7,18 @@
     "update"
   ],
   "published": "2026-07-23",
-  "fetched_at": "2026-10-24T17:07:56+09:00",
+  "fetched_at": "2026-11-05T23:37:45+09:00",
   "lastmod": null,
-  "content_hash": "sha256:a02cdee3ab12a5468715eec956d93309af7d627850d896d3086cd8721fb5c93b",
+  "content_hash": "sha256:9d178495d6f220c4b485704564ad9daa9485f8bcefafec2df35b1166c39570d5",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "竹中半兵衛",
+      "kind": "獣神化・改",
+      "start": "2026-07-28T12:00:00+09:00",
+      "end": "2026-07-29T04:00:00+09:00"
+    }
+  ]
 }

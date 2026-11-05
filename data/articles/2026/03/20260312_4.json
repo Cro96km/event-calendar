@@ -7,10 +7,18 @@
     "update"
   ],
   "published": "2026-03-12",
-  "fetched_at": "2026-10-24T17:20:53+09:00",
+  "fetched_at": "2026-11-05T23:36:58+09:00",
   "lastmod": null,
-  "content_hash": "sha256:914f9d904e4af6e9f92bdb601ea150d68ce8e02da1be5714fcb19353bd0565b1",
+  "content_hash": "sha256:d3e737c72c4b8d4b519c0f7cf5764982d1faf045211e5e065a2733e271cf4766",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "ブレイク",
+      "kind": "獣神化・改",
+      "start": "2026-03-17T12:00:00+09:00",
+      "end": "2026-03-18T04:00:00+09:00"
+    }
+  ]
 }

@@ -7,10 +7,18 @@
     "update"
   ],
   "published": "2026-10-22",
-  "fetched_at": "2026-11-05T16:49:13+09:00",
+  "fetched_at": "2026-11-05T23:38:19+09:00",
   "lastmod": "2026-10-22T17:20:56+09:00",
   "content_hash": "sha256:06c201ac9f5f2de496209196127c82da10c209b64965bbea56ab01c90695901e",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "三千院ホトリ",
+      "kind": "獣神化・改",
+      "start": "2026-10-27T12:00:00+09:00",
+      "end": "2026-10-28T04:00:00+09:00"
+    }
+  ]
 }

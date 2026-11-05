@@ -7,10 +7,18 @@
     "update"
   ],
   "published": "2026-06-18",
-  "fetched_at": "2026-10-24T17:17:02+09:00",
+  "fetched_at": "2026-11-05T23:37:29+09:00",
   "lastmod": null,
-  "content_hash": "sha256:6f6a5a665ff0a2903abc28bccc49a3c94efd597e1fe2f0341e0ef20ddd6ec767",
+  "content_hash": "sha256:8e9a0775bb4d7df657d8b69490be7211fe2c0486b0258bcac28c86d7a6d25bd3",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "アキレウス",
+      "kind": "獣神化・改",
+      "start": "2026-06-23T12:00:00+09:00",
+      "end": "2026-06-24T04:00:00+09:00"
+    }
+  ]
 }

@@ -7,10 +7,24 @@
     "update"
   ],
   "published": "2026-02-19",
-  "fetched_at": "2026-10-24T17:22:56+09:00",
+  "fetched_at": "2026-11-05T23:36:48+09:00",
   "lastmod": null,
-  "content_hash": "sha256:7188b3ce2af2fdf73e48192a9a5248a6609f4728484d7540b6aee7db8975c598",
+  "content_hash": "sha256:8454aaa35f5f02e8a77ce2fc45bfe0d9dc64a50c1151a95a4114e5f749a26cdb",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "鍾馗",
+      "kind": "獣神化・改",
+      "start": "2026-02-20T12:00:00+09:00",
+      "end": "2026-02-21T04:00:00+09:00"
+    },
+    {
+      "name": "大千鳥十文字槍",
+      "kind": "獣神化・改",
+      "start": "2026-02-24T12:00:00+09:00",
+      "end": "2026-02-25T04:00:00+09:00"
+    }
+  ]
 }

@@ -128,7 +128,7 @@
 
 ### 4.3.8 表示順・小見出しの設定(`config/display/order.json` / `src/sections.ts` / `src/order-check.ts`)
 **セクション・小見出し・並びの設定はここだけ**に集約し、小見出しの**名前も個数もこのファイルが正本**(コードに名前を持たない。増減・改名・並べ替えは order.json の編集だけ)。記入例は `config/display/order.md`。
-- `sections`=セクションの定義(`id`・`label`・`hue`・`categories`)と順(上から)。quest・campaign・gacha は必須(振り分けの判定がコードにある)。追加も可(§4.11。小見出しは持たない)。
+- `sections`=セクションの定義(`id`・`label`・`hue`・`categories`)と順(上から)。character・quest・campaign・gacha は必須(振り分けの判定がコードにある。character は §4.13)。追加も可(§4.11。小見出しは持たない)。
 - `groups`=quest・campaign・gacha ごとの小見出しの配列。**配列の順が表示順**。1つの小見出しの項目: `name`(表示名)・`role`(コードが特別扱いする役割。quest: `event`=イベントガチャの写し〈通常→コラボの固定順〉・`raid`=降臨〈行ラベルから「降臨」を除く〉・`super`=超究極〈補足なし→補足→キャラ名の固定順〉、gacha: `event`・`regular`=定例。名前を変えても役割は残る。各1つ必須)・`match`(どの項目が入るか: `"words"`=自分の `words` / `"name"`=自分の `name` / `{includes}` / `{pattern}`。無ければ名称では入らない)・`words`・`sort`・`then`・`aliases`・`late`・`default`。
 - 振り分け(`matchGroup`): `late` でない `match` を配列の順に、次に `late` のもの、最後に `default`。手動の `group`(manual・overrides)は最優先、イベントガチャの写し(id 末尾 `~event`)は quest の `event`。ガチャは、コラボ記事の「ガチャ「」」本体=`event`、定例ガチャの語を `ガチャ「語」` で含む=`regular`(年代別の行を含む)、記事タイトルが `classify.gacha.event_title_prefixes` で始まる=`event`、それ以外=`default`。キャンペーンは `match: "name"` の小見出しの名前を含む(または `aliases`)。どれにも入らないものは「その他」(キャンペーンの先頭固定の月次項目は見出しなし)。
 - `sort`(行の並び方): `fixed`(`words` の順。項目名に含む語を上から、一致しない行は `*` の位置・無ければ末尾。同順位は `then`=`name`〈既定〉/`start`)/ `name`(表示ラベルの五十音順)/ `start`(開始順。既定)/ `builtin`(コード固定: `role: event` のイベント、`role: super` の超究極)。定例クエスト・定例ガチャの `words` は、その小見出しに入れる項目の判定も兼ねる。
@@ -166,6 +166,16 @@
 - メンテナンスの帯(§4.3.6)は4枚とも出る。
 - **4:00 の位置**: 4:00(ゲーム日の境目。03:59含む)は列の1/6の位置だが、端の矢印が入らないため、撮影モードだけ**開始・終了とも**列の0.2の位置へずらす(`shotStartFrac`・`shotEndFrac`。同じ線の上に置き、バーの端の余白(2px)も付けない)。端の矢印は線に寄せる(`.shot .bar-ev.clip-l/clip-r`)。0:00開始・24:00(23:59含む)終了のバーは余白なしで罫線に接する。いずれも通常表示は変えない。
 - `npm run discord:images` が `dist/` をローカルで配信し、Playwright(Chromium・Asia/Tokyo・2倍解像度)で4枚の PNG を `out/discord/` に出す。送信は含まない。設定の点検は `npm run check`(`shotConfigProblems`)。
+
+### 4.13 キャラクターセクション(`src/characters.ts` / `config/display/order.json` の `character` / `src/data/export.ts`)
+クエストの上に置くセクション。**1キャラクター=1行**。対象は、新限定キャラの追加と、ガチャキャラの進化(獣神化・獣神化改・真獣神化)の解禁。
+- **抽出**(収集時。`buildRecord` → `parseCharacters`。公式の本文は保存せず、名前・種別・日時だけを記事の JSON の `characters`(省略可)に残す):
+  - 進化: 本文の見出し `# 真獣神化「名前」`・`# 獣神化・改「名前」`・`# 獣神化「名前」` の直後の `▼解禁日時` の次の行の日時。タイトルでなく本文を使うので、「等3体」「日付なし」のタイトルでも全員取れる。バーは**解禁日のゲーム日1日分**(解禁の時刻〜翌4:00)。
+  - 新限定: タイトルに「新限定」を含む記事。名前は本文の `新限定キャラクター「A」「B」`(無ければタイトルの `新限定(キャラ)「A」`)。バーは**記事のガチャの開催期間**(`ガチャ「…」` の項目。無ければ記事の最初の項目)。
+  - 日時・主期間が取れないものは行にしない(推測した日付を載せない)。足りないものは `manual.json` の add で足す。
+- **表示**: 行名は `名前（種別）`(1行目=名前、2行目=（種別）)。出力時にカテゴリ `character`(記事のカテゴリとは別)・id `<記事ID>#c<連番>` を付け、セクション `character`(`order.json`。小見出しなし)に入る。**表示/非表示の判断(§4.5〜4.6)の対象外で常に表示**(メンテナンスと同じ)。外したい行は `manual.json` の hide(項目ID `20260211_4#c0` か記事ID)。項目IDごとの修正(§4.11)も効く。
+- 進化の記事(カテゴリ update)自体は従来どおり非表示のまま(行はキャラクターのセクションだけに出る)。新限定のガチャの行は、ガチャのセクションに従来どおり出る。
+- 既存の記事への反映は、`data/raw` に生HTMLを取得して `npm run rebuild`(新しい記事は収集で自動)。
 
 ### 4.7 詳細パネルの内容(`src/details.ts` / `src/ui.ts` / `src/label.ts`)
 - **開き方**: ガントのバーだけでなく**左ラベルを押しても**同じ詳細が開く(ラベルは `role="button"`・Tab/Enter/Spaceで操作可)。
@@ -252,6 +262,7 @@
   "reward_until": "2026-11-24T03:59:00+09:00"
 }
 ```
+（キャラクターを含む記事は、ほかに `"characters": [{"name": "桜", "kind": "獣神化・改", "start": "...", "end": "..."}]` を持つ。§4.13）
 - `category` は一覧の先頭カテゴリ、`categories` は全カテゴリ(記事が複数カテゴリを持つため)。
 - event.id は `<記事ID>#<連番>`（延長等で期間が変わっても同一event追跡に使う）。`reward_until` は記事単位(複数eventの記事でも1つ)。
 - 本文・画像は保存しない（`raw`は期間の原文断片のみ。例外: §4.7 の対象ステージ/クエストの短い項目 `details`）。生HTMLは`data/raw/`(ignore)。

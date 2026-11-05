@@ -7,10 +7,18 @@
     "update"
   ],
   "published": "2026-07-16",
-  "fetched_at": "2026-10-24T17:08:14+09:00",
+  "fetched_at": "2026-11-05T23:37:43+09:00",
   "lastmod": null,
-  "content_hash": "sha256:cf64774751ce2ea8a1fdf40e68727685463f20ecc59e8c6bc488d8a620c78e50",
+  "content_hash": "sha256:536616575497770e96d523fb7781c1f27e2090428a59352daf2ca93f0d369e20",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "プラトン",
+      "kind": "獣神化・改",
+      "start": "2026-07-21T12:00:00+09:00",
+      "end": "2026-07-22T04:00:00+09:00"
+    }
+  ]
 }
