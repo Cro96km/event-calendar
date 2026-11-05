@@ -8,7 +8,7 @@
       "end": "2026-12-31 23:59",
       "group": "常設クエスト",
       "hide_start": true,
-      "hide_end": true,
+      "hide_end": false,
       "note": "常設クエスト。年が変わるときは end を延ばす"
     },
     {
@@ -18,7 +18,7 @@
       "end": "2026-12-31 23:59",
       "group": "常設クエスト",
       "hide_start": true,
-      "hide_end": true
+      "hide_end": false
     },
     {
       "name": "神獣の聖域",
@@ -27,7 +27,7 @@
       "end": "2026-12-31 23:59",
       "group": "常設クエスト",
       "hide_start": true,
-      "hide_end": true
+      "hide_end": false
     },
     {
       "name": "未開の大地",
@@ -36,14 +36,16 @@
       "end": "2026-12-31 23:59",
       "group": "常設クエスト",
       "hide_start": true,
-      "hide_end": true
+      "hide_end": false
     },
     {
       "name": "天魔の孤城 BATTLE突破報酬",
       "category": "event",
       "start": "2024-01-01 00:00",
       "end": "2027-08-01 03:59",
-      "group": "常設クエスト"
+      "group": "常設クエスト",
+      "hide_start": true,
+      "hide_end": false
     }
   ],
   "hide": [
