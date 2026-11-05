@@ -1,5 +1,5 @@
 {
-  "_doc": "手動の調整。add=公式ニュースに無い項目をカレンダーに足す(公式由来の項目と同じ扱い。name・category(event=クエスト / campaign=キャンペーン)・start・end は JST の \"YYYY-MM-DD HH:MM\"、group=小見出し(省略可。クエストは 定例クエスト など、キャンペーンは campaign-order.json のグループ語)、note=メモ)。hide=表示から外す項目(id=項目ID 例 20261030_3#0、または記事ID 例 20261030_3 でその記事の全項目。メンテナンスにも効く。データは消さず、この行を消せば元に戻る。note=理由)。直し方は docs/operations.md §14。Actions の manual からも編集できる。",
+  "_doc": "手動の調整。add=公式ニュースに無い項目をカレンダーに足す(公式由来の項目と同じ扱い。name・category(event=クエスト / campaign=キャンペーン)・start・end は JST の \"YYYY-MM-DD HH:MM\"、group=小見出し(省略可。クエストは 定例クエスト など、キャンペーンは order.json の groups.campaign の語)、note=メモ)。hide=表示から外す項目(id=項目ID 例 20261030_3#0、または記事ID 例 20261030_3 でその記事の全項目。メンテナンスにも効く。データは消さず、この行を消せば元に戻る。note=理由)。直し方は docs/operations.md §14。Actions の manual からも編集できる。",
   "add": [
     {
       "name": "閃きの遊技場",
@@ -31,7 +31,7 @@
       "group": "常設クエスト"
     },
     {
-      "name": "天魔の孤城（毎月の報酬）",
+      "name": "天魔の孤城 BATTLE突破報酬",
       "category": "event",
       "start": "2024-01-01 00:00",
       "end": "2027-08-01 03:59",
