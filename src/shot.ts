@@ -1,7 +1,7 @@
 // 撮影モード(Discord 用の画像。URL パラメータ ?shot=…&date=…)。純関数(DOMなし)。docs/spec.md §4.12
 import config from '../config/display/discord.json';
 import { CHARACTER_KINDS } from './characters';
-import { SECTIONS } from './sections';
+import { SECTIONS, type Section } from './sections';
 import type { BarSpan } from './week';
 
 /** 撮影の種類。summary=概要(絞り込みあり)、他(character=キャラクター・quest・campaign・gacha)はそのセクションだけ(絞り込みなし)。 */
@@ -30,18 +30,27 @@ export function parseShot(search: string): ShotParams | null {
   return { kind: kind as ShotKind, date: date !== null && isDay(date) ? date : null };
 }
 
-/** 概要の絞り込み設定(config/display/discord.json の summary)。 */
+/** 概要の1ブロック(config/display/discord.json の summary.blocks)。上から順に、条件に合う行を並べる。 */
+export interface SummaryBlock {
+  /** セクションid(order.json の sections) */
+  section: string;
+  /** 出す小見出し(order.json の groups の name)。複数なら、この順に並べる。省略=セクションの全行 */
+  groups?: string[];
+  /** 空でなければ、項目名にこの語のどれかを含む行だけ残す */
+  keywords?: string[];
+  /** 項目名にこの語を含む行を外す */
+  hide_keywords?: string[];
+  /** 開催日だけ出す(その週に始まるものを開始日の列1日分に描く。それ以前に始まったものは出さない) */
+  start_day_only?: boolean;
+  /** 小見出しを出すか(既定: groups を指定したブロックは出す・語だけのブロックは出さない) */
+  headings?: boolean;
+  /** 最大行数(上から数える) */
+  max_rows?: number;
+}
+
+/** 概要の設定。セクションの大見出し(キャラクター・クエストなど)は出さず、blocks を上から順に並べる。 */
 export interface SummaryConfig {
-  sections: string[];
-  /** セクションid → 外す小見出し */
-  hide_groups: Record<string, string[]>;
-  /** セクションid → 項目名にこの語を含む行を外す */
-  hide_keywords: Record<string, string[]>;
-  /** セクションid → 空でなければ、項目名にこの語のどれかを含む行だけ残す */
-  only_keywords: Record<string, string[]>;
-  /** セクションid → 開催日だけ出す小見出し(その週に始まるものを、開始日の列だけに描く。それ以前に始まったものは出さない) */
-  start_day_only: Record<string, string[]>;
-  max_rows: Record<string, number>;
+  blocks: SummaryBlock[];
 }
 export const SUMMARY: SummaryConfig = config.summary as SummaryConfig;
 
@@ -49,75 +58,67 @@ export const SUMMARY: SummaryConfig = config.summary as SummaryConfig;
 export function shotConfigProblems(cfg: SummaryConfig = SUMMARY, sectionIds: readonly string[] = SECTIONS.map((s) => s.id), groupNames: (section: string) => readonly string[] = () => []): string[] {
   const p: string[] = [];
   const isStrs = (v: unknown): v is string[] => Array.isArray(v) && v.every((x) => typeof x === 'string');
-  if (!isStrs(cfg.sections) || cfg.sections.length === 0) p.push('summary.sections は1つ以上のセクションidの配列');
-  else {
-    for (const s of cfg.sections) if (!sectionIds.includes(s)) p.push(`summary.sections: 「${s}」は order.json にないセクションです(${sectionIds.join(' / ')})`);
-    if (new Set(cfg.sections).size !== cfg.sections.length) p.push('summary.sections: セクションが重複しています');
-  }
-  for (const key of ['hide_keywords', 'only_keywords'] as const) {
-    const v: unknown = cfg[key];
-    if (typeof v !== 'object' || v === null || Array.isArray(v)) p.push(`summary.${key} はオブジェクト(セクションid → 語の配列)`);
-    else {
-      for (const [sec, words] of Object.entries(v)) {
-        if (!sectionIds.includes(sec)) p.push(`summary.${key}: 「${sec}」は order.json にないセクションです`);
-        else if (!isStrs(words)) p.push(`summary.${key}.${sec} は文字列の配列`);
-        else if (words.some((x) => x.trim() === '')) p.push(`summary.${key}.${sec}: 空の語があります`);
-      }
+  if (!Array.isArray(cfg.blocks) || cfg.blocks.length === 0) return ['summary.blocks は1つ以上のブロックの配列'];
+  cfg.blocks.forEach((b, i) => {
+    const w = `summary.blocks[${i}]`;
+    if (!sectionIds.includes(b.section)) p.push(`${w}.section: 「${b.section}」は order.json にないセクションです(${sectionIds.join(' / ')})`);
+    for (const key of ['groups', 'keywords', 'hide_keywords'] as const) {
+      const v: unknown = b[key];
+      if (v === undefined) continue;
+      if (!isStrs(v) || v.length === 0) p.push(`${w}.${key} は1つ以上の文字列の配列`);
+      else if (v.some((x) => x.trim() === '')) p.push(`${w}.${key}: 空の語があります`);
     }
-  }
-  for (const key of ['hide_groups', 'start_day_only'] as const) {
-    const v: unknown = cfg[key];
-    if (typeof v !== 'object' || v === null || Array.isArray(v)) p.push(`summary.${key} はオブジェクト(セクションid → 小見出しの配列)`);
-    else {
-      for (const [sec, names] of Object.entries(v)) {
-        if (!sectionIds.includes(sec)) p.push(`summary.${key}: 「${sec}」は order.json にないセクションです`);
-        else if (!isStrs(names)) p.push(`summary.${key}.${sec} は小見出しの名前の配列`);
-        else {
-          const known = groupNames(sec);
-          for (const n of names) if (known.length > 0 && !known.includes(n)) p.push(`summary.${key}.${sec}: 「${n}」は order.json の小見出しにありません(${known.join(' / ')})`);
-        }
-      }
+    if (isStrs(b.groups)) {
+      const known = groupNames(b.section);
+      for (const g of b.groups) if (known.length > 0 && !known.includes(g)) p.push(`${w}.groups: 「${g}」は order.json の ${b.section} の小見出しにありません(${known.join(' / ')})`);
     }
-  }
-  if (typeof cfg.max_rows !== 'object' || cfg.max_rows === null || Array.isArray(cfg.max_rows)) p.push('summary.max_rows はオブジェクト(セクションid → 行数)');
-  else {
-    for (const [sec, n] of Object.entries(cfg.max_rows)) {
-      if (!sectionIds.includes(sec)) p.push(`summary.max_rows: 「${sec}」は order.json にないセクションです`);
-      if (!Number.isInteger(n) || n < 1) p.push(`summary.max_rows.${sec}: 1以上の整数`);
-    }
-  }
+    if (b.start_day_only !== undefined && typeof b.start_day_only !== 'boolean') p.push(`${w}.start_day_only は true / false`);
+    if (b.headings !== undefined && typeof b.headings !== 'boolean') p.push(`${w}.headings は true / false`);
+    if (b.max_rows !== undefined && !(Number.isInteger(b.max_rows) && b.max_rows >= 1)) p.push(`${w}.max_rows: 1以上の整数`);
+  });
   return p;
 }
 
-/** 概要に出すセクションか。 */
-export const summaryHasSection = (sectionId: string, cfg: SummaryConfig = SUMMARY): boolean => cfg.sections.includes(sectionId);
+/** 概要で並べる1ブロック分(ui.ts が大見出しなしで描く)。 */
+export interface SummaryEntry {
+  section: Section;
+  rows: BarSpan[][];
+  /** 小見出しを出すか */
+  headings: boolean;
+}
 
 /**
- * 概要の絞り込み。rows=1セクションの行(上から順)。groupOf=行の小見出し(無ければ null)。
- * 順: 小見出しで外す → 語で外す → only_keywords で残す → 開催日だけ(start_day_only) → 行数で切る。
- * 語・小見出し・行数の指定は、すべてセクションごと。
+ * 概要の行を、設定の blocks の順に並べる。sections=ganttSections の結果(セクションごとの行)。groupOf=行の小見出し(無ければ null)。
+ * キャラクターの行は先に詰める(compactCharacterRows)。ブロックごとの判定順: 小見出し → 語で外す → only の語 → 開催日だけ → 行数。行が無いブロックは出さない。
  */
-export function filterSummaryRows(sectionId: string, rows: BarSpan[][], groupOf: (e: BarSpan['event']) => string | null, cfg: SummaryConfig = SUMMARY): BarSpan[][] {
-  const hideGroups = cfg.hide_groups[sectionId] ?? [];
-  const hideWords = cfg.hide_keywords[sectionId] ?? [];
-  const onlyWords = cfg.only_keywords[sectionId] ?? [];
-  const dayOnly = cfg.start_day_only[sectionId] ?? [];
-  const out: BarSpan[][] = [];
-  for (const bars of rows) {
-    const e = (bars[0] as BarSpan).event;
-    const g = groupOf(e);
-    if (g !== null && hideGroups.includes(g)) continue;
-    if (hideWords.some((k) => e.name.includes(k))) continue;
-    if (onlyWords.length > 0 && !onlyWords.some((k) => e.name.includes(k))) continue;
-    if (g !== null && dayOnly.includes(g)) {
-      const days = startDayBars(bars);
-      if (days.length > 0) out.push(days);
-      continue;
+export function summaryBlocks(sections: { section: Section; rows: BarSpan[][] }[], groupOf: (sectionId: string, e: BarSpan['event']) => string | null, cfg: SummaryConfig = SUMMARY): SummaryEntry[] {
+  const out: SummaryEntry[] = [];
+  const compacted = new Map<string, BarSpan[][]>();
+  const rowsOf = (sec: { section: Section; rows: BarSpan[][] }): BarSpan[][] => {
+    if (sec.section.id !== 'character') return sec.rows;
+    if (!compacted.has(sec.section.id)) compacted.set(sec.section.id, compactCharacterRows(sec.rows));
+    return compacted.get(sec.section.id) as BarSpan[][];
+  };
+  for (const b of cfg.blocks) {
+    const sec = sections.find((x) => x.section.id === b.section);
+    if (!sec) continue;
+    let rows = rowsOf(sec).filter((bars) => {
+      const e = (bars[0] as BarSpan).event;
+      if (b.groups !== undefined && !b.groups.includes(groupOf(sec.section.id, e) ?? '')) return false;
+      if (b.hide_keywords?.some((k) => e.name.includes(k))) return false;
+      if (b.keywords !== undefined && !b.keywords.some((k) => e.name.includes(k))) return false;
+      return true;
+    });
+    // 複数の小見出しは、設定に書いた順(同じ小見出しの中は元の並び)
+    if (b.groups !== undefined) {
+      const order = (bars: BarSpan[]): number => (b.groups as string[]).indexOf(groupOf(sec.section.id, (bars[0] as BarSpan).event) ?? '');
+      rows = rows.map((r, i) => ({ r, i })).sort((x, y) => order(x.r) - order(y.r) || x.i - y.i).map((x) => x.r);
     }
-    out.push(bars);
+    if (b.start_day_only) rows = rows.map((bars) => startDayBars(bars)).filter((bars) => bars.length > 0);
+    if (b.max_rows !== undefined) rows = rows.slice(0, b.max_rows);
+    if (rows.length > 0) out.push({ section: sec.section, rows, headings: b.headings ?? b.groups !== undefined });
   }
-  const max = cfg.max_rows[sectionId];
-  return max === undefined ? out : out.slice(0, max);
+  return out;
 }
 
 /** 開催日だけの表示: その表示期間に始まるバーを、開始日の列1日分(罫線から罫線まで。開始時刻は問わない)にする。表示期間より前に始まったものは出さない。 */
