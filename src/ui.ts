@@ -4,7 +4,7 @@ import { appTitle } from './app';
 import { monthlyEvents, type MonthlyDef } from './monthly';
 import { clampToWindow, windowRange } from './window';
 import { type BarSpan, addDays, isOnCalendarDay, campaignGroup, questGroup, maintenanceBars, maintenanceOnDay, addMonthsToDay, dayLabel, monthWindow, eventsForDay, formatJst, ganttSections, mergeSameLabel, rowLabel, periodText, slotRows, weekDays, weekdayOf } from './week';
-import { EVENT_QUEST_SUFFIX, MAINTENANCE_CATEGORY, gachaGroup } from './sections';
+import { EVENT_QUEST_SUFFIX, MAINTENANCE_CATEGORY, gachaGroup, sectionOf } from './sections';
 import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
@@ -94,7 +94,7 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
   // イベントクエスト行のバーは、ガチャ由来の写し(id末尾 ~event)。詳細は元のガチャイベントを、タイトルは行ラベル(「ガチャ」なし)で出す
   const baseId = sel.eventId?.endsWith(EVENT_QUEST_SUFFIX) ? sel.eventId.slice(0, -EVENT_QUEST_SUFFIX.length) : sel.eventId;
   const entries = sel.eventId
-    ? pool.filter((e) => e.id === baseId && isOnCalendarDay(e, sel.day)).map((e) => ({ event: baseId === sel.eventId ? e : { ...e, name: rowLabel('gacha', e).l1 } }))
+    ? pool.filter((e) => e.id === baseId && sectionOf(e.category) !== null && isOnCalendarDay(e, sel.day)).map((e) => ({ event: baseId === sel.eventId ? e : { ...e, name: rowLabel('gacha', e).l1 } }))
     : eventsForDay(pool, sel.day);
   // メンテナンス(帯)も、帯を選んだとき/日付を選んだときに出す
   const maint = state.events.filter((e) => (sel.eventId ? e.id === sel.eventId : true) && maintenanceOnDay(e, sel.day));
