@@ -149,6 +149,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 | `update.yml` | 毎週金曜 00:00 JST、手動実行 | `npm run update`(収集→判定→差分レポート)→ lint・テスト・公開データ生成 + `npm run check`(健全性) →ブランチ `update/<日時>` と PR(本文=差分レポート)。健全ならラベル『自動マージ』を付けて**マージし、`deploy.yml` を起動**。健全でなければラベル『要確認』+理由で待機。要対応があれば Issue。変更が無ければ何もしない。例外で落ちたら Issue「更新の失敗」 |
 | `deploy.yml` | main への push(`data/articles`・`config`・`src`・`public`・設定ファイルの変更)、手動実行、`update.yml`・`apply.yml` の起動 | 正本と設定から表示用データを作り直し(`npm run update -- --no-collect`。収集しない)、公開サイトをビルドして GitHub Pages に公開 |
 | `apply.yml` | 要対応Issue(タイトルが「要対応」)に `/apply` とコメント(所有者・メンバー・共同作業者のみ。Issueの作者も更新ワークフローのbotか所有者のものだけ) | Issue本文のチェックを `npm run judge` で判断の記憶に取り込み、検証して PR→自動マージ→`deploy.yml` 起動→Issue を閉じる。検証が通らなければ『要確認』で待機 |
+| `manual.yml` | 手動実行のみ(Actions → manual → Run workflow) | 入力(操作・項目名・期間など)で `npm run manual` を実行 → 検証(lint・テスト・ビルド・`npm run check`) → `config/schedule/manual.json` を更新する PR → 健全なら自動マージして `deploy.yml` を起動。検証が通らなければ『要確認』で待機。手順は §14 |
 | `ci.yml` | PR、main への push | lint・テスト・ビルド(人が作る PR 用) |
 
 **手動実行の入力(update.yml)**: `collect`(false にすると収集せず、設定の変更だけを反映して判定とレポートを作り直す)、`pages`(既定2)、`since`(初回・過去分用。公式サイトへの負荷が大きい)。

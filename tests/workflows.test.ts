@@ -7,8 +7,8 @@ const files = readdirSync(DIR).filter((f) => f.endsWith('.yml'));
 const text = (f: string): string => readFileSync(new URL(f, DIR), 'utf8');
 
 describe('GitHub Actions ワークフローの不変条件', () => {
-  it('ワークフローが存在する(update / deploy / apply / ci)', () => {
-    expect(files).toEqual(expect.arrayContaining(['update.yml', 'deploy.yml', 'apply.yml', 'ci.yml']));
+  it('ワークフローが存在する(update / deploy / apply / manual / ci)', () => {
+    expect(files).toEqual(expect.arrayContaining(['update.yml', 'deploy.yml', 'apply.yml', 'manual.yml', 'ci.yml']));
   });
 
   it.each(files)('%s: 使うアクションはすべてコミットSHAで固定(サプライチェーン対策)', (f) => {
@@ -34,6 +34,19 @@ describe('GitHub Actions ワークフローの不変条件', () => {
     expect(t).toMatch(/OWNER.*MEMBER.*COLLABORATOR/);
     expect(t).toContain("startsWith(github.event.issue.title, '要対応')");
     expect(t).toContain('github.event.issue.pull_request == null');
+  });
+
+  it('manual.yml: 手動実行だけ(自動では動かない)。入力は環境変数経由で npm run manual に渡し、manual.json だけをコミットして、検証が通れば自動マージ→deploy', () => {
+    const t = text('manual.yml');
+    expect(t).toMatch(/on:\n\s+workflow_dispatch:/);
+    expect(t).not.toMatch(/^\s+(push|pull_request|schedule|issue_comment|issues):/m);
+    expect(t).toContain('npm run manual --');
+    expect(t).toContain('git add config/schedule/manual.json');
+    expect(t).toContain('npm run check');
+    expect(t).toContain('gh workflow run deploy.yml');
+    // 入力(github.event.inputs.*)は env: にだけ書く。run: に直接展開しない
+    const runs = t.split(/\n(?=\s*-?\s*(?:name|run|id|uses|env|if|with):)/).filter((blk) => /^\s*-?\s*run:/.test(blk));
+    for (const blk of runs) expect(blk).not.toMatch(/\$\{\{\s*github\.event\.inputs\./);
   });
 
   it('update.yml: 毎週金曜0:00 JST(木曜15:00 UTC)と手動実行、手動入力(collect/pages/since)。収集はnpm run update 経由', () => {

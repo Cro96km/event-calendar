@@ -1,0 +1,126 @@
+# 手動の調整: Actions → manual → Run workflow に入力すると、config/schedule/manual.json を更新する PR を作り、
+# 検証が通れば自動マージして反映する(公式に無い項目の追加・項目の非表示)。手動実行できるのは書き込み権限のある人だけ。docs/operations.md §14。
+name: manual
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: '操作: add=項目を足す / remove=足した項目を取り除く / hide=項目を表示から外す / unhide=非表示を取り消す'
+        type: choice
+        required: true
+        options: [add, remove, hide, unhide]
+      name:
+        description: '[add・remove] 項目名(例: 閃きの遊技場)'
+        type: string
+        default: ''
+      category:
+        description: '[add] event=クエスト / campaign=キャンペーン'
+        type: choice
+        options: [event, campaign]
+        default: event
+      start:
+        description: '[add] 開始(JST) YYYY-MM-DD HH:MM'
+        type: string
+        default: ''
+      end:
+        description: '[add] 終了(JST) YYYY-MM-DD HH:MM'
+        type: string
+        default: ''
+      group:
+        description: '[add・任意] 小見出し(クエスト: 定例クエスト など。キャンペーンは campaign-order.json のグループ語)'
+        type: string
+        default: ''
+      id:
+        description: '[hide・unhide] 項目ID(例: 20261030_3#0)または記事ID(例: 20261030_3。その記事の全項目)'
+        type: string
+        default: ''
+      note:
+        description: '[add・hide・任意] メモ・理由'
+        type: string
+        default: ''
+
+permissions:
+  contents: write
+  pull-requests: write
+  actions: write
+
+concurrency:
+  group: manual
+  cancel-in-progress: false
+
+jobs:
+  manual:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      # 入力は環境変数経由で渡す(シェルに直接展開しない)。書式の誤りは npm run manual が投げて、ここで止まる。
+      - name: Apply
+        env:
+          IN_ACTION: ${{ github.event.inputs.action }}
+          IN_NAME: ${{ github.event.inputs.name }}
+          IN_CATEGORY: ${{ github.event.inputs.category }}
+          IN_START: ${{ github.event.inputs.start }}
+          IN_END: ${{ github.event.inputs.end }}
+          IN_GROUP: ${{ github.event.inputs.group }}
+          IN_ID: ${{ github.event.inputs.id }}
+          IN_NOTE: ${{ github.event.inputs.note }}
+        run: |
+          set -euo pipefail
+          args=("$IN_ACTION")
+          opt() { if [ -n "$2" ]; then args+=("$1" "$2"); fi; }
+          case "$IN_ACTION" in
+            add) opt --name "$IN_NAME"; opt --category "$IN_CATEGORY"; opt --start "$IN_START"; opt --end "$IN_END"; opt --group "$IN_GROUP"; opt --note "$IN_NOTE" ;;
+            remove) opt --name "$IN_NAME" ;;
+            hide) opt --id "$IN_ID"; opt --note "$IN_NOTE" ;;
+            unhide) opt --id "$IN_ID" ;;
+          esac
+          npm run manual -- "${args[@]}"
+
+      - name: Verify
+        id: verify
+        run: |
+          set +e
+          npm run lint && npm test && npm run build:public
+          echo "ci=$?" >> "$GITHUB_OUTPUT"
+          npm run check
+          echo "check=$?" >> "$GITHUB_OUTPUT"
+
+      - name: PR and merge
+        env:
+          CI_RESULT: ${{ steps.verify.outputs.ci }}
+          CHECK_RESULT: ${{ steps.verify.outputs.check }}
+          IN_ACTION: ${{ github.event.inputs.action }}
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain config)" ]; then
+            echo "変更がありませんでした(すでに同じ内容です)。" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          branch="manual/$(date -u +%Y%m%d%H%M%S)"
+          git switch -c "$branch"
+          git add config/schedule/manual.json
+          git commit -m "config: manual adjustment ($IN_ACTION)"
+          git push origin "$branch"
+          gh label create "要確認" --color d93f0b 2>/dev/null || true
+          url=$(gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" --title "config: manual adjustment ($IN_ACTION)" --body "手動の調整(config/schedule/manual.json)。検証: CI相当=$CI_RESULT / 点検=$CHECK_RESULT")
+          if [ "$CI_RESULT" = "0" ] && [ "$CHECK_RESULT" = "0" ]; then
+            gh pr merge "$url" --squash --delete-branch
+            gh workflow run deploy.yml --ref "${{ github.event.repository.default_branch }}"
+            echo "反映しました: $url(公開サイトは数分で更新されます)" | tee -a "$GITHUB_STEP_SUMMARY"
+          else
+            gh pr edit "$url" --add-label "要確認"
+            echo "検証が通らなかったため、自動マージしていません: $url" | tee -a "$GITHUB_STEP_SUMMARY"
+            exit 1
+          fi
