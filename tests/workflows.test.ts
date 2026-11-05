@@ -41,6 +41,9 @@ describe('GitHub Actions ワークフローの不変条件', () => {
     expect(t).toMatch(/on:\n\s+workflow_dispatch:/);
     expect(t).not.toMatch(/^\s+(push|pull_request|schedule|issue_comment|issues):/m);
     expect(t).toContain('npm run manual --');
+    // build:public は表示用データ(public/data)が要るので、検証の前に作り直す
+    expect(t.indexOf('npm run update -- --no-collect')).toBeGreaterThan(t.indexOf('npm run manual --'));
+    expect(t.indexOf('npm run update -- --no-collect')).toBeLessThan(t.indexOf('npm run build:public'));
     expect(t).toContain('git add config/schedule/manual.json');
     expect(t).toContain('npm run check');
     expect(t).toContain('gh workflow run deploy.yml');
