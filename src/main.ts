@@ -6,6 +6,7 @@ import { mergeEvents, mergeSameLabel } from './week';
 import { applyManual } from './manual';
 import { applyOverrides } from './overrides';
 import { MONTHLY } from './monthly';
+import { parseShot } from './shot';
 import './style.css';
 
 async function load(): Promise<{ index: IndexFile; events: ExportEvent[]; selection: SelectionJson | null }> {
@@ -38,8 +39,13 @@ if (root) {
   root.textContent = '読み込み中…';
   load()
     .then(({ index, events, selection }) => {
-      const state = initialState(todayJstDay(), applyManual(applyOverrides(applySelection(events, selection))), index, MONTHLY);
-      if (import.meta.env.DEV) state.refresh = () => refreshData(state);
+      // 撮影モード(?shot=…&date=…。Discord 用の画像)。基準日を固定でき、畳み状態(localStorage)は使わない
+      const shot = parseShot(location.search);
+      const state = initialState(shot?.date ?? todayJstDay(), applyManual(applyOverrides(applySelection(events, selection))), index, MONTHLY);
+      if (shot) {
+        state.shot = shot.kind;
+        state.collapsed = new Set();
+      } else if (import.meta.env.DEV) state.refresh = () => refreshData(state);
       render(root, state);
     })
     .catch((e: unknown) => {

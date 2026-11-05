@@ -6,6 +6,8 @@ import { checkHakai } from '../src/hakai-check';
 import { judgeHealth } from '../src/health';
 import { MANUAL, manualProblems } from '../src/manual';
 import { orderProblems } from '../src/order-check';
+import { shotConfigProblems } from '../src/shot';
+import { SECTIONS, groupDefs } from '../src/sections';
 import { OVERRIDES, overrideProblems, type OfficialValue } from '../src/overrides';
 import cfgOverrides from '../config/display/label-overrides.json';
 import { labelWidth, MAX_LABEL_WIDTH } from '../src/label-override';
@@ -21,7 +23,8 @@ const HELP = `npm run check [-- --summary FILE]
     4. 手動の調整(config/schedule/manual.json)の書式・日時・小見出し(誤り=要確認)。存在しない項目IDは警告。
     5. 項目ごとの手動の修正(config/schedule/overrides.json)の書式(誤り=要確認)。存在しない項目ID・公式の値の変化(was との食い違い)・不要になった修正は警告。
     6. 表示順の設定(config/display/order.json)の書式・小見出しの過不足(誤り=要確認)。
-    7. 健全性(--summary を渡したとき): 収集の完了・既存記事の書き換え量・期間が取れない新規の割合(config/judge/health.json の閾値)。
+    7. Discord 画像の概要の絞り込み(config/display/discord.json)の書式・セクション・小見出しの名前(誤り=要確認)。
+    8. 健全性(--summary を渡したとき): 収集の完了・既存記事の書き換え量・期間が取れない新規の割合(config/judge/health.json の閾値)。
   オプション:
     --summary FILE  npm run update が出したサマリ(update-report.json)。健全性の点検に使う。
     --help          この説明
@@ -68,6 +71,7 @@ for (const u of ov.unknown) warns.push(`overrides.json に、存在しない項�
 for (const x of ov.stale) warns.push(`overrides.json: 公式の値が修正時から変わりました。修正を見直してください: ${x}`);
 for (const x of ov.redundant) warns.push(`overrides.json: 修正が今の公式の値と同じです(不要。unset で外せます): ${x}`);
 for (const p of orderProblems()) fails.push(`表示順の設定の誤り: ${p}`);
+for (const p of shotConfigProblems(undefined, SECTIONS.map((x) => x.id), (sec) => groupDefs(sec).map((g) => g.name))) fails.push(`Discord 画像の設定の誤り: ${p}`);
 
 const summaryFile = arg('--summary');
 if (summaryFile !== undefined) {

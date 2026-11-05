@@ -9,6 +9,7 @@ import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
 import { isQuestNameBlock, questNameColor, withFixedFloors } from './quest-color';
+import { SHOT_4AM_FRAC, filterSummaryRows, shotEndFrac, shotStartFrac, summaryHasSection, type ShotKind } from './shot';
 
 interface Selection {
   day: string;
@@ -36,6 +37,8 @@ export interface AppState {
   refresh?: () => Promise<{ ok: boolean; message: string }>;
   updating: boolean;
   updateMessage: string;
+  /** 撮影モード(?shot=…。Discord 用の画像。spec §4.12)。指定時は操作・詳細・注意書きを出さず、種類のセクションだけを週表示で描く */
+  shot?: ShotKind;
 }
 
 const COLLAPSED_KEY = 'collapsedSections';
@@ -420,8 +423,12 @@ export function render(root: HTMLElement, state: AppState): void {
   body.append(dateRow, rowsBox);
   const sections = ganttSections([...state.events, ...monthlyEvents(days[0] as string, days[days.length - 1] as string, state.monthly)], days);
   if (sections.length === 0) rowsBox.append(el('p', 'empty', state.view === 'week' ? '今日から7日間に表示するイベントはありません' : 'この月に表示するイベントはありません'));
-  for (const { section, rows } of sections) {
-    const folded = state.collapsed.has(section.id);
+  for (const { section, rows: allRows } of sections) {
+    if (state.shot && state.shot !== 'summary' && state.shot !== section.id) continue;
+    if (state.shot === 'summary' && !summaryHasSection(section.id)) continue;
+    // 撮影モード: 概要だけ設定(config/display/discord.json)で絞る。畳みは無視する
+    const rows = state.shot === 'summary' ? filterSummaryRows(section.id, allRows, (e) => (section.id === 'quest' ? questGroup(e) : section.id === 'gacha' ? gachaGroup(e) : campaignGroup(e))) : allRows;
+    const folded = !state.shot && state.collapsed.has(section.id);
     const h = el('div', 'g-section', folded ? `${section.label}(${rows.length})` : section.label);
     h.dataset.section = section.id;
     h.style.setProperty('--hue', String(section.hue));
@@ -501,8 +508,13 @@ export function render(root: HTMLElement, state: AppState): void {
         b.style.gridColumn = `${bar.from + 2} / ${bar.to + 3}`;
         // 列内の開始/終了時刻(ゲーム日4:00基準)に応じて左右を詰める。マージン%は占有する列群の幅が基準
         const n = bar.to - bar.from + 1;
-        if (!bar.clippedLeft && bar.startFrac > 0) b.style.marginLeft = `calc(${((bar.startFrac / n) * 100).toFixed(3)}% + 2px)`;
-        if (!bar.clippedRight && !bar.openEnded && bar.endFrac < 1) b.style.marginRight = `calc(${(((1 - bar.endFrac) / n) * 100).toFixed(3)}% + 2px)`;
+        // 撮影モードだけ: 4:00 開始・終了のバーを同じ幅だけ伸ばし(矢印が入るように)、0:00 開始・24:00 終了は余白を付けず罫線に接する
+        const startFrac = state.shot ? shotStartFrac(bar.startFrac) : bar.startFrac;
+        if (!bar.clippedLeft && startFrac > 0) b.style.marginLeft = `calc(${((startFrac / n) * 100).toFixed(3)}%${state.shot && startFrac === SHOT_4AM_FRAC ? '' : ' + 2px'})`; // 4:00 の位置は開始・終了とも同じ線(余白なし)
+        else if (state.shot && !bar.clippedLeft) b.style.marginLeft = '0';
+        const endFrac = state.shot ? shotEndFrac(bar.endFrac) : bar.endFrac;
+        if (!bar.clippedRight && !bar.openEnded && endFrac < 1) b.style.marginRight = `calc(${(((1 - endFrac) / n) * 100).toFixed(3)}%${state.shot && endFrac === SHOT_4AM_FRAC ? '' : ' + 2px'})`;
+        else if (state.shot && !bar.clippedRight && !bar.openEnded) b.style.marginRight = '0';
         if (bar.clippedLeft) b.classList.add('clip-l');
         if (bar.clippedRight) b.classList.add('clip-r');
         if (bar.openEnded) b.classList.add('open');
@@ -540,8 +552,17 @@ export function render(root: HTMLElement, state: AppState): void {
     rowsBox.append(overlay);
   }
 
-  attachDrag(grid, state, rerender);
+  if (!state.shot) attachDrag(grid, state, rerender);
 
+  if (state.shot) {
+    // 撮影モード: カレンダーと隅の注記だけ(操作・詳細・注意書きは出さない)。撮影の対象は .shot
+    const frame = el('div', 'shot');
+    frame.dataset.testid = 'shot';
+    frame.dataset.shot = state.shot;
+    frame.append(grid);
+    root.append(frame);
+    return;
+  }
   const detail = renderDetail(state, rerender);
   root.append(header, grid, detail, footer());
   // 選択したら詳細パネルまで自動で移動する(見えていれば動かさない)。環境が未対応/動きを減らす設定なら即時移動

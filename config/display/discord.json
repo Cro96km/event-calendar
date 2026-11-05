@@ -1,0 +1,10 @@
+{
+  "_doc": "Discord 用の画像(撮影モード ?shot=…。docs/operations.md の撮影の節)の設定。summary=「概要」の画像だけに効く絞り込み(クエスト・キャンペーン・ガチャの各画像は絞らない)。sections=概要に出すセクションのid(order.json の sections)。hide_groups=セクションidごとに、概要から外す小見出しの名前(order.json の groups の name)。hide_keywords=項目名にこの語を含む行を外す。only_keywords=空でなければ、項目名にこの語のどれかを含む行だけ残す(hide より後に判定)。max_rows=セクションidごとの最大行数(上から数える。無指定=制限なし)。初期値は絞らない(現状のまま)。直すのはこのファイルだけ(コードの変更は要らない)。",
+  "summary": {
+    "sections": ["quest", "campaign", "gacha"],
+    "hide_groups": {},
+    "hide_keywords": [],
+    "only_keywords": [],
+    "max_rows": {}
+  }
+}
