@@ -1272,7 +1272,7 @@ describe('ガチャセクション', () => {
     expect(b).not.toBeNull();
     click(b);
     expect(q('detail')?.textContent).not.toContain('この日のイベントはありません');
-    expect(q('detail')?.textContent).toContain('ギャラクシーアドベンチャー');
+    expect(q('detail')?.querySelector('h3')?.textContent).toBe('ギャラクシーアドベンチャー II'); // 行ラベルと同じ。「ガチャ」は付けない
   });
 
   it('periodText: 年をまたぐ場合だけ年を付ける。hide_start / hide_end', () => {
