@@ -126,3 +126,9 @@ button { font: inherit; color: inherit; }
 .g-label.colored:not(.pickup) .g-l1 { color: color-mix(in srgb, var(--pc) 78%, var(--text)); }
 @media (prefers-color-scheme: dark) { .g-label.colored:not(.pickup) .g-l1 { color: color-mix(in srgb, var(--pc) 52%, var(--text)); } }
 .detail-note { margin: .3rem 0; font-size: .9rem; white-space: pre-wrap; }
+/* 撮影モード(?shot=…。Discord 用の画像。spec §4.12)。ライト固定・操作なし。撮影の対象は .shot */
+body:has(.shot) { padding: 0; background: #fff; }
+.shot { background: #fff; padding: 12px; width: 760px; }
+.shot .gantt { --label: 12rem; overflow: visible; }
+.shot .g-row:not(.g-dates) > .g-label { cursor: default; }
+.shot-note { display: flex; justify-content: space-between; margin: .5rem 0 0; font-size: .75rem; color: #667; }

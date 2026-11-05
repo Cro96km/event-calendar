@@ -160,6 +160,12 @@
 - 帯は行の下(日付ヘッダは除く。日付クリックを奪わない)の層に重なる(行のバーはその部分で押せない。左ラベルからは開ける)。終了未定のメンテは開始列のみ。
 - 期間の時刻の「頃」(`0:00頃`)は全記事で許容する(メンテ以外でも時刻として扱う)。想定時間は公式の「前後する場合」あり。
 
+### 4.12 撮影モード(Discord 用の画像。`src/shot.ts` / `src/ui.ts` / `scripts/discord-images.ts` / `config/display/discord.json`)
+- URL パラメータ `?shot=summary|quest|campaign|gacha` で撮影モード(`&date=YYYY-MM-DD` で基準日を固定。無ければ今日〈ゲーム日〉)。常に**週表示**(基準日から7日)。操作ボタン・詳細パネル・注意書き・ドラッグ・畳みは無く、日付ヘッダの行から始まり、隅に「非公式・非営利」と公式サイトの収集時刻を出す。`.shot` が撮影の対象(ライト固定の幅760px)。
+- `quest` / `campaign` / `gacha` はそのセクションだけ(絞り込みなし)。`summary` は `config/display/discord.json` の `summary`(sections・hide_groups・hide_keywords・only_keywords・max_rows。初期値は絞らない)で行を絞る。判定順: 小見出しで外す→語で外す→only で残す→行数で切る。
+- メンテナンスの帯(§4.3.6)は4枚とも出る。
+- `npm run discord:images` が `dist/` をローカルで配信し、Playwright(Chromium・Asia/Tokyo・2倍解像度)で4枚の PNG を `out/discord/` に出す。送信は含まない。設定の点検は `npm run check`(`shotConfigProblems`)。
+
 ### 4.7 詳細パネルの内容(`src/details.ts` / `src/ui.ts` / `src/label.ts`)
 - **開き方**: ガントのバーだけでなく**左ラベルを押しても**同じ詳細が開く(ラベルは `role="button"`・Tab/Enter/Spaceで操作可)。
 - **自動スクロール**: バー/ラベル/日付を押して詳細が開いたら、パネルまで自動でスクロールする(`scrollIntoView({block:'nearest'})`。既に見えていれば動かさない。「動きを減らす」設定では即時)。閉じるときは動かさない。
