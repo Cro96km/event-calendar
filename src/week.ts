@@ -1,6 +1,6 @@
 // 週表示の純ロジック（DOMなし）。spec §4.3。日付はゲーム日 YYYY-MM-DD(JST)。
 import { gameDayOf, isOnGameDay } from './gameday';
-import { GACHA_GROUPS, GACHA_GROUP_ORDER, QUEST_GROUP_ORDER, gachaEra, gachaGroup, regularGachaIndex, CAMPAIGN_ALIASES, CAMPAIGN_GROUPS, GROUP_SORT, MAINTENANCE_CATEGORY, EVENT_QUEST_SUFFIX, QUEST_GROUPS, QUEST_ORDER, SECTIONS, sectionOf, sectionOfEvent, type Section } from './sections';
+import { GACHA_GROUPS, GACHA_GROUP_ORDER, QUEST_GROUP_ORDER, gachaEra, gachaGroup, regularGachaIndex, CAMPAIGN_ALIASES, CAMPAIGN_GROUPS, ROW_RULES, MAINTENANCE_CATEGORY, EVENT_QUEST_SUFFIX, QUEST_GROUPS, QUEST_ORDER, SECTIONS, sectionOf, sectionOfEvent, type Section } from './sections';
 import type { ExportEvent } from './data/export';
 import { labelLines, shortLabel, superUltimateLabel, superUltimateParts } from './label';
 import { labelOverride } from './label-override';
@@ -211,8 +211,6 @@ export function mergeSameLabel(events: ExportEvent[]): ExportEvent[] {
 
 /** 降臨スケジュールの名称(`黎絶 キャローネ降臨`)。 */
 const RAID_NAME = /^(轟絶|黎絶|滅絶) .+降臨$/;
-/** 絶級クエストの並び(滅絶→黎絶→轟絶)。 */
-const RAID_TIERS = ['滅絶', '黎絶', '轟絶'];
 
 /** クエストの小見出し(QUEST_GROUPS のいずれか)。spec §4.3.5。 */
 export function questGroup(e: { name: string; id?: string; group?: string }): string {
@@ -261,16 +259,18 @@ const byLabel = (sectionId: string, a: ExportEvent, b: ExportEvent): number => {
   return byName(la.l1, lb.l1) || byName(la.l2 ?? '', lb.l2 ?? '');
 };
 
-/** 小見出し内の並び(GROUP_SORT)。語の順 → 同順位は名前順。設定の無い小見出しは 0(=開始順に任せる)。 */
+/** 小見出し内の並び(order.json の rows)。fixed=語の順 → 同順位は then(既定 name=名前順 / start=0 で開始順に任せる)。name=名前順。start・設定なし=0(開始順に任せる)。 */
 function groupSortCmp(group: string, sectionId: string, a: ExportEvent, b: ExportEvent): number {
-  const spec = GROUP_SORT[group];
-  if (!spec) return 0;
+  const rule = ROW_RULES[group];
+  if (!rule || rule.sort === 'start' || rule.sort === 'builtin') return 0;
+  if (rule.sort === 'name') return byLabel(sectionId, a, b);
+  const spec = rule.words ?? [];
   const star = spec.indexOf('*');
   const rank = (e: ExportEvent): number => {
     const i = spec.findIndex((k) => k !== '*' && e.name.includes(k));
     return i >= 0 ? i : star >= 0 ? star : spec.length;
   };
-  return rank(a) - rank(b) || byLabel(sectionId, a, b);
+  return rank(a) - rank(b) || (rule.then === 'start' ? 0 : byLabel(sectionId, a, b));
 }
 
 /** クエストの並び: 小見出し順 → イベントは 通常→コラボ(各々開始順) / 定例は QUEST_ORDER の順 / 絶級は 滅絶→黎絶→轟絶→名前 / 超究極は 補足なし→補足(名前)→キャラ名 / 期間限定は名前。 */
@@ -278,13 +278,7 @@ function questCmp(a: ExportEvent, b: ExportEvent): number {
   const ga = questGroup(a);
   const gb = questGroup(b);
   if (ga !== gb) return QUEST_GROUP_ORDER.indexOf(ga) - QUEST_GROUP_ORDER.indexOf(gb);
-  const kw = (e: ExportEvent): number => QUEST_ORDER.findIndex((k) => e.name.includes(k));
   if (ga === QUEST_GROUPS[1]) return Number(a.category === 'collab') - Number(b.category === 'collab');
-  if (ga === QUEST_GROUPS[0]) return kw(a) - kw(b);
-  if (ga === '絶級クエスト') {
-    const tier = (e: ExportEvent): number => RAID_TIERS.findIndex((k) => e.name.startsWith(k));
-    return tier(a) - tier(b) || byLabel('quest', a, b);
-  }
   if (ga === '超究極クエスト') {
     const pa = superUltimateParts(a.name) ?? { chara: '', kind: '' };
     const pb = superUltimateParts(b.name) ?? { chara: '', kind: '' };
@@ -321,7 +315,7 @@ function gachaCmp(a: ExportEvent, b: ExportEvent, works: Map<string, number>): n
     const rank = (e: ExportEvent): number => (e.pickup ? e.pickup.order + 1 : 0);
     return Number(a.category === 'collab') - Number(b.category === 'collab') || start(a) - start(b) || workOf(a).localeCompare(workOf(b)) || rank(a) - rank(b);
   }
-  if (ga !== GACHA_GROUPS[0]) return groupSortCmp(ga, 'gacha', a, b);
+  if (ga !== GACHA_GROUPS[0] || ROW_RULES[ga]?.sort !== 'fixed') return groupSortCmp(ga, 'gacha', a, b);
   return regularGachaIndex(a.name) - regularGachaIndex(b.name) || gachaEra(a.name) - gachaEra(b.name);
 }
 

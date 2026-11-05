@@ -1,6 +1,0 @@
-{
-  "_doc": "クエストセクションの小見出しと並び(spec 4.3.5)。keywords に一致する項目は monthly_label の小見出し(毎月決まった日程で出現する定例。総称の変更は monthly_label の編集のみ)にまとめ、keywords の上から順に並べる。小見出しの表示順は イベントクエスト(event_label。イベントガチャと同じ項目を同じラベルで写す。config/display/gacha-order.json)→ 定例クエスト。以降の小見出しは 絶級クエスト(滅絶→黎絶→轟絶)→期間限定クエスト(名称に「クエスト」を含む)→超究極クエスト→その他。同順位内は開始順。小見出し内の並びの細則は config/display/sort-order.json。",
-  "event_label": "イベントクエスト",
-  "monthly_label": "定例クエスト",
-  "keywords": ["覇者の塔", "絶級トーナメント", "禁忌の獄", "破界の星墓", "未開の幻洞"]
-}

@@ -92,7 +92,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 | フォルダ | 役割 | ファイル(いつ直すか) |
 |---|---|---|
 | `config/judge/` | 表示・非表示の判断 | `rules.json`(自動判定のルール。上から最初の一致)、`decisions.json`(判断の記憶。`npm run candidates` が要判断ファイルから取り込む生成物なので、通常は手で編集しない)。`selection/YYYY/MM.md`(表示の判断の月別の表。記事の月ごと。自動生成・git管理・読む用)。ローカルの生成物 `needs-review.md`(要判断の一覧・編集する)はgit管理外 |
-| `config/display/` | 表記・並び・色・表示範囲 | `window.json`(カレンダーの表示範囲。過去・未来それぞれの月数。公開データ・移動の限界・判断の表・`npm run prune` が使う)、`label-overrides.json`(長いラベルを短くする)、`sort-order.json`・`gacha-order.json`・`campaign-order.json`・`quest-order.json`(並び順・小見出し)、`quest-colors.json`(禁忌の獄の属性色と色の定義)、`recurring.json`(定例のラベル) |
+| `config/display/` | 表記・並び・色・表示範囲 | `window.json`(カレンダーの表示範囲。過去・未来それぞれの月数。公開データ・移動の限界・判断の表・`npm run prune` が使う)、`label-overrides.json`(長いラベルを短くする)、`order.json`(**並び順の唯一の設定**。セクション・小見出し・行の並び方。spec §4.3.8)、`campaign-order.json`・`gacha-order.json`(分類のみ。並びは order.json)、`quest-colors.json`(禁忌の獄の属性色と色の定義)、`recurring.json`(定例のラベル) |
 | `config/schedule/` | ニュースに載らない日程・事実 | `manual.json`(手動の調整。公式に無い項目の追加・項目の非表示。§14)、`hakai.json`(星墓のクエスト名→色と、固定の階層。§8)、`monthly-days.json`(毎月決まった日に出る項目)、`normal-quest-attributes.json`(ノーマルクエストの曜日別の対象属性) |
 
 過去記事を全体から判断し直す仕組み(`npm run review-year`・`config/review/`)は廃止した。更新ごとの差分で判断する(運用の再設計。。

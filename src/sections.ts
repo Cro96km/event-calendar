@@ -1,30 +1,39 @@
 // カテゴリ → カレンダーのセクション対応。表示の調整はこのファイルだけで行う。spec §4.3。
 import campaignOrder from '../config/display/campaign-order.json';
 import gachaOrder from '../config/display/gacha-order.json';
-import questOrder from '../config/display/quest-order.json';
-import sortOrder from '../config/display/sort-order.json';
+import order from '../config/display/order.json';
 
-/** キャンペーンの並び順キーワード(config/display/campaign-order.json)。spec §4.3.3。 */
-export const CAMPAIGN_ORDER: readonly string[] = campaignOrder.keywords;
-/** キャンペーン内の小見出し(並び順)。CAMPAIGN_ORDER + 追加グループ(ミッション)。 */
-export const CAMPAIGN_GROUPS: readonly string[] = [...campaignOrder.keywords, ...campaignOrder.extra_groups];
+/** 行の並び方(config/display/order.json の rows)。 */
+export interface RowRule {
+  sort: 'fixed' | 'name' | 'start' | 'builtin';
+  /** fixed: 項目名に含む語の順("*"=その他の位置) */
+  words?: readonly string[];
+  /** fixed の同順位の並び(既定 name) */
+  then?: 'name' | 'start';
+}
+/** 小見出しごとの行の並び。無い小見出しは開始順。 */
+export const ROW_RULES: Readonly<Record<string, RowRule>> = order.rows as Record<string, RowRule>;
+const wordsOf = (group: string): readonly string[] => ROW_RULES[group]?.words ?? [];
+
+/** キャンペーンの小見出し(表示順。config/display/order.json の groups.campaign)。 */
+export const CAMPAIGN_GROUPS: readonly string[] = order.groups.campaign;
+/** 名称に含む語で振り分けるキャンペーンの小見出し(セクション振り分け・2行表示の対象)。extra_groups(ミッション)は除く。 */
+export const CAMPAIGN_ORDER: readonly string[] = CAMPAIGN_GROUPS.filter((g) => !campaignOrder.extra_groups.includes(g));
 /** キャンペーンの別名(項目名に含む語 → グループ)。config/display/campaign-order.json の group_aliases。 */
 export const CAMPAIGN_ALIASES: Readonly<Record<string, string>> = campaignOrder.group_aliases;
-/** 小見出し内の並び(config/display/sort-order.json)。キー=小見出し名、値=項目名に含む語の順(\"*\"=その他の位置)。 */
-export const GROUP_SORT: Readonly<Record<string, readonly string[]>> = { ...sortOrder.campaign, ...sortOrder.quest, ...sortOrder.gacha };
-/** クエストの並び順キーワード(config/display/quest-order.json)。spec §4.3.5。 */
-export const QUEST_ORDER: readonly string[] = questOrder.keywords;
-/** クエストの小見出し(判定用。0=定例〈総称は config/display/quest-order.json の monthly_label〉、1=イベント)。表示順は QUEST_GROUP_ORDER。spec §4.3.5。 */
-export const QUEST_GROUPS: readonly string[] = [questOrder.monthly_label, questOrder.event_label, `常設クエスト`, '絶級クエスト', '期間限定クエスト', '超究極クエスト', 'その他'];
+/** 定例クエストの語(order.json の rows.定例クエスト.words)。名称に含めば定例クエスト。spec §4.3.5。 */
+export const QUEST_ORDER: readonly string[] = wordsOf('定例クエスト');
+/** クエストの小見出し(判定用。0=定例、1=イベント)。表示順は QUEST_GROUP_ORDER(order.json)。spec §4.3.5。 */
+export const QUEST_GROUPS: readonly string[] = ['定例クエスト', 'イベントクエスト', '常設クエスト', '絶級クエスト', '期間限定クエスト', '超究極クエスト', 'その他'];
 /** イベントガチャの写しをクエストの「イベントクエスト」に出すためのイベントid接尾辞(week.ts ganttSections)。 */
 export const EVENT_QUEST_SUFFIX = '~event';
-/** ガチャの小見出し(判定用。0=定例、1=イベント〈コラボ含む〉、2=期間限定)と定例ガチャの語(config/display/gacha-order.json)。表示順は GACHA_GROUP_ORDER。spec §4.3.7。 */
-export const GACHA_GROUPS: readonly string[] = [gachaOrder.labels.regular, gachaOrder.labels.event, gachaOrder.labels.limited];
-export const GACHA_REGULAR: readonly string[] = gachaOrder.regular_keywords;
+/** ガチャの小見出し(判定用。0=定例、1=イベント〈コラボ含む〉、2=期間限定)と定例ガチャの語(order.json の rows.定例ガチャ.words)。表示順は GACHA_GROUP_ORDER。spec §4.3.7。 */
+export const GACHA_GROUPS: readonly string[] = ['定例ガチャ', 'イベントガチャ', '期間限定ガチャ'];
+export const GACHA_REGULAR: readonly string[] = wordsOf('定例ガチャ');
 
-/** 小見出しの表示順: クエストは イベント→定例→絶級→期間限定→超究極→その他。ガチャは イベント→定例→期間限定。(#143) */
-export const QUEST_GROUP_ORDER: readonly string[] = [QUEST_GROUPS[1] as string, QUEST_GROUPS[0] as string, ...QUEST_GROUPS.slice(2)];
-export const GACHA_GROUP_ORDER: readonly string[] = [GACHA_GROUPS[1] as string, GACHA_GROUPS[0] as string, ...GACHA_GROUPS.slice(2)];
+/** 小見出しの表示順(config/display/order.json の groups)。 */
+export const QUEST_GROUP_ORDER: readonly string[] = order.groups.quest;
+export const GACHA_GROUP_ORDER: readonly string[] = order.groups.gacha;
 
 /** 年代別の行 `ガチャ「<定例ガチャ名> 2013＆2014」`(年代の表由来)。 */
 const ERA_GACHA = /^ガチャ「(.+?) (?:(\d{4})(?:[＆&]\d{4})?|Vol\.(\d+))」$/;
@@ -59,12 +68,14 @@ export interface Section {
   categories: readonly string[];
 }
 
-/** 表示順。未掲載のカテゴリは表示しない(「その他」セクションは持たない)。 */
-export const SECTIONS: readonly Section[] = [
+const SECTION_DEFS: readonly Section[] = [
   { id: 'quest', label: 'クエスト', hue: 215, categories: ['event'] },
   { id: 'campaign', label: 'キャンペーン', hue: 140, categories: ['campaign', 'web-shop'] },
   { id: 'gacha', label: 'ガチャ', hue: 340, categories: ['collab'] },
 ];
+
+/** 表示順(config/display/order.json の sections)。未掲載のカテゴリは表示しない(「その他」セクションは持たない)。 */
+export const SECTIONS: readonly Section[] = order.sections.map((id) => SECTION_DEFS.find((x) => x.id === id) as Section);
 
 /** event カテゴリでも、名称がキャンペーン系キーワード(英雄の神殿など)を含めばキャンペーンセクションに入れる。spec §4.3.5 */
 export function sectionOfEvent(e: { category: string; name: string; title?: string }): Section | null {
