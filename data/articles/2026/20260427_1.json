@@ -1,0 +1,37 @@
+{
+  "id": "20260427_1",
+  "url": "https://www.monster-strike.com/news/20260427_1.html",
+  "title": "ガチャ「破界に響く星歌」4/28より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-04-27",
+  "fetched_at": "2026-10-24T17:19:03+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:d600191c6c98fcab716aa12de04936d109b6928baadb4d08e9abd0981dddaba5",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260427_1#0",
+      "name": "ガチャ「破界に響く星歌」4/28より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-04-28T12:00:00+09:00",
+      "end": "2026-04-30T11:59:00+09:00",
+      "raw": "2026年4月28日(火)12:00〜4月30日(木)11:59",
+      "title_named": true,
+      "details": [
+        {
+          "label": "対象キャラクター",
+          "lines": [
+            "ガウェイン | ★5 | 火",
+            "アスカロン | ★6（獣神化前） | 水",
+            "コーディリア＆リア | ★6（獣神化前） | 光",
+            "アンキレー | ★6（獣神化前） | 闇"
+          ]
+        }
+      ]
+    }
+  ],
+  "reward_until": null
+}

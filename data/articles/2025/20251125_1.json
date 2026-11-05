@@ -1,0 +1,26 @@
+{
+  "id": "20251125_1",
+  "url": "https://www.monster-strike.com/news/20251125_1.html",
+  "title": "「破界の星墓」が11/27より期間限定で登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2025-11-25",
+  "fetched_at": "2026-10-24T17:26:32+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:0ad257ded26bf794327557f5ac8047154c8dc39cb371c0c48d0f51d0753e7e1e",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20251125_1#0",
+      "name": "「破界の星墓」が11/27より期間限定で登場！ #1",
+      "label": "出現期間",
+      "start": "2025-11-27T12:00:00+09:00",
+      "end": "2025-12-21T11:59:00+09:00",
+      "raw": "2025年11月27日(木)12:00〜12月21日(日)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

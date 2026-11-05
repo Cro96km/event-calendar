@@ -1,0 +1,27 @@
+{
+  "id": "20260521_2",
+  "url": "https://www.monster-strike.com/news/20260521_2.html",
+  "title": "超究極クエスト（スカルミリオーネ）が5/23より期間限定で登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-05-21",
+  "fetched_at": "2026-10-24T17:18:11+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:d17daa62a730aaf9f59af5ed37af1fe02e7b1046b4ec8896f61dab55e9c13b91",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260521_2#0",
+      "name": "超究極クエスト（スカルミリオーネ）が5/23より期間限定で登場！ #1",
+      "label": "出現期間",
+      "start": "2026-05-23T19:00:00+09:00",
+      "end": "2026-07-21T11:59:00+09:00",
+      "raw": "2026年5月23日(土)19:00〜7月21日(火)11:59",
+      "title_named": true,
+      "color": "#eb0043"
+    }
+  ],
+  "reward_until": null
+}

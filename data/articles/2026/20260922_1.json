@@ -1,0 +1,26 @@
+{
+  "id": "20260922_1",
+  "url": "https://www.monster-strike.com/news/20260922_1.html",
+  "title": "ガチャ「オリエンタル・トラベラーズ」9/23より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-09-22",
+  "fetched_at": "2026-10-24T17:05:17+09:00",
+  "lastmod": "2026-09-22T14:04:23+09:00",
+  "content_hash": "sha256:f23ec29772087519f3372a134d179a3ca1c1530acabcd9481ef4061204b66636",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260922_1#0",
+      "name": "ガチャ「オリエンタル・トラベラーズ」9/23より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-09-23T12:00:00+09:00",
+      "end": "2026-09-25T11:59:00+09:00",
+      "raw": "2026年9月23日(水)12:00〜9月25日(金)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

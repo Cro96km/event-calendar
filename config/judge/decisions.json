@@ -1,0 +1,868 @@
+{
+  "kinds": {
+    "campaign::「」のクエストで書庫ポイントの消費が0!": {
+      "decision": "on",
+      "example": "「追憶の書庫」のクエストで書庫ポイントの消費が0!"
+    },
+    "campaign::「」のクエストで金卵の排出率が「」!": {
+      "decision": "on",
+      "example": "「追憶の書庫」のクエストで金卵の排出率が「2倍」!"
+    },
+    "campaign::「」の究極難易度でスコア報酬に「」のスペシャルボーナス!": {
+      "decision": "on",
+      "example": "「守護獣の森」の究極難易度でスコア報酬に「5倍」のスペシャルボーナス!"
+    },
+    "campaign::「」の絶級クエストでスペシャル報酬が「」!": {
+      "decision": "on",
+      "example": "「追憶の書庫」の絶級クエストでスペシャル報酬が「2倍」!"
+    },
+    "campaign::「」をクリアした際に獲得できる経験値が「」!": {
+      "decision": "on",
+      "example": "「ノーマルクエスト」をクリアした際に獲得できる経験値が「2倍」!"
+    },
+    "campaign::「12.5th Half Anniversary招待キャンペーン」開催記念プレゼント!": {
+      "decision": "off",
+      "example": "「12.5th Half Anniversary招待キャンペーン」開催記念プレゼント!",
+      "confirmed": true
+    },
+    "campaign::「GWの7日間 超爆轟黎祭」開催!": {
+      "decision": "off",
+      "example": "「GWの7日間 超爆轟黎祭」開催!",
+      "confirmed": true
+    },
+    "campaign::「クエストサーチ活用ミッション」開催!": {
+      "decision": "on",
+      "example": "「クエストサーチ活用ミッション」開催!",
+      "confirmed": true
+    },
+    "campaign::「タイムシフト活用ミッション」開催!": {
+      "decision": "on",
+      "example": "「タイムシフト活用ミッション」開催!",
+      "confirmed": true
+    },
+    "campaign::「モンストの日」にシール玉登場!": {
+      "decision": "off",
+      "example": "「モンストの日」にシール玉登場!",
+      "confirmed": true
+    },
+    "campaign::「超爆轟黎祭」開催!": {
+      "decision": "off",
+      "example": "「超爆轟黎祭」開催!",
+      "confirmed": true
+    },
+    "campaign::「集めて使って!オーブバックチャレンジ」開催!": {
+      "decision": "off",
+      "example": "「集めて使って!オーブバックチャレンジ」開催!",
+      "confirmed": true
+    },
+    "campaign::【13周年感謝キャンペーン】「」が開催！": {
+      "decision": "off",
+      "example": "【13周年感謝キャンペーン】「よりどりガチャマーケット」が開催！"
+    },
+    "campaign::≪モンスポット≫「」の出現確率がアップ!": {
+      "decision": "on",
+      "example": "≪モンスポット≫「学びのパワー」の出現確率がアップ!"
+    },
+    "campaign::オーブバックチャレンジ開催記念!5週連続プレゼントキャンペーン": {
+      "decision": "off",
+      "example": "オーブバックチャレンジ開催記念!5週連続プレゼントキャンペーン",
+      "confirmed": true
+    },
+    "campaign::コラボ開催記念!キャラ育成パック販売!": {
+      "decision": "off",
+      "example": "コラボ開催記念!キャラ育成パック販売!"
+    },
+    "campaign::フレンドポイントの獲得量が「」!": {
+      "decision": "on",
+      "example": "フレンドポイントの獲得量が「5倍」!",
+      "confirmed": true
+    },
+    "campaign::レースの展開を予想しよう": {
+      "decision": "off",
+      "example": "レースの展開を予想しよう",
+      "confirmed": true
+    },
+    "campaign::ログインで「」をプレゼント!": {
+      "decision": "off",
+      "example": "ログインで「オーブ引換券」をプレゼント!",
+      "confirmed": true
+    },
+    "campaign::各種キャンペーン!": {
+      "decision": "off",
+      "confirmed": true
+    },
+    "campaign::報酬を受け取ろう": {
+      "decision": "off",
+      "example": "報酬を受け取ろう",
+      "confirmed": true
+    },
+    "campaign::期間限定！「12.5th Half Anniversary招待キャンペーン」開催！": {
+      "decision": "off",
+      "example": "期間限定！「12.5th Half Anniversary招待キャンペーン」開催！",
+      "confirmed": true
+    },
+    "campaign::期間限定「クエストサーチ活用ミッション」開催!": {
+      "decision": "on",
+      "example": "期間限定「クエストサーチ活用ミッション」開催!"
+    },
+    "campaign::期間限定「タイムシフト活用ミッション」開催!": {
+      "decision": "on",
+      "example": "期間限定「タイムシフト活用ミッション」開催!"
+    },
+    "campaign::英雄の神殿の「」でわくわくの実が2個排出!": {
+      "decision": "on",
+      "example": "英雄の神殿の「ノーコンテニュー報酬」でわくわくの実が2個排出!"
+    },
+    "collab::「夜と昼を別つ双子ミッション」開催!": {
+      "decision": "off",
+      "example": "「夜と昼を別つ双子ミッション」開催!"
+    },
+    "collab::「日替わり誠くんガチャ」開催!": {
+      "decision": "off",
+      "example": "「日替わり誠くんガチャ」開催!"
+    },
+    "collab::「誠くんポイント」を集めよう!": {
+      "decision": "off",
+      "example": "「誠くんポイント」を集めよう!"
+    },
+    "collab::SNSキャンペーン開催!": {
+      "decision": "off",
+      "example": "SNSキャンペーン開催!"
+    },
+    "collab::ガチャ「黄泉のツガイ」開催!": {
+      "decision": "on",
+      "example": "ガチャ「黄泉のツガイ」開催!"
+    },
+    "collab::コラボキャラクターを紹介!": {
+      "decision": "off",
+      "example": "コラボキャラクターを紹介!"
+    },
+    "collab::コラボクエストが登場!": {
+      "decision": "off",
+      "example": "コラボクエストが登場!"
+    },
+    "collab::コラボスターターパックが登場!": {
+      "decision": "off",
+      "example": "コラボスターターパックが登場!"
+    },
+    "collab::コラボ限定グッズプレゼントキャンペーン": {
+      "decision": "off",
+      "example": "コラボ限定グッズプレゼントキャンペーン"
+    },
+    "collab::コラボ限定デザインの「」登場!": {
+      "decision": "off",
+      "example": "コラボ限定デザインの「勝利画像」登場!"
+    },
+    "collab::フレンドガチャ詳細": {
+      "decision": "off",
+      "example": "フレンドガチャ詳細"
+    },
+    "collab::ログインでコラボキャラクターやトク玉をゲット!": {
+      "decision": "off",
+      "example": "ログインでコラボキャラクターやトク玉をゲット!"
+    },
+    "collab::対象のコラボキャラクターは期間中運極状態に!": {
+      "decision": "off",
+      "example": "対象のコラボキャラクターは期間中運極状態に!"
+    },
+    "collab::引用ポストキャンペーン": {
+      "decision": "off",
+      "example": "引用ポストキャンペーン"
+    },
+    "collab::超究極クエスト「」が登場!": {
+      "decision": "off",
+      "example": "超究極クエスト「イワン」が登場!"
+    },
+    "collab::集めた「」で、誠くんにお願いしよう!": {
+      "decision": "off",
+      "example": "集めた「誠くんポイント」で、誠くんにお願いしよう!"
+    },
+    "event::「」「」が登場！ミッションクリアで「」も！": {
+      "decision": "on",
+      "example": "「禁忌の獄」「禁忌の獄〜深淵〜」が登場！ミッションクリアで「★6確定ガチャ」も！",
+      "confirmed": true
+    },
+    "event::「」「」期間限定で登場！ミッションクリアで「」も！": {
+      "decision": "off",
+      "example": "「覇者の塔」「覇者の塔シーズンズ」期間限定で登場！ミッションクリアで「★6確定ガチャ」も！",
+      "confirmed": true
+    },
+    "event::「」がリニューアル！「」として内容もアップデートして登場！": {
+      "decision": "off",
+      "example": "「初心者応援パック プレミアム」がリニューアル！「スタートダッシュパックプレミアム」として内容もアップデートして登場！"
+    },
+    "event::「」が期間限定で登場！みんなで突破数を積み重ねるチャレンジも実施！": {
+      "decision": "on",
+      "example": "「破界の星墓」が期間限定で登場！みんなで突破数を積み重ねるチャレンジも実施！"
+    },
+    "event::「」が登場！ミッションクリアで★6確定ガチャも！": {
+      "decision": "on",
+      "example": "「未開の砂宮」が登場！ミッションクリアで★6確定ガチャも！",
+      "confirmed": true
+    },
+    "event::「」との期間限定イベント詳細!": {
+      "decision": "off",
+      "example": "「サッカー日本代表」との期間限定イベント詳細!",
+      "confirmed": true
+    },
+    "event::「」に新たな神獣「」と「」が登場！": {
+      "decision": "off",
+      "example": "「神獣の聖域」に新たな神獣「テンリン」と「聖域の狩人」が登場！",
+      "confirmed": true
+    },
+    "event::「」のストーリーを描いたマンガをMONST DICTIONARYで公開中!": {
+      "decision": "off",
+      "example": "「ミライ」のストーリーを描いたマンガをMONST DICTIONARYで公開中!",
+      "confirmed": true
+    },
+    "event::「」の登場を記念して3つのSNSキャンペーンを開催!": {
+      "decision": "off",
+      "example": "「リンネ」の登場を記念して3つのSNSキャンペーンを開催!",
+      "confirmed": true
+    },
+    "event::「」を使用回数100回以上のキャラでクリアすると宝箱「」!": {
+      "decision": "on",
+      "example": "「イベントクエスト」を使用回数100回以上のキャラでクリアすると宝箱「+1」!"
+    },
+    "event::「」を編成するとBGMが変更!": {
+      "decision": "off",
+      "example": "「リンネ」を編成するとBGMが変更!",
+      "confirmed": true
+    },
+    "event::「」特設サイトにてキャンペーンを開催!": {
+      "decision": "off",
+      "example": "「リンネ」特設サイトにてキャンペーンを開催!",
+      "confirmed": true
+    },
+    "event::「」登場記念!SNSキャンペーン開催!": {
+      "decision": "off",
+      "example": "「サクリファイス」登場記念!SNSキャンペーン開催!",
+      "confirmed": true
+    },
+    "event::「」開催！新限定キャラ「」登場！": {
+      "decision": "off",
+      "example": "「激・獣神祭」開催！新限定キャラ「ミライ」登場！",
+      "confirmed": true
+    },
+    "event::「」開催！新限定キャラ「」登場！モンストWebショップで先行販売！": {
+      "decision": "off",
+      "example": "「超・獣神祭」開催！新限定キャラ「カグヤ」登場！モンストWebショップで先行販売！",
+      "confirmed": true
+    },
+    "event::「CALEzMA」の楽曲をチェック!": {
+      "decision": "off",
+      "example": "「CALEzMA」の楽曲をチェック!",
+      "confirmed": true
+    },
+    "event::「アンダーワールド・トラベラーズ」の楽曲をチェック!": {
+      "decision": "off",
+      "example": "「アンダーワールド・トラベラーズ」の楽曲をチェック!",
+      "confirmed": true
+    },
+    "event::「オーブあみだくじ結果投稿キャンペーン」実施!": {
+      "decision": "off",
+      "example": "「オーブあみだくじ結果投稿キャンペーン」実施!",
+      "confirmed": true
+    },
+    "event::「オラコイン」の集め方": {
+      "decision": "off",
+      "example": "「オラコイン」の集め方",
+      "confirmed": true
+    },
+    "event::「クイズDEストライク」開催!": {
+      "decision": "off",
+      "example": "「クイズDEストライク」開催!",
+      "confirmed": true
+    },
+    "event::「けしモン！タイムアタック！」が期間限定で開催！": {
+      "decision": "off",
+      "example": "「けしモン！タイムアタック！」が期間限定で開催！",
+      "confirmed": true
+    },
+    "event::「パネルDEストライク」開催!": {
+      "decision": "off",
+      "example": "「パネルDEストライク」開催!",
+      "confirmed": true
+    },
+    "event::「モンストの日」にボイスセット登場!": {
+      "decision": "off",
+      "example": "「モンストの日」にボイスセット登場!",
+      "confirmed": true
+    },
+    "event::「年末カウントダウンSP!激・獣神祭」開催!": {
+      "decision": "off",
+      "example": "「年末カウントダウンSP!激・獣神祭」開催!",
+      "confirmed": true
+    },
+    "event::「期間限定！13周年記念パック」が登場！": {
+      "decision": "off",
+      "example": "「期間限定！13周年記念パック」が登場！"
+    },
+    "event::「禁忌の獄」「禁忌の獄〜深淵〜」が期間限定で登場！": {
+      "decision": "on",
+      "example": "「禁忌の獄」「禁忌の獄〜深淵〜」が期間限定で登場！"
+    },
+    "event::「絶級トーナメント」が期間限定で登場！": {
+      "decision": "on",
+      "example": "「絶級トーナメント」が期間限定で登場！"
+    },
+    "event::「覇者の塔シーズンズ」開催!": {
+      "decision": "off",
+      "example": "「覇者の塔シーズンズ」開催!"
+    },
+    "event::「願いをのせて!オーブあみだくじ」開催!": {
+      "decision": "off",
+      "example": "「願いをのせて!オーブあみだくじ」開催!",
+      "confirmed": true
+    },
+    "event::【13周年大カーン謝祭カウントダウン】最大300個のオーブ獲得のチャンス！「」開催！": {
+      "decision": "off",
+      "example": "【13周年大カーン謝祭カウントダウン】最大300個のオーブ獲得のチャンス！「願いをのせて！オーブあみだくじ」開催！",
+      "confirmed": true
+    },
+    "event::【13周年感謝キャンペーン】2つのコースから選べる「」開催！現金最大100万円やオーブ最大100個が当たるチャンス！": {
+      "decision": "off",
+      "example": "【13周年感謝キャンペーン】2つのコースから選べる「13周年スクラッチくじ」開催！現金最大100万円やオーブ最大100個が当たるチャンス！",
+      "confirmed": true
+    },
+    "event::【年末年始キャンペーン'25-'26】「」開催！": {
+      "decision": "off",
+      "example": "【年末年始キャンペーン'25-'26】「かならず当たる！超・獣神くじ」開催！",
+      "confirmed": true
+    },
+    "event::【年末年始キャンペーン'25-'26】新イベント「」スタート！": {
+      "decision": "off",
+      "example": "【年末年始キャンペーン'25-'26】新イベント「伝説の武具XI」スタート！",
+      "confirmed": true
+    },
+    "event::【年末年始キャンペーン'25-'26】新黎絶クエスト（）が初登場！M4のライブ配信も！": {
+      "decision": "off",
+      "example": "【年末年始キャンペーン'25-'26】新黎絶クエスト（イプエクティ）が初登場！M4のライブ配信も！",
+      "confirmed": true
+    },
+    "event::<モンパス会員限定>桜フレームが期間限定で登場!": {
+      "decision": "off",
+      "example": "<モンパス会員限定>桜フレームが期間限定で登場!",
+      "confirmed": true
+    },
+    "event::≪モンスポット≫ラッキーバルーンで「」の出現確率がアップ!": {
+      "decision": "on",
+      "example": "≪モンスポット≫ラッキーバルーンで「オラゴン」の出現確率がアップ!"
+    },
+    "event::★6確定ガチャ玉について": {
+      "decision": "off",
+      "example": "★6確定ガチャ玉について"
+    },
+    "event::1プレゼント期間にログインして10枚ゲット": {
+      "decision": "off",
+      "example": "1プレゼント期間にログインして10枚ゲット",
+      "confirmed": true
+    },
+    "event::2026年前期「ストライカーレコード」開催！": {
+      "decision": "off",
+      "example": "2026年前期「ストライカーレコード」開催！",
+      "confirmed": true
+    },
+    "event::2026年後期「ストライカーレコード」開催！": {
+      "decision": "off",
+      "example": "2026年後期「ストライカーレコード」開催！",
+      "confirmed": true
+    },
+    "event::2つのアップデート内容をチェック!": {
+      "decision": "off",
+      "example": "2つのアップデート内容をチェック!",
+      "confirmed": true
+    },
+    "event::2通りの獣神化で登場!": {
+      "decision": "off",
+      "example": "2通りの獣神化で登場!",
+      "confirmed": true
+    },
+    "event::EXおまけに限定グッジョブ!": {
+      "decision": "off",
+      "example": "EXおまけに限定グッジョブ!",
+      "confirmed": true
+    },
+    "event::LINE公式アカウントと友だちになって獣竜玉ゲット!": {
+      "decision": "off",
+      "example": "LINE公式アカウントと友だちになって獣竜玉ゲット!",
+      "confirmed": true
+    },
+    "event::MV仕様の「」、お正月仕様の「」「」が期間限定で登場!": {
+      "decision": "off",
+      "example": "MV仕様の「ヤクモ」、お正月仕様の「ナイトメア」「マギア」が期間限定で登場!",
+      "confirmed": true
+    },
+    "event::SNSキャンペーン実施!": {
+      "decision": "off",
+      "example": "SNSキャンペーン実施!",
+      "confirmed": true
+    },
+    "event::SNS投稿ミッション": {
+      "decision": "off",
+      "example": "SNS投稿ミッション"
+    },
+    "event::SWC仕様の「ジュゲム」が登場!": {
+      "decision": "off",
+      "example": "SWC仕様の「ジュゲム」が登場!",
+      "confirmed": true
+    },
+    "event::アプリ「」で「」のイベント開催!": {
+      "decision": "off",
+      "example": "アプリ「モンソニ!」で「カルマロックスター」のイベント開催!",
+      "confirmed": true
+    },
+    "event::オラコインイベントの報酬にボイスセット登場!": {
+      "decision": "off",
+      "example": "オラコインイベントの報酬にボイスセット登場!",
+      "confirmed": true
+    },
+    "event::オラコインイベント開催!": {
+      "decision": "on",
+      "example": "オラコインイベント開催!",
+      "confirmed": true
+    },
+    "event::ガチャ「RED STARS」開催！": {
+      "decision": "on",
+      "example": "ガチャ「RED STARS」開催！"
+    },
+    "event::ガチャ「ミッドナイト・パーティー」開催！": {
+      "decision": "on",
+      "example": "ガチャ「ミッドナイト・パーティー」開催！"
+    },
+    "event::ガチャ「モンコレDX」開催！": {
+      "decision": "on",
+      "example": "ガチャ「モンコレDX」開催！"
+    },
+    "event::ガチャ「激・獣神祭」開催!": {
+      "decision": "on",
+      "example": "ガチャ「激・獣神祭」開催!"
+    },
+    "event::クエストボスをチェック!": {
+      "decision": "off",
+      "example": "クエストボスをチェック!",
+      "confirmed": true
+    },
+    "event::クエスト詳細をチェック!": {
+      "decision": "off",
+      "example": "クエスト詳細をチェック!",
+      "confirmed": true
+    },
+    "event::ゲーム内キャンペーン開催!": {
+      "decision": "off",
+      "example": "ゲーム内キャンペーン開催!",
+      "confirmed": true
+    },
+    "event::サイン色紙プレゼントキャンペーン開催!": {
+      "decision": "off",
+      "example": "サイン色紙プレゼントキャンペーン開催!",
+      "confirmed": true
+    },
+    "event::サンタジャックのハッピートナカイ採用面接": {
+      "decision": "off",
+      "example": "サンタジャックのハッピートナカイ採用面接",
+      "confirmed": true
+    },
+    "event::シーズンコイン引き換え方法&内容": {
+      "decision": "off",
+      "example": "シーズンコイン引き換え方法&内容",
+      "confirmed": true
+    },
+    "event::シーズンの制覇について": {
+      "decision": "off",
+      "example": "シーズンの制覇について"
+    },
+    "event::スクランブルユニバースに新シーズン「」が登場！": {
+      "decision": "off",
+      "example": "スクランブルユニバースに新シーズン「エルシーズン」が登場！",
+      "confirmed": true
+    },
+    "event::ステージと報酬について": {
+      "decision": "off",
+      "example": "ステージと報酬について",
+      "confirmed": true
+    },
+    "event::ストライクシール（）2種プレゼント!": {
+      "decision": "off",
+      "example": "ストライクシール(レア)2種プレゼント!",
+      "confirmed": true
+    },
+    "event::つみたて方をチェック!": {
+      "decision": "off",
+      "example": "つみたて方をチェック!",
+      "confirmed": true
+    },
+    "event::トレジャー9開催!": {
+      "decision": "off",
+      "example": "トレジャー9開催!",
+      "confirmed": true
+    },
+    "event::ミニゲームをクリアして報酬をゲットしよう!": {
+      "decision": "off",
+      "example": "ミニゲームをクリアして報酬をゲットしよう!",
+      "confirmed": true
+    },
+    "event::メダル引き換えの新キャラクターとして獣神化「」が登場！": {
+      "decision": "off",
+      "example": "メダル引き換えの新キャラクターとして獣神化「キリエ」が登場！",
+      "confirmed": true
+    },
+    "event::モンストWebショップで先行販売!": {
+      "decision": "off",
+      "example": "モンストWebショップで先行販売!",
+      "confirmed": true
+    },
+    "event::モンストWebショップで真獣神玉10個を無料プレゼント!": {
+      "decision": "on",
+      "example": "モンストWebショップで真獣神玉10個を無料プレゼント!",
+      "confirmed": true
+    },
+    "event::モンストの日にボイスセット登場!": {
+      "decision": "off",
+      "example": "モンストの日にボイスセット登場!",
+      "confirmed": true
+    },
+    "event::モンパス会員限定フレーム登場!": {
+      "decision": "off",
+      "example": "モンパス会員限定フレーム登場!",
+      "confirmed": true
+    },
+    "event::ラックを集めて合計獲得ラック報酬をゲットしよう!": {
+      "decision": "off",
+      "example": "ラックを集めて合計獲得ラック報酬をゲットしよう!",
+      "confirmed": true
+    },
+    "event::リポストキャンペーン": {
+      "decision": "off",
+      "example": "リポストキャンペーン",
+      "confirmed": true
+    },
+    "event::リンネの新春お年玉キャンペーン": {
+      "decision": "off",
+      "example": "リンネの新春お年玉キャンペーン",
+      "confirmed": true
+    },
+    "event::一部キャラクターの上方修正を実施!": {
+      "decision": "off",
+      "example": "一部キャラクターの上方修正を実施!",
+      "confirmed": true
+    },
+    "event::各キャラクターの応募状況をチェック!": {
+      "decision": "off",
+      "example": "各キャラクターの応募状況をチェック!",
+      "confirmed": true
+    },
+    "event::報酬をチェック!": {
+      "decision": "off",
+      "example": "報酬をチェック!",
+      "confirmed": true
+    },
+    "event::平均ランク報酬": {
+      "decision": "off",
+      "example": "平均ランク報酬",
+      "confirmed": true
+    },
+    "event::年末に期間限定クエストが「」に再登場!": {
+      "decision": "off",
+      "example": "年末に期間限定クエストが「追憶の書庫」に再登場!",
+      "confirmed": true
+    },
+    "event::応募して抽選会に参加しよう!": {
+      "decision": "off",
+      "example": "応募して抽選会に参加しよう!",
+      "confirmed": true
+    },
+    "event::応募できるキャラクターや報酬を紹介!": {
+      "decision": "off",
+      "example": "応募できるキャラクターや報酬を紹介!",
+      "confirmed": true
+    },
+    "event::抽選結果を確認しよう!": {
+      "decision": "off",
+      "example": "抽選結果を確認しよう!",
+      "confirmed": true
+    },
+    "event::挑戦方法をチェック!": {
+      "decision": "off",
+      "example": "挑戦方法をチェック!",
+      "confirmed": true
+    },
+    "event::探索完了報酬を受け取ろう!": {
+      "decision": "off",
+      "example": "探索完了報酬を受け取ろう!",
+      "confirmed": true
+    },
+    "event::新イベント「」がスタート！「」開催！": {
+      "decision": "off",
+      "example": "新イベント「掟と抗争のカルコサ PART Ⅲ」がスタート！「クイズDEストライク」開催！",
+      "confirmed": true
+    },
+    "event::新イベント「コード・ビブリア４～開かれし伝承～」開催！": {
+      "decision": "off",
+      "example": "新イベント「コード・ビブリア４～開かれし伝承～」開催！",
+      "confirmed": true
+    },
+    "event::新イベント「幕末維新伝 伍之章」開催！": {
+      "decision": "off",
+      "example": "新イベント「幕末維新伝 伍之章」開催！",
+      "confirmed": true
+    },
+    "event::新イベント「鋼鉄の誓い3 ～異色の乙女～」開催！": {
+      "decision": "off",
+      "example": "新イベント「鋼鉄の誓い3 ～異色の乙女～」開催！",
+      "confirmed": true
+    },
+    "event::新イベントクエストが登場!": {
+      "decision": "off",
+      "example": "新イベントクエストが登場!",
+      "confirmed": true
+    },
+    "event::新イベントクエスト登場!": {
+      "decision": "off",
+      "example": "新イベントクエスト登場!",
+      "confirmed": true
+    },
+    "event::新キャラクター3体の「」を紹介!": {
+      "decision": "off",
+      "example": "新キャラクター3体の「獣神化」を紹介!",
+      "confirmed": true
+    },
+    "event::新クエスト「覇者の塔・序」が追加!": {
+      "decision": "off",
+      "example": "新クエスト「覇者の塔・序」が追加!",
+      "confirmed": true
+    },
+    "event::新たな「神獣」と「聖域の狩人」をチェック!": {
+      "decision": "off",
+      "example": "新たな「神獣」と「聖域の狩人」をチェック!",
+      "confirmed": true
+    },
+    "event::新限定キャラクター「」が登場!": {
+      "decision": "off",
+      "example": "新限定キャラクター「アンダーワールド・トラベラーズ」が登場!",
+      "confirmed": true
+    },
+    "event::新黎絶クエスト（）が初登場！「」でM4のステージも！": {
+      "decision": "off",
+      "example": "新黎絶クエスト（セレボラ）が初登場！「MONST FREAK 2026」でM4のステージも！",
+      "confirmed": true
+    },
+    "event::新黎絶クエスト（）が初登場！M4のライブ配信も！": {
+      "decision": "off",
+      "example": "新黎絶クエスト（コンサリジオ）が初登場！M4のライブ配信も！",
+      "confirmed": true
+    },
+    "event::期間限定イベント「」がスタート！": {
+      "decision": "off",
+      "example": "期間限定イベント「モンスト夏休み2026」がスタート！",
+      "confirmed": true
+    },
+    "event::期間限定イベント「」が登場！": {
+      "decision": "on",
+      "example": "期間限定イベント「未開の幻洞」が登場！"
+    },
+    "event::期間限定イベントクエスト登場!": {
+      "decision": "off",
+      "example": "期間限定イベントクエスト登場!",
+      "confirmed": true
+    },
+    "event::期間限定キャラクター3体の「」を紹介!": {
+      "decision": "off",
+      "example": "期間限定キャラクター3体の「獣神化」を紹介!",
+      "confirmed": true
+    },
+    "event::期間限定クエストが一部再登場!": {
+      "decision": "off",
+      "example": "期間限定クエストが一部再登場!",
+      "confirmed": true
+    },
+    "event::期間限定クエストが再登場!": {
+      "decision": "off",
+      "example": "期間限定クエストが再登場!",
+      "confirmed": true
+    },
+    "event::期間限定クエスト登場!": {
+      "decision": "off",
+      "example": "期間限定クエスト登場!",
+      "confirmed": true
+    },
+    "event::期間限定報酬": {
+      "decision": "off",
+      "example": "期間限定報酬",
+      "confirmed": true
+    },
+    "event::本開催限定!特別な勲章が登場!": {
+      "decision": "off",
+      "example": "本開催限定!特別な勲章が登場!",
+      "confirmed": true
+    },
+    "event::滅絶キャラクターを強化できる「」が新登場!": {
+      "decision": "off",
+      "example": "滅絶キャラクターを強化できる「滅絶の技」が新登場!",
+      "confirmed": true
+    },
+    "event::激・獣神祭の新限定キャラクター「」登場!": {
+      "decision": "off",
+      "example": "激・獣神祭の新限定キャラクター「アルカ」登場!",
+      "confirmed": true
+    },
+    "event::特定キャラクターの排出確率が超UPする期間": {
+      "decision": "off",
+      "example": "特定キャラクターの排出確率が超UPする期間",
+      "confirmed": true
+    },
+    "event::破界の星墓 みんなで突破チャレンジ": {
+      "decision": "off",
+      "example": "破界の星墓 みんなで突破チャレンジ"
+    },
+    "event::稀に「彩卵」が出現!": {
+      "decision": "off",
+      "example": "稀に「彩卵」が出現!",
+      "confirmed": true
+    },
+    "event::絶級クエストボスの「」所持で100%「」するように!": {
+      "decision": "off",
+      "example": "絶級クエストボスの「運極」所持で100%「棄権」するように!",
+      "confirmed": true
+    },
+    "event::編成するとBGMが変更": {
+      "decision": "off",
+      "example": "編成するとBGMが変更",
+      "confirmed": true
+    },
+    "event::豪華景品がその場で当たる7日連続キャンペーン開催!": {
+      "decision": "off",
+      "example": "豪華景品がその場で当たる7日連続キャンペーン開催!",
+      "confirmed": true
+    },
+    "event::超・獣神祭の新限定キャラクター「」登場!": {
+      "decision": "off",
+      "example": "超・獣神祭の新限定キャラクター「エボニー&アイボリー」登場!",
+      "confirmed": true
+    },
+    "event::超究極・兵クエスト（）が期間限定で出現！": {
+      "decision": "on",
+      "example": "超究極・兵クエスト（ミザリー）が期間限定で出現！"
+    },
+    "event::超究極「歌いし聖夜曲」が登場!": {
+      "decision": "off",
+      "example": "超究極「歌いし聖夜曲」が登場!",
+      "confirmed": true
+    },
+    "event::遊び方をチェック!": {
+      "decision": "off",
+      "example": "遊び方をチェック!",
+      "confirmed": true
+    },
+    "event::過去に登場したお正月期間限定クエストが「」に再登場!": {
+      "decision": "off",
+      "example": "過去に登場したお正月期間限定クエストが「追憶の書庫」に再登場!",
+      "confirmed": true
+    },
+    "event::過去に登場した期間限定クエストが一部再登場!": {
+      "decision": "off",
+      "example": "過去に登場した期間限定クエストが一部再登場!",
+      "confirmed": true
+    },
+    "event::選んだキャラが抽選で当たるチャンス！「」が開催！": {
+      "decision": "off",
+      "example": "選んだキャラが抽選で当たるチャンス！「みんなで応募！マルチ抽選会」が開催！",
+      "confirmed": true
+    },
+    "event::開封ボーナス登場!": {
+      "decision": "off",
+      "example": "開封ボーナス登場!",
+      "confirmed": true
+    },
+    "event::降臨クリアボーナスキャンペーン開催!": {
+      "decision": "off",
+      "example": "降臨クリアボーナスキャンペーン開催!",
+      "confirmed": true
+    },
+    "event::除夜の鐘RTAキャンペーン": {
+      "decision": "off",
+      "example": "除夜の鐘RTAキャンペーン",
+      "confirmed": true
+    },
+    "other::「」に対する義援金寄付とチャリティーオーブの実施について（）": {
+      "decision": "off",
+      "example": "「令和8年熊本地震」に対する義援金寄付とチャリティーオーブの実施について（〜）",
+      "confirmed": true
+    },
+    "other::マンガ「」単行本最終5巻が発売！限定グッジョブも！": {
+      "decision": "off",
+      "example": "マンガ「下町ハローワールド」単行本最終5巻が発売！限定グッジョブも！",
+      "confirmed": true
+    },
+    "other::作品紹介!": {
+      "decision": "off",
+      "example": "作品紹介!",
+      "confirmed": true
+    },
+    "other::購入特典プレゼントキャンペーン!": {
+      "decision": "off",
+      "example": "購入特典プレゼントキャンペーン!",
+      "confirmed": true
+    },
+    "web-shop::「」販売！お正月仕様の「」「」の専用フレームに変化する称号付き！": {
+      "decision": "off",
+      "example": "「新春オーブ福袋」販売！お正月仕様の「ナイトメア」「マギア」の専用フレームに変化する称号付き！",
+      "confirmed": true
+    },
+    "web-shop::「」開催！期間限定でオーブ増量＆ストライクシールがおまけで付いてくる！": {
+      "decision": "off",
+      "example": "「オーブ大増量祭」開催！期間限定でオーブ増量＆ストライクシールがおまけで付いてくる！",
+      "confirmed": true
+    },
+    "web-shop::1LINE友だち追加で100円分プレゼント!": {
+      "decision": "off",
+      "example": "1LINE友だち追加で100円分プレゼント!",
+      "confirmed": true
+    },
+    "web-shop::2お支払いで50%還元!": {
+      "decision": "off",
+      "example": "2お支払いで50%還元!",
+      "confirmed": true
+    },
+    "web-shop::ポイント2倍キャンペーン開催": {
+      "decision": "off",
+      "example": "ポイント2倍キャンペーン開催",
+      "confirmed": true
+    },
+    "web-shop::みんなの銀行の期間限定キャンペーンを開催！": {
+      "decision": "off",
+      "example": "みんなの銀行の期間限定キャンペーンを開催！"
+    },
+    "web-shop::モンストWebショップ×エアウォレット": {
+      "decision": "off",
+      "example": "モンストWebショップ×エアウォレット",
+      "confirmed": true
+    },
+    "web-shop::モンストWebショップで三井住友カードを利用するとオーブがもらえるキャンペーンを実施！": {
+      "decision": "off",
+      "example": "モンストWebショップで三井住友カードを利用するとオーブがもらえるキャンペーンを実施！",
+      "confirmed": true
+    },
+    "web-shop::モンストWebショップで楽天ペイ（）を利用すると、抽選で楽天ポイントが当たるキャンペーンを開催！": {
+      "decision": "off",
+      "example": "モンストWebショップで楽天ペイ（オンライン決済）を利用すると、抽選で楽天ポイントが当たるキャンペーンを開催！",
+      "confirmed": true
+    },
+    "web-shop::モンストWebショップで楽天ペイ（）を利用すると、抽選で楽天ポイントが当たるキャンペーン開催！": {
+      "decision": "off",
+      "example": "モンストWebショップで楽天ペイ（オンライン決済）を利用すると、抽選で楽天ポイントが当たるキャンペーン開催！",
+      "confirmed": true
+    },
+    "web-shop::常設プログラム開始!(PR)": {
+      "decision": "off",
+      "example": "常設プログラム開始!(PR)",
+      "confirmed": true
+    },
+    "web-shop::期間限定キャンペーン開催!（）": {
+      "decision": "off",
+      "example": "期間限定キャンペーン開催!(PR)",
+      "confirmed": true
+    }
+  },
+  "items": {}
+}

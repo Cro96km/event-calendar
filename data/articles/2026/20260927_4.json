@@ -1,0 +1,26 @@
+{
+  "id": "20260927_4",
+  "url": "https://www.monster-strike.com/news/20260927_4.html",
+  "title": "ガチャ「モンストジェネレーション2015 〜ダルタニャン編〜」9/29より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-09-27",
+  "fetched_at": "2026-10-24T17:04:59+09:00",
+  "lastmod": "2026-10-02T17:27:05+09:00",
+  "content_hash": "sha256:10704b71cd0fd90e4c6dfeeef44eebd6118e12d8bb80b5f823980f969c793fac",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260927_4#0",
+      "name": "ガチャ「モンストジェネレーション2015 〜ダルタニャン編〜」9/29より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-09-29T12:00:00+09:00",
+      "end": "2026-10-03T11:59:00+09:00",
+      "raw": "2026年9月29日(火)12:00〜10月3日(土)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

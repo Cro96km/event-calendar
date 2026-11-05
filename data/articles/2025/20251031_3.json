@@ -1,0 +1,37 @@
+{
+  "id": "20251031_3",
+  "url": "https://www.monster-strike.com/news/20251031_3.html",
+  "title": "ガチャ「破界に響く星歌」11/1より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2025-10-31",
+  "fetched_at": "2026-10-24T17:27:21+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:8d982f92ebcb18414df27d5187ce9c3e4e0365c4c84bc9382119c44a8ca29cbc",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20251031_3#0",
+      "name": "ガチャ「破界に響く星歌」11/1より開催！ #1",
+      "label": "開催期間",
+      "start": "2025-11-01T12:00:00+09:00",
+      "end": "2025-11-04T11:59:00+09:00",
+      "raw": "2025年11月1日(土)12:00〜11月4日(火)11:59",
+      "title_named": true,
+      "details": [
+        {
+          "label": "対象キャラクター",
+          "lines": [
+            "島津豊久 | ★6（獣神化前） | 火",
+            "フォーマルハウト | ★6（獣神化前） | 水",
+            "ラー | ★5 | 光",
+            "ナイトホーク | ★6（獣神化前） | 闇"
+          ]
+        }
+      ]
+    }
+  ],
+  "reward_until": null
+}

@@ -1,0 +1,27 @@
+{
+  "id": "20260813_4",
+  "url": "https://www.monster-strike.com/news/20260813_4.html",
+  "title": "超究極・兵クエスト（グノーシス）が8/22より期間限定で出現！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-08-13",
+  "fetched_at": "2026-10-24T17:06:55+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:acf4a521b2aa87818f2c943e6cf1e9e1025fcb04eab2861cfb3d30923ab84516",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260813_4#0",
+      "name": "超究極・兵クエスト（グノーシス）が8/22より期間限定で出現！ #1",
+      "label": "クエスト出現期間",
+      "start": "2026-08-22T19:00:00+09:00",
+      "end": "2026-10-27T11:59:00+09:00",
+      "raw": "2026年8月22日(土)19:00〜10月27日(火)11:59",
+      "title_named": true,
+      "color": "#007d32"
+    }
+  ],
+  "reward_until": null
+}

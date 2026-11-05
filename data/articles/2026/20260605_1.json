@@ -1,0 +1,26 @@
+{
+  "id": "20260605_1",
+  "url": "https://www.monster-strike.com/news/20260605_1.html",
+  "title": "ガチャ「グリーンファンタジー」6/6より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-06-05",
+  "fetched_at": "2026-10-24T17:17:30+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:1bff60725cdc89ae3b4e32e62009246d3b8c86a4ebf12df2eca285da33d4e7ca",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260605_1#0",
+      "name": "ガチャ「グリーンファンタジー」6/6より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-06-06T12:00:00+09:00",
+      "end": "2026-06-08T11:59:00+09:00",
+      "raw": "2026年6月6日(土)12:00〜6月8日(月)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

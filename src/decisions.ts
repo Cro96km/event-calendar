@@ -1,0 +1,218 @@
+// 判断の記憶(config/judge/decisions.json)・4区分・要判断ファイル(config/judge/needs-review.md)の純関数。spec §4.6。
+import { classify, type Rule } from './classify';
+import { INHERIT_MARK, type Candidate } from './selection';
+
+/** 確定した判断(記憶に保存できる値)。未確定を含む classify.ts の Decision とは別。 */
+export type Verdict = 'on' | 'off';
+
+interface KindDecision {
+  decision: Verdict;
+  /** 人が読むための例(判断した行のタイトル)。この項目自身には記憶を無条件に適用する */
+  example: string;
+  /** 要判断ファイルで人が種類として確定した(=例以外の同種にも無条件に適用)。移行で学習しただけのものは未確定 */
+  confirmed?: boolean;
+}
+export interface Decisions {
+  /** 種類ID(`カテゴリ::種類キー`)→判断。『この種類は常に表示/非表示』 */
+  kinds: Record<string, KindDecision>;
+  /** 個別キー→判断。種類判断より優先(移行時に同種の中で判断が割れた項目の例外) */
+  items: Record<string, Verdict>;
+}
+export const emptyDecisions = (): Decisions => ({ kinds: {}, items: {} });
+
+/** 種類キーとして残すべき本文の最小長(括弧とその中身・記号・空白を除く)。短いと別物を同種と誤判定しやすい */
+const MIN_KIND_CHARS = 10;
+
+function blankKey(key: string): string {
+  return key.replace(/「[^」]*」/g, '「」').replace(/『[^』]*』/g, '『』').replace(/[（(][^）)]*[）)]/g, '（）');
+}
+
+/**
+ * 種類キー: 固有名(「」『』()の中身)を空にした文字列。ただし空にした後の本文が短い(MIN_KIND_CHARS未満)なら
+ * 一般化しすぎで誤判定しうるため項目キー自身を種類キーとする(=同じ項目にしか適用しない)。
+ */
+export function kindKey(key: string): string {
+  const b = blankKey(key);
+  const body = b.replace(/[「」『』（）\s!！?？・、。]/g, '');
+  return body.length >= MIN_KIND_CHARS ? b : key;
+}
+export const kindId = (category: string, key: string): string => `${category}::${kindKey(key)}`;
+
+export type Bucket = 'recurring' | 'auto-on' | 'auto-off' | 'review';
+const BUCKET_LABEL: Record<Bucket, string> = { recurring: '定例', 'auto-on': '自動ON', 'auto-off': '自動OFF', review: '要判断' };
+
+export interface Judged {
+  cand: Candidate;
+  kind: string;
+  decision: Verdict | null;
+  source: 'memory' | 'rule' | null;
+  /** ルール由来のとき一致したルール名 */
+  rule: string | null;
+  /** 同種(同じ種類ID)の候補が含まれる記事数の合計 */
+  kindCount: number;
+  bucket: Bucket;
+  /** 記憶(未確定の種類判断)とルールが食い違い要判断に回した。値=記憶の判断 */
+  conflict: Verdict | null;
+}
+
+/**
+ * 候補を判定する。優先順: 個別の記憶 > 種類の記憶 > ルール(unsureは判断なし)。
+ * 保守性: 種類の記憶が未確定(移行で学習しただけ)で、例以外の項目にルールが逆の判断を出す場合は
+ * 誤適用を避けて要判断に回す。
+ * 定例 = 判断済みで同種が複数記事に出現するもの(表示/非表示は初回判断=記憶またはルールを踏襲)。
+ * 要判断 = 判断が無いもの(未選択=非表示扱い)。
+ */
+export function judgeAll(cands: Candidate[], d: Decisions, rules: Rule[] | null): Judged[] {
+  const total = new Map<string, number>();
+  for (const c of cands) total.set(kindId(c.category, c.key), (total.get(kindId(c.category, c.key)) ?? 0) + c.count);
+  return cands.map((c) => {
+    const id = kindId(c.category, c.key);
+    const kindCount = total.get(id) ?? c.count;
+    const kd = d.kinds[id];
+    const itemCount = c.count;
+    let decision: Verdict | null = d.items[c.key] ?? kd?.decision ?? null;
+    let source: Judged['source'] = decision ? 'memory' : null;
+    let rule: string | null = null;
+    let conflict: Verdict | null = null;
+    if (decision && d.items[c.key] === undefined && kd && !kd.confirmed && kd.example !== c.key && rules) {
+      const cls = classify({ key: c.key, category: c.category, count: itemCount }, rules);
+      if (cls.decision !== 'unsure' && cls.decision !== decision) [conflict, decision, source] = [decision, null, null];
+    }
+    if (!decision && !conflict && rules) {
+      const cls = classify({ key: c.key, category: c.category, count: itemCount }, rules);
+      if (cls.decision !== 'unsure') [decision, source, rule] = [cls.decision, 'rule', cls.rule];
+    }
+    const bucket: Bucket = decision === null ? 'review' : kindCount >= 2 ? 'recurring' : decision === 'on' ? 'auto-on' : 'auto-off';
+    return { cand: c, kind: id, decision, source, rule, kindCount, bucket, conflict };
+  });
+}
+
+export const selectedKeys = (js: Judged[]): string[] => js.filter((j) => j.decision === 'on').map((j) => j.cand.key);
+
+export interface ReviewGroup {
+  /** 種類キー(判断を適用する単位) */
+  id: string;
+  category: string;
+  /** 例示タイトル(最大3) */
+  examples: string[];
+  count: number;
+  /** 例示の直近期間とリンク */
+  period: string;
+  url: string;
+  /** 記憶とルールの食い違いがあるときの記憶の判断 */
+  conflict: Verdict | null;
+}
+
+/** 要判断の候補を同種ごとに集約する。 */
+export function reviewGroups(js: Judged[]): ReviewGroup[] {
+  const m = new Map<string, ReviewGroup>();
+  for (const j of js) {
+    if (j.bucket !== 'review') continue;
+    const g = m.get(j.kind);
+    if (!g) m.set(j.kind, { id: kindKey(j.cand.key), category: j.cand.category, examples: [j.cand.key], count: j.cand.count, period: j.cand.latest, url: j.cand.url, conflict: j.conflict });
+    else {
+      g.count += j.cand.count;
+      g.examples.push(j.cand.key);
+      g.conflict ??= j.conflict;
+    }
+  }
+  return [...m.values()];
+}
+
+const REVIEW_LINE = /^- \[([ xX-])\] (.+?)(?: \| (.*))?$/;
+export interface ReviewRow {
+  /** ' '=未判断 / 'x'=常に表示 / '-'=常に非表示 */
+  mark: ' ' | 'x' | '-';
+  id: string;
+  category: string;
+  count: string;
+  examples: string;
+  period: string;
+  url: string;
+}
+
+const REVIEW_HEADER = `# 要判断(ここだけ見れば良い)
+
+同種の候補をまとめた行です。1行の判断が「この種類は常に表示/非表示」として記憶され、同種の以後の候補にも自動で適用されます。
+- 表示する: \`- [x]\`
+- 表示しない: \`- [-]\`
+- 保留: \`- [ ]\` のまま(未選択=非表示扱い。次回も要判断に残る)
+編集後に \`npm run candidates\` を実行すると config/judge/decisions.json に取り込まれ、この行は消えます。
+先頭の種類キー・カテゴリは編集しないこと。\`|\` 区切り: 種類キー | カテゴリ | 件数 | 例 | 直近期間 | リンク
+`;
+
+export function renderReview(groups: ReviewGroup[]): string {
+  const rows = groups.map((g) => `- [ ] ${g.id} | ${g.category} | ${g.count}件 | 例: ${g.examples.slice(0, 3).join(' / ')}${g.examples.length > 3 ? ` ほか${g.examples.length - 3}件` : ''} | ${g.period} | ${g.url}${g.conflict ? ` | 注意: 記憶は常に${g.conflict === 'on' ? '表示' : '非表示'}だがルールと食い違うため再確認` : ''}`);
+  return `${REVIEW_HEADER}\n${rows.length ? rows.join('\n') : '(要判断はありません)'}\n`;
+}
+
+export function parseReview(md: string): { rows: ReviewRow[]; unrecognized: number } {
+  const rows: ReviewRow[] = [];
+  let unrecognized = 0;
+  for (const line of md.split(/\r?\n/)) {
+    const m = REVIEW_LINE.exec(line);
+    if (!m) {
+      if (/^- \[.*\]/.test(line) || /^\s*-\s*\[[^\]]*\]/.test(line)) unrecognized++;
+      continue;
+    }
+    const f = (m[3] ?? '').split(' | ');
+    rows.push({ mark: (m[1] === 'X' ? 'x' : m[1]) as ReviewRow['mark'], id: (m[2] as string).trim(), category: f[0] ?? '', count: f[1] ?? '', examples: (f[2] ?? '').replace(/^例:\s*/, ''), period: f[3] ?? '', url: f[4] ?? '' });
+  }
+  return { rows, unrecognized };
+}
+
+/** 要判断ファイルで確定した行(x / -)を記憶に取り込む。同じ種類の既存の判断は上書き。戻り値は取り込んだ行数。 */
+export function importReview(d: Decisions, rows: ReviewRow[]): number {
+  let n = 0;
+  for (const r of rows) {
+    if (r.mark === ' ' || r.category === '') continue;
+    const verdict: Verdict = r.mark === 'x' ? 'on' : 'off';
+    const old = d.kinds[`${r.category}::${r.id}`];
+    if (old && !old.confirmed && old.decision !== verdict) {
+      // 未確定の種類記憶と逆の判断(食い違い行の確定): 元の例の判断を反転させないよう、列挙された項目だけ個別に記憶
+      for (const e of r.examples.replace(/ ほか\d+件$/, '').split(' / ')) if (e !== '') d.items[e] = verdict;
+      n++;
+      continue;
+    }
+    d.kinds[`${r.category}::${r.id}`] = { decision: verdict, example: old?.example ?? r.examples.split(' / ')[0] ?? r.id, confirmed: true };
+    n++;
+  }
+  return n;
+}
+
+export function parseDecisions(json: unknown): Decisions {
+  const o = json as { kinds?: Record<string, KindDecision>; items?: Record<string, Verdict> } | null;
+  if (!o || typeof o.kinds !== 'object' || typeof o.items !== 'object' || o.kinds === null || o.items === null) throw new Error('decisions.json: kinds / items がありません');
+  const ok = (v: unknown): boolean => v === 'on' || v === 'off';
+  for (const [k, v] of Object.entries(o.kinds)) if (!ok(v?.decision)) throw new Error(`decisions.json: kinds[${k}].decision は on/off のみ`);
+  for (const [k, v] of Object.entries(o.items)) if (!ok(v)) throw new Error(`decisions.json: items[${k}] は on/off のみ`);
+  return { kinds: o.kinds, items: o.items };
+}
+
+/** 差分が読めるようキー順で安定出力する。 */
+export function serializeDecisions(d: Decisions): string {
+  const sort = <T>(r: Record<string, T>): Record<string, T> => Object.fromEntries(Object.entries(r).sort(([a], [b]) => a.localeCompare(b)));
+  return `${JSON.stringify({ kinds: sort(d.kinds), items: sort(d.items) }, null, 2)}\n`;
+}
+
+export const GENERATED_MARK = '<!-- generated: npm run candidates -->';
+
+const SECTION_ORDER: Bucket[] = ['review', 'recurring', 'auto-on', 'auto-off'];
+
+/** 参照用の生成物(config/judge/selection.md)。編集不要。行形式は `- [x|空] キー | …` で selection.json の元にもなる。 */
+export function renderReference(js: Judged[]): string {
+  const how = (j: Judged): string => (j.source === 'memory' ? '記憶' : j.source === 'rule' ? `ルール:${j.rule}` : '未判断');
+  const body = SECTION_ORDER.map((b) => {
+    const rows = js.filter((j) => j.bucket === b);
+    const label = BUCKET_LABEL[b];
+    const lines = rows.map((j) => `- [${j.decision === 'on' ? 'x' : ' '}] ${j.cand.key} | ${j.cand.category} | ${j.cand.count}件 | ${j.cand.latest}${j.cand.inherited ? INHERIT_MARK : ''} | ${j.cand.url} | ${how(j)}`);
+    return `## ${label}(${rows.length}件)\n\n${lines.join('\n')}${lines.length ? '\n' : ''}`;
+  });
+  return `${GENERATED_MARK}\n# 表示候補の分類(自動生成・参照用)\n\nこのファイルは \`npm run candidates\` が毎回作り直します。**編集しないでください**(編集は config/judge/needs-review.md の要判断のみ)。\n区分: 要判断(未選択) / 定例(同種が複数記事に出現し判断済み) / 自動ON / 自動OFF。\`[x]\`が表示。\n\n${body.join('\n')}`;
+}
+
+export const countBuckets = (js: Judged[]): Record<Bucket, number> => {
+  const r: Record<Bucket, number> = { recurring: 0, 'auto-on': 0, 'auto-off': 0, review: 0 };
+  for (const j of js) r[j.bucket]++;
+  return r;
+};

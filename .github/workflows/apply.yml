@@ -1,0 +1,86 @@
+# 判断の取り込み: 要対応Issueに `/apply` とコメントすると、チェックボックスの判断を config/judge/decisions.json に取り込む PR を作り、
+# 検証が通れば自動マージして反映する。リポジトリの所有者・メンバー・共同作業者のコメントだけ受け付ける。docs/operations.md §11・§13。
+name: apply
+
+on:
+  issue_comment:
+    types: [created]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: apply
+  cancel-in-progress: false
+
+jobs:
+  apply:
+    # 要対応Issue(タイトルが「要対応」で始まる)への `/apply` だけ。PRへのコメントは対象外。コメントの投稿者と、Issueの作者(更新ワークフローのbotか所有者)の両方を信頼できるものに限る(外部の人が作ったIssueを取り込まない)。
+    if: >-
+      github.event.issue.pull_request == null &&
+      startsWith(github.event.issue.title, '要対応') &&
+      (github.event.issue.user.login == 'github-actions[bot]' || github.event.issue.user.login == github.repository_owner) &&
+      github.event.comment.body == '/apply' &&
+      contains(fromJSON('["OWNER","MEMBER","COLLABORATOR"]'), github.event.comment.author_association)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      GH_TOKEN: ${{ github.token }}
+      ISSUE_NUMBER: ${{ github.event.issue.number }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      # Issue本文は信頼できない入力として、環境変数経由でファイルに書く(シェルに直接展開しない)。
+      - name: Apply judgments
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+        run: |
+          printf '%s' "$ISSUE_BODY" > issue-body.md
+          npm run judge -- --issue issue-body.md
+          npm run update -- --no-collect
+
+      - name: Verify
+        id: verify
+        run: |
+          set +e
+          npm run lint && npm test && npm run build:public
+          echo "ci=$?" >> "$GITHUB_OUTPUT"
+          npm run check
+          echo "check=$?" >> "$GITHUB_OUTPUT"
+
+      - name: PR and merge
+        env:
+          CI_RESULT: ${{ steps.verify.outputs.ci }}
+          CHECK_RESULT: ${{ steps.verify.outputs.check }}
+        run: |
+          set -euo pipefail
+          if [ -z "$(git status --porcelain config)" ]; then
+            gh issue comment "$ISSUE_NUMBER" --body "取り込む判断の変更がありませんでした(すでに取り込み済み、またはチェックの変更がありません)。"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          branch="judge/issue-$ISSUE_NUMBER-$(date -u +%Y%m%d%H%M)"
+          git switch -c "$branch"
+          git add config/judge/decisions.json
+          git commit -m "config: 判断の取り込み (#$ISSUE_NUMBER)"
+          git push origin "$branch"
+          gh label create "要確認" --color d93f0b 2>/dev/null || true
+          url=$(gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" --title "判断の取り込み (#$ISSUE_NUMBER)" --body "要対応Issue #$ISSUE_NUMBER の判断(チェック=表示、無し=非表示)を判断の記憶に取り込みます。検証: CI相当=$CI_RESULT / 点検=$CHECK_RESULT")
+          if [ "$CI_RESULT" = "0" ] && [ "$CHECK_RESULT" = "0" ]; then
+            gh pr merge "$url" --squash --delete-branch
+            gh workflow run deploy.yml --ref "${{ github.event.repository.default_branch }}"
+            gh issue comment "$ISSUE_NUMBER" --body "判断を取り込みました($url)。公開サイトに反映します。"
+            gh issue close "$ISSUE_NUMBER"
+          else
+            gh pr edit "$url" --add-label "要確認"
+            gh issue comment "$ISSUE_NUMBER" --body "検証が通らなかったため、自動マージしていません: $url (CI相当=$CI_RESULT / 点検=$CHECK_RESULT)。ログを確認してください。"
+          fi

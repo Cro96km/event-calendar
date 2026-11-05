@@ -1,0 +1,27 @@
+{
+  "id": "20260305_8",
+  "url": "https://www.monster-strike.com/news/20260305_8.html",
+  "title": "超究極クエスト（ルビカンテ）が3/13より期間限定で登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-03-05",
+  "fetched_at": "2026-10-24T17:21:11+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:c2c22cc08a2b79d3be15fcf06202ea7f21aeb85779d60ea6a0982ec42670d76d",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260305_8#0",
+      "name": "超究極クエスト（ルビカンテ）が3/13より期間限定で登場！ #1",
+      "label": "出現期間",
+      "start": "2026-03-13T19:00:00+09:00",
+      "end": "2026-05-20T11:59:00+09:00",
+      "raw": "2026年3月13日(金)19:00〜5月20日(水)11:59",
+      "title_named": true,
+      "color": "#3154ef"
+    }
+  ],
+  "reward_until": null
+}

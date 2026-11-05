@@ -1,0 +1,42 @@
+{
+  "name": "monst-event-calendar",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview",
+    "build:public": "npm run build && tsx scripts/export-public.ts --src public/data --out dist/data",
+    "lint": "eslint .",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "scrape": "tsx scripts/scrape.ts",
+    "reparse": "tsx scripts/scrape.ts reparse",
+    "collect": "tsx scripts/collect.ts",
+    "update": "tsx scripts/update.ts",
+    "judge": "tsx scripts/judge.ts",
+    "rebuild": "tsx scripts/collect.ts --rebuild",
+    "candidates": "tsx scripts/candidates.ts",
+    "report:unparsed": "tsx scripts/report-unparsed.ts",
+    "check": "tsx scripts/check.ts",
+    "help": "tsx scripts/help.ts"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "@types/node": "^26.6.5",
+    "eslint": "^10.13.0",
+    "happy-dom": "^21.0.4",
+    "tsx": "^4.23.15",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.72.0",
+    "vite": "^8.3.5",
+    "vitest": "^5.0.5"
+  },
+  "dependencies": {
+    "node-html-parser": "^9.0.5"
+  }
+}

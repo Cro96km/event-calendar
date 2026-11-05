@@ -1,0 +1,26 @@
+{
+  "id": "20260416_1",
+  "url": "https://www.monster-strike.com/news/20260416_1.html",
+  "title": "ガチャ「オリエンタル・トラベラーズ」4/17より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-04-16",
+  "fetched_at": "2026-10-24T17:19:38+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:d40d9c6f8008f2cd1d99c4db6b551058b4898e6c41dfadf9ab35cbde8cb2a166",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260416_1#0",
+      "name": "ガチャ「オリエンタル・トラベラーズ」4/17より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-04-17T12:00:00+09:00",
+      "end": "2026-04-19T11:59:00+09:00",
+      "raw": "2026年4月17日(金)12:00〜4月19日(日)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

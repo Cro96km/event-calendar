@@ -1,0 +1,36 @@
+{
+  "id": "20260717_2",
+  "url": "https://www.monster-strike.com/news/20260717_2.html",
+  "title": "「禁忌の獄」「禁忌の獄〜深淵〜」が7/21 12時より期間限定で登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-07-17",
+  "fetched_at": "2026-10-24T17:08:10+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:cc3bb5f08d069d3e91e8f4788eb44327904454cef3f124c9688e867f0f13e1a2",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260717_2#0",
+      "name": "「禁忌の獄」「禁忌の獄〜深淵〜」が7/21 12時より期間限定で登場！ #1",
+      "label": "出現期間",
+      "start": "2026-07-21T12:00:00+09:00",
+      "end": "2026-08-08T11:59:00+09:00",
+      "raw": "2026年7月21日(火)12:00〜8月8日(土)11:59",
+      "title_named": true,
+      "details": [
+        {
+          "label": "本開催の「禁忌の獄～深淵〜」対象ステージ",
+          "lines": [
+            "火獄の無量大数",
+            "光獄の刹那",
+            "闇獄の那由他"
+          ]
+        }
+      ]
+    }
+  ],
+  "reward_until": null
+}

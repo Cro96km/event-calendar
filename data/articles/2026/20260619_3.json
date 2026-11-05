@@ -1,0 +1,26 @@
+{
+  "id": "20260619_3",
+  "url": "https://www.monster-strike.com/news/20260619_3.html",
+  "title": "ガチャ「水の遊宴」6/22より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-06-19",
+  "fetched_at": "2026-10-24T17:16:55+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:0ddf49fad512cab037a6871ccc3236944eeaa5ce84be157939149c55dba06f37",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260619_3#0",
+      "name": "ガチャ「水の遊宴」6/22より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-06-22T12:00:00+09:00",
+      "end": "2026-06-23T11:59:00+09:00",
+      "raw": "2026年6月22日(月)12:00〜6月23日(火)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

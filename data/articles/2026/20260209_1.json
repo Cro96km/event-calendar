@@ -1,0 +1,26 @@
+{
+  "id": "20260209_1",
+  "url": "https://www.monster-strike.com/news/20260209_1.html",
+  "title": "ガチャ「グリーンファンタジー」2/10より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-02-09",
+  "fetched_at": "2026-10-24T17:23:20+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:73112c6f56c5ff127d89cd152a148b92c7af934aadd9fad1fa2d0a7615339bc5",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260209_1#0",
+      "name": "ガチャ「グリーンファンタジー」2/10より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-02-10T12:00:00+09:00",
+      "end": "2026-02-12T11:59:00+09:00",
+      "raw": "2026年2月10日(火)12:00〜2月12日(木)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

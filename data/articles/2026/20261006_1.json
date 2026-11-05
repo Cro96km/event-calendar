@@ -1,0 +1,26 @@
+{
+  "id": "20261006_1",
+  "url": "https://www.monster-strike.com/news/20261006_1.html",
+  "title": "ガチャ「水の遊宴」10/7より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-10-06",
+  "fetched_at": "2026-10-24T14:53:28+09:00",
+  "lastmod": "2026-10-06T16:51:50+09:00",
+  "content_hash": "sha256:3ae47fc2064a4f3961c4b5265b32be6604a36757a961f7e511f9aac36d743d88",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20261006_1#0",
+      "name": "ガチャ「水の遊宴」10/7より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-10-07T12:00:00+09:00",
+      "end": "2026-10-09T11:59:00+09:00",
+      "raw": "2026年10月7日(水)12:00〜10月9日(金)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

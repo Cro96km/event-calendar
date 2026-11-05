@@ -1,0 +1,46 @@
+{
+  "id": "20260723_2",
+  "url": "https://www.monster-strike.com/news/20260723_2.html",
+  "title": "【13周年大カーン謝祭カウントダウン】「選抜！13周年人気投票ガチャ」7/24より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-07-23",
+  "fetched_at": "2026-10-24T17:08:04+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:019dab5fd507017ec1f76fded86e5a9ae13f8749be83e3e7d118220566391d6b",
+  "parse_status": "partial",
+  "events": [
+    {
+      "id": "20260723_2#0",
+      "name": "ソロモン組",
+      "label": "ガチャ開催期間",
+      "start": "2026-07-24T12:00:00+09:00",
+      "end": null,
+      "raw": "2026年7月24日(金)12:00〜",
+      "title_named": true,
+      "anchor": "f"
+    },
+    {
+      "id": "20260723_2#1",
+      "name": "ガチャが引ける「ファン玉」プレゼント!",
+      "label": "「ファン玉」配布期間",
+      "start": "2026-07-24T04:00:00+09:00",
+      "end": null,
+      "raw": "2026年7月24日(金)4:00〜",
+      "anchor": "3"
+    },
+    {
+      "id": "20260723_2#2",
+      "name": "「選抜!13周年人気投票ガチャ」詳細!",
+      "label": "ガチャ開催期間",
+      "start": "2026-07-24T12:00:00+09:00",
+      "end": null,
+      "raw": "2026年7月24日(金)12:00〜",
+      "inherited": true,
+      "anchor": "1"
+    }
+  ],
+  "reward_until": null
+}

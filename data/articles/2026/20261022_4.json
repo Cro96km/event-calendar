@@ -1,0 +1,27 @@
+{
+  "id": "20261022_4",
+  "url": "https://www.monster-strike.com/news/20261022_4.html",
+  "title": "超究極・兵クエスト（ミザリー）が10/30より期間限定で出現！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-10-22",
+  "fetched_at": "2026-10-23T15:37:33+09:00",
+  "lastmod": "2026-10-22T17:16:10+09:00",
+  "content_hash": "sha256:e1ba0db3512fb5ca84abaf9905aee51006d06de2b6298e208d6295f8e1d6690e",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20261022_4#0",
+      "name": "超究極・兵クエスト（ミザリー）が10/30より期間限定で出現！ #1",
+      "label": "クエスト出現期間",
+      "start": "2026-10-30T19:00:00+09:00",
+      "end": "2026-12-08T11:59:00+09:00",
+      "raw": "2026年10月30日(金)19:00〜12月8日(火)11:59",
+      "title_named": true,
+      "color": "#3154ef"
+    }
+  ],
+  "reward_until": null
+}

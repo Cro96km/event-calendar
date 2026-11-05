@@ -1,0 +1,26 @@
+{
+  "id": "20251121_1",
+  "url": "https://www.monster-strike.com/news/20251121_1.html",
+  "title": "「絶級トーナメント」が11/26 12時より期間限定で登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2025-11-21",
+  "fetched_at": "2026-10-24T17:26:38+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:707af724205c5bf2b0940787afa51208e12c7d1ca01b823f702ca87501cba8e4",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20251121_1#0",
+      "name": "「絶級トーナメント」が11/26 12時より期間限定で登場！ #1",
+      "label": "出現期間",
+      "start": "2025-11-26T12:00:00+09:00",
+      "end": "2025-12-06T11:59:00+09:00",
+      "raw": "2025年11月26日(水)12:00〜12月6日(土)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

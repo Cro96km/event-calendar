@@ -1,0 +1,26 @@
+{
+  "id": "20261015_1",
+  "url": "https://www.monster-strike.com/news/20261015_1.html",
+  "title": "みんなの銀行の期間限定キャンペーンを10/15より開催！",
+  "category": "web-shop",
+  "categories": [
+    "web-shop"
+  ],
+  "published": "2026-10-15",
+  "fetched_at": "2026-10-23T15:37:57+09:00",
+  "lastmod": "2026-10-15T11:03:20+09:00",
+  "content_hash": "sha256:b45037cf089e6324183d47b267e6726f9261636a5dd723cb3f596a649b98e783",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20261015_1#0",
+      "name": "みんなの銀行の期間限定キャンペーンを10/15より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-10-15T00:00:00+09:00",
+      "end": "2026-10-31T23:59:00+09:00",
+      "raw": "2026年10月15日(木)0:00〜 10月31日(土)23:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

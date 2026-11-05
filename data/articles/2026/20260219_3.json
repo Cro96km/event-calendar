@@ -1,0 +1,26 @@
+{
+  "id": "20260219_3",
+  "url": "https://www.monster-strike.com/news/20260219_3.html",
+  "title": "メダル引き換えの新キャラクター「コーフィ」が2/27より登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-02-19",
+  "fetched_at": "2026-10-24T17:22:57+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:180a2e7f21c065f3a326dab7b222ab2b80604170effcce5dabcc85020e8ed48d",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260219_3#0",
+      "name": "メダル引き換えの新キャラクター「コーフィ」が2/27より登場！ #1",
+      "label": "引き換え可能期間",
+      "start": "2026-02-27T04:00:00+09:00",
+      "end": "2026-08-31T23:59:00+09:00",
+      "raw": "2026年2月27日(金)4:00〜8月31日(月)23:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

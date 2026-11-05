@@ -1,0 +1,34 @@
+{
+  "id": "20261008_2",
+  "url": "https://www.monster-strike.com/news/20261008_2.html",
+  "title": "※重要※Ver.33.0アップデートメンテナンスの実施について",
+  "category": "maintenance",
+  "categories": [
+    "maintenance"
+  ],
+  "published": "2026-10-08",
+  "fetched_at": "2026-10-24T14:53:22+09:00",
+  "lastmod": "2026-10-08T17:08:36+09:00",
+  "content_hash": "sha256:b3db9977388263ca62111afe96c53bddffd15f81fac856e4e345bb5efe23be37",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20261008_2#0",
+      "name": "Ver.33.0アップデートメンテナンス",
+      "label": "メンテナンス実施日程",
+      "start": "2026-10-14T00:00:00+09:00",
+      "end": "2026-10-14T06:00:00+09:00",
+      "raw": "2026年10月14日(水)0:00〜6:00",
+      "title_named": true,
+      "details": [
+        {
+          "label": "メンテナンス内容",
+          "lines": [
+            "Ver.33.0アップデート"
+          ]
+        }
+      ]
+    }
+  ],
+  "reward_until": null
+}

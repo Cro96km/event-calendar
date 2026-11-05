@@ -1,0 +1,26 @@
+{
+  "id": "20260928_2",
+  "url": "https://www.monster-strike.com/news/20260928_2.html",
+  "title": "シールガチャ「シールオブジェネシス 第3弾」が10/2より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-09-28",
+  "fetched_at": "2026-10-24T17:04:49+09:00",
+  "lastmod": "2026-10-02T20:12:20+09:00",
+  "content_hash": "sha256:901da7a0e8f6dfae9864cc9b1a5d08f7ef345e897ded6a72e35c587487c21e2d",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260928_2#0",
+      "name": "シールガチャ「シールオブジェネシス 第3弾」が10/2より開催！ #1",
+      "label": "ガチャ開催期間",
+      "start": "2026-10-02T12:00:00+09:00",
+      "end": "2027-04-11T11:59:00+09:00",
+      "raw": "2026年10月2日(金)12:00〜2027年4月11日(日)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

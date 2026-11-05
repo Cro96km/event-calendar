@@ -1,0 +1,27 @@
+{
+  "id": "20260528_2",
+  "url": "https://www.monster-strike.com/news/20260528_2.html",
+  "title": "新轟絶クエスト（ポットスターラー）が6/5より初登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-05-28",
+  "fetched_at": "2026-10-24T17:17:54+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:a66258d488a6871c28688eb156d63550ff226c0ee7cfd0743fb6e0c20794cd11",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260528_2#0",
+      "name": "轟絶 ポットスターラー降臨",
+      "label": "初出現日時",
+      "start": "2026-06-05T19:00:00+09:00",
+      "end": "2026-06-06T11:59:00+09:00",
+      "raw": "2026年6月5日(金)19:00〜6月6日(土)11:59",
+      "title_named": true,
+      "color": "#007d32"
+    }
+  ],
+  "reward_until": null
+}

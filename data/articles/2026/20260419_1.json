@@ -1,0 +1,26 @@
+{
+  "id": "20260419_1",
+  "url": "https://www.monster-strike.com/news/20260419_1.html",
+  "title": "ガチャ「ミッドナイト・パーティー」4/20より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-04-19",
+  "fetched_at": "2026-10-24T17:19:20+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:28c90d4b451db01ee6c633ba335417c12ecaf083748c2a19c3de6d55e39c232f",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260419_1#0",
+      "name": "ガチャ「ミッドナイト・パーティー」4/20より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-04-20T12:00:00+09:00",
+      "end": "2026-04-22T11:59:00+09:00",
+      "raw": "2026年4月20日(月)12:00〜4月22日(水)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

@@ -1,0 +1,37 @@
+{
+  "id": "20260702_1",
+  "url": "https://www.monster-strike.com/news/20260702_1.html",
+  "title": "ガチャ「破界に響く星歌」7/3より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-07-02",
+  "fetched_at": "2026-10-24T17:09:01+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:aa6a6c25d9a912321310c30fda791859b2c947fcba71a67a4284aedb019e7684",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260702_1#0",
+      "name": "ガチャ「破界に響く星歌」7/3より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-07-03T12:00:00+09:00",
+      "end": "2026-07-05T11:59:00+09:00",
+      "raw": "2026年7月3日(金)12:00〜7月5日(日)11:59",
+      "title_named": true,
+      "details": [
+        {
+          "label": "対象キャラクター",
+          "lines": [
+            "ムーラン | ★6（獣神化前） | 火",
+            "マスター・コーヴ | ★6（獣神化前） | 水",
+            "コーディリア＆リア | ★6（獣神化前） | 光",
+            "ブラフマーストラ | ★6（獣神化前） | 闇"
+          ]
+        }
+      ]
+    }
+  ],
+  "reward_until": null
+}

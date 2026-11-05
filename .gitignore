@@ -1,0 +1,15 @@
+node_modules/
+dist/
+.cache/
+data/raw/
+*.log
+.env
+public/data/
+config/judge/selection.md
+config/judge/needs-review.md
+update-report.md
+update-report.json
+update-issue.md
+
+# ローカルのAI向け指示(公開しない)
+CLAUDE.md

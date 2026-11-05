@@ -1,0 +1,27 @@
+{
+  "id": "20261001_4",
+  "url": "https://www.monster-strike.com/news/20261001_4.html",
+  "title": "新轟絶クエスト（ルーズリップス）が10/2より初登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-10-01",
+  "fetched_at": "2026-10-24T14:53:38+09:00",
+  "lastmod": "2026-10-05T11:37:21+09:00",
+  "content_hash": "sha256:ce5f30a9bc15419a2a3b5e67291ecb63f2040f563a64e2d9dd2aa78e2a2b2c8c",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20261001_4#0",
+      "name": "轟絶 ルーズリップス降臨",
+      "label": "初出現日時",
+      "start": "2026-10-02T19:00:00+09:00",
+      "end": "2026-10-03T11:59:00+09:00",
+      "raw": "2026年10月2日(金)19:00〜10月3日(土)11:59",
+      "title_named": true,
+      "color": "#a237c3"
+    }
+  ],
+  "reward_until": null
+}

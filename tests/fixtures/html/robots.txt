@@ -1,0 +1,5 @@
+User-agent: *
+Disallow: /mt/admin/
+Disallow: /mt-static/
+
+Sitemap: https://www.monster-strike.com/sitemap.xml

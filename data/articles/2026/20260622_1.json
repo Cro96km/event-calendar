@@ -1,0 +1,26 @@
+{
+  "id": "20260622_1",
+  "url": "https://www.monster-strike.com/news/20260622_1.html",
+  "title": "ガチャ「ミッドナイト・パーティー」6/23より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-06-22",
+  "fetched_at": "2026-10-24T17:16:53+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:ba59196d474c7fcd9ce328fdbf6447143f49b2c4e46e6796722e1b02528dad1b",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260622_1#0",
+      "name": "ガチャ「ミッドナイト・パーティー」6/23より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-06-23T12:00:00+09:00",
+      "end": "2026-06-25T11:59:00+09:00",
+      "raw": "2026年6月23日(火)12:00〜6月25日(木)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

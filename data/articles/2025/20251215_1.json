@@ -1,0 +1,26 @@
+{
+  "id": "20251215_1",
+  "url": "https://www.monster-strike.com/news/20251215_1.html",
+  "title": "「モンスト×メルカリギフト」コラボキャンペーンが12/15より開催！",
+  "category": "campaign",
+  "categories": [
+    "campaign"
+  ],
+  "published": "2025-12-15",
+  "fetched_at": "2026-10-24T17:25:42+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:8d9f7ccc1c56c6ff8d32e3f146e974d4d906fe59c09bd987f40fab4be3c113e7",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20251215_1#0",
+      "name": "「モンスト×メルカリギフト」コラボキャンペーンが12/15より開催！ #1",
+      "label": "キャンペーン期間",
+      "start": "2025-12-15T10:00:00+09:00",
+      "end": "2025-12-31T23:59:00+09:00",
+      "raw": "2025年12月15日(月)10:00〜12月31日(水)23:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

@@ -1,0 +1,26 @@
+{
+  "id": "20261001_1",
+  "url": "https://www.monster-strike.com/news/20261001_1.html",
+  "title": "モンストWebショップで楽天ペイ（オンライン決済）を利用すると、抽選で楽天ポイントが当たるキャンペーンを10/1より開催！",
+  "category": "web-shop",
+  "categories": [
+    "web-shop"
+  ],
+  "published": "2026-10-01",
+  "fetched_at": "2026-10-24T17:04:43+09:00",
+  "lastmod": "2026-10-01T09:56:10+09:00",
+  "content_hash": "sha256:ef3598d40aa6fc70ffd2189dff9fd7c94927342609304caf226de88d8625ae44",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20261001_1#0",
+      "name": "モンストWebショップで楽天ペイ（オンライン決済）を利用すると、抽選で楽天ポイントが当たるキャンペーンを10/1より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-10-01T00:00:00+09:00",
+      "end": "2026-10-31T23:59:00+09:00",
+      "raw": "2026年10月1日(木)0:00〜10月31日(土)23:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

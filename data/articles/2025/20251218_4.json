@@ -1,0 +1,25 @@
+{
+  "id": "20251218_4",
+  "url": "https://www.monster-strike.com/news/20251218_4.html",
+  "title": "新爆絶クエスト（シューティング）が12/26より初登場！「トレジャー9」も開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2025-12-18",
+  "fetched_at": "2026-10-24T17:25:32+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:7f7e6048adc7893c5054a2d5b7ae005618ab3715adde1d83ae10aa266985f097",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20251218_4#0",
+      "name": "トレジャー9開催!",
+      "label": "「トレジャー9」挑戦可能期間",
+      "start": "2025-12-26T19:00:00+09:00",
+      "end": "2026-02-24T03:59:00+09:00",
+      "raw": "2025年12月26日(金)19:00〜2026年2月24日(火)3:59"
+    }
+  ],
+  "reward_until": null
+}

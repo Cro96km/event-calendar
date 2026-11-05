@@ -1,0 +1,26 @@
+{
+  "id": "20260907_1",
+  "url": "https://www.monster-strike.com/news/20260907_1.html",
+  "title": "ガチャ「RED STARS」9/8より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-09-07",
+  "fetched_at": "2026-10-24T17:06:00+09:00",
+  "lastmod": "2026-09-07T17:28:46+09:00",
+  "content_hash": "sha256:64bdf4c8efae42322a2c6179e791822cb22750ea2d4439eeb23dcbe9f750b8de",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260907_1#0",
+      "name": "ガチャ「RED STARS」9/8より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-09-08T12:00:00+09:00",
+      "end": "2026-09-10T11:59:00+09:00",
+      "raw": "2026年9月8日(火)12:00〜9月10日(木)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

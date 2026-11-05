@@ -1,0 +1,27 @@
+{
+  "id": "20260122_1",
+  "url": "https://www.monster-strike.com/news/20260122_1.html",
+  "title": "超究極クエスト（マラコーダ）が1/31より期間限定で登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-01-22",
+  "fetched_at": "2026-10-24T17:24:07+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:9432a8a621c1fbbad49fef28b9d254eac415e6d09c76e172f11f9e97b987ee7e",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260122_1#0",
+      "name": "超究極クエスト（マラコーダ）が1/31より期間限定で登場！ #1",
+      "label": "出現期間",
+      "start": "2026-01-31T19:00:00+09:00",
+      "end": "2026-03-10T11:59:00+09:00",
+      "raw": "2026年1月31日(土)19:00〜3月10日(火)11:59",
+      "title_named": true,
+      "color": "#007d32"
+    }
+  ],
+  "reward_until": null
+}

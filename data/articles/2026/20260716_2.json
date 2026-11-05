@@ -1,0 +1,26 @@
+{
+  "id": "20260716_2",
+  "url": "https://www.monster-strike.com/news/20260716_2.html",
+  "title": "ガチャ「復刻♪モンスト夏休み2019」7/18より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-07-16",
+  "fetched_at": "2026-10-24T17:08:16+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:ed8b6c3754bef71768d4760b81c4b65e6a903dbb548cb8b3c1c804e2c202bd20",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260716_2#0",
+      "name": "ガチャ「復刻♪モンスト夏休み2019」7/18より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-07-18T12:00:00+09:00",
+      "end": "2026-07-20T11:59:00+09:00",
+      "raw": "2026年7月18日(土)12:00〜7月20日(月)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

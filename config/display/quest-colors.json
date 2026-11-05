@@ -1,0 +1,5 @@
+{
+  "_doc": "詳細パネルの対象ステージ/階層クエストの名前に付ける属性色(spec §4.7)。palette は公式の属性色(赤=火・青=水・緑=木・黄=光・紫=闇)。kinki は禁忌の獄(名前の先頭の属性+獄)。破界の星墓は config/schedule/hakai.json。名前が対応表に無ければ色なし。",
+  "palette": {"red": "#eb0043", "blue": "#3154ef", "green": "#007d32", "yellow": "#a16800", "purple": "#a237c3"},
+  "kinki": {"火": "red", "水": "blue", "木": "green", "光": "yellow", "闇": "purple"}
+}

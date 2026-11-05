@@ -1,0 +1,26 @@
+{
+  "id": "20260803_2",
+  "url": "https://www.monster-strike.com/news/20260803_2.html",
+  "title": "「令和8年熊本地震」に対する義援金寄付とチャリティーオーブの実施について（8/3 19時〜）",
+  "category": "other",
+  "categories": [
+    "other"
+  ],
+  "published": "2026-08-03",
+  "fetched_at": "2026-10-24T17:07:30+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:381ecfa7528941c8aa94adf59d276f1ccb2beb21c2f864b81b7d772775592f9f",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260803_2#0",
+      "name": "「令和8年熊本地震」に対する義援金寄付とチャリティーオーブの実施について（8/3 19時〜） #1",
+      "label": "対象期間",
+      "start": "2026-08-03T19:00:00+09:00",
+      "end": "2026-08-12T11:59:00+09:00",
+      "raw": "2026年8月3日(月)19:00〜8月12日(水)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

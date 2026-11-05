@@ -1,0 +1,27 @@
+{
+  "id": "20260409_2",
+  "url": "https://www.monster-strike.com/news/20260409_2.html",
+  "title": "新轟絶クエスト（スタバーン）が4/17より初登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-04-09",
+  "fetched_at": "2026-10-24T17:19:52+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:f06762f6e116356b534c50fb0dffa3d4a72a80b0f23f1bab77460b248fc0cdde",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260409_2#0",
+      "name": "轟絶 スタバーン降臨",
+      "label": "初出現日時",
+      "start": "2026-04-17T19:00:00+09:00",
+      "end": "2026-04-18T11:59:00+09:00",
+      "raw": "2026年4月17日(金)19:00〜4月18日(土)11:59",
+      "title_named": true,
+      "color": "#a16800"
+    }
+  ],
+  "reward_until": null
+}

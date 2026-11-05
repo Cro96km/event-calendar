@@ -1,0 +1,26 @@
+{
+  "id": "20260702_7",
+  "url": "https://www.monster-strike.com/news/20260702_7.html",
+  "title": "DREAMDAZE Ⅳ開催記念クエスト「あゆむ」が7/11より期間限定で出現！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-07-02",
+  "fetched_at": "2026-10-24T17:08:49+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:244b1fc23032022d864ea1b410171e72bd3d0f7639829814141f16580d5c2cfb",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260702_7#0",
+      "name": "DREAMDAZE Ⅳ開催記念クエスト「あゆむ」が7/11より期間限定で出現！ #1",
+      "label": "クエスト出現期間",
+      "start": "2026-07-11T10:00:00+09:00",
+      "end": "2026-07-17T11:59:00+09:00",
+      "raw": "2026年7月11日(土)10:00〜7月17日(金)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

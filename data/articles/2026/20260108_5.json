@@ -1,0 +1,26 @@
+{
+  "id": "20260108_5",
+  "url": "https://www.monster-strike.com/news/20260108_5.html",
+  "title": "マンガ「下町ハローワールド」単行本最終5巻が発売！限定グッジョブも！",
+  "category": "other",
+  "categories": [
+    "other"
+  ],
+  "published": "2026-01-08",
+  "fetched_at": "2026-10-24T17:24:29+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:5f75af82655949ac171614e84bef6e34726d2da7406265f36a1886ce397a1a4a",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260108_5#0",
+      "name": "マンガ「下町ハローワールド」単行本最終5巻が発売！限定グッジョブも！ #1",
+      "label": "引き換え可能期間",
+      "start": "2026-01-09T04:00:00+09:00",
+      "end": "2026-02-08T03:59:00+09:00",
+      "raw": "2026年1月9日(金)4:00〜2月8日(日)3:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

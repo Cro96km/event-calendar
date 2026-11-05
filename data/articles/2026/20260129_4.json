@@ -1,0 +1,27 @@
+{
+  "id": "20260129_4",
+  "url": "https://www.monster-strike.com/news/20260129_4.html",
+  "title": "新轟絶クエスト（ディジェン）が2/6より初登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-01-29",
+  "fetched_at": "2026-10-24T17:23:44+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:d815463a835236658c7d436a19c5416488790d1ed4c9a286a0c4a868fcbbde69",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260129_4#0",
+      "name": "轟絶 ディジェン降臨",
+      "label": "初出現日時",
+      "start": "2026-02-06T19:00:00+09:00",
+      "end": "2026-02-07T11:59:00+09:00",
+      "raw": "2026年2月6日(金)19:00〜2月7日(土)11:59",
+      "title_named": true,
+      "color": "#eb0043"
+    }
+  ],
+  "reward_until": null
+}

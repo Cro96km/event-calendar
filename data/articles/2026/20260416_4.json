@@ -1,0 +1,27 @@
+{
+  "id": "20260416_4",
+  "url": "https://www.monster-strike.com/news/20260416_4.html",
+  "title": "超究極・兵クエスト（ジャガーノート）が4/24より期間限定で出現！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-04-16",
+  "fetched_at": "2026-10-24T17:19:32+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:4f2c5c9709fa03a714905cac4e56e567d5e2c427795e593a9860dd3b7c6271d0",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260416_4#0",
+      "name": "超究極・兵クエスト（ジャガーノート）が4/24より期間限定で出現！ #1",
+      "label": "クエスト出現期間",
+      "start": "2026-04-24T19:00:00+09:00",
+      "end": "2026-06-24T11:59:00+09:00",
+      "raw": "2026年4月24日(金)19:00〜6月24日(水)11:59",
+      "title_named": true,
+      "color": "#a237c3"
+    }
+  ],
+  "reward_until": null
+}

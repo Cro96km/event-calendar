@@ -1,0 +1,26 @@
+{
+  "id": "20260211_5",
+  "url": "https://www.monster-strike.com/news/20260211_5.html",
+  "title": "ガチャ「モンストジェネレーション」2/12より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-02-11",
+  "fetched_at": "2026-10-24T17:23:10+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:66f31d982a74a23115cbb1035f071eb0cd9fbfc53b1ef138283af59a3d54fcc6",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260211_5#0",
+      "name": "ガチャ「モンストジェネレーション」2/12より開催！ #1",
+      "label": "ガチャ開催期間",
+      "start": "2026-02-12T00:00:00+09:00",
+      "end": "2026-02-13T11:59:00+09:00",
+      "raw": "2026年2月12日(木)0:00〜2月13日(金)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

@@ -1,0 +1,26 @@
+{
+  "id": "20260911_3",
+  "url": "https://www.monster-strike.com/news/20260911_3.html",
+  "title": "期間限定イベント「未開の幻洞」が9/14より登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-09-11",
+  "fetched_at": "2026-10-24T17:05:44+09:00",
+  "lastmod": "2026-09-11T17:21:49+09:00",
+  "content_hash": "sha256:bdab993b6caea5f36a9cb96d67edacff8ac79bd12b205d74768cf1f9b66a151b",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260911_3#0",
+      "name": "期間限定イベント「未開の幻洞」が9/14より登場！ #1",
+      "label": "出現期間",
+      "start": "2026-09-14T12:00:00+09:00",
+      "end": "2026-09-29T11:59:00+09:00",
+      "raw": "2026年9月14日(月)12:00〜9月29日(火)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

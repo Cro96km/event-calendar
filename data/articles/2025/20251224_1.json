@@ -1,0 +1,26 @@
+{
+  "id": "20251224_1",
+  "url": "https://www.monster-strike.com/news/20251224_1.html",
+  "title": "「ラファエル」の真獣神化が本日（12/24）12時に解禁！クリスマス仕様の真獣神化も！",
+  "category": "update",
+  "categories": [
+    "update"
+  ],
+  "published": "2025-12-24",
+  "fetched_at": "2026-10-24T17:25:20+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:2c6cb845ce9e072baa42f3d58f864842ca9f118003b172447e272cb441f3b5b6",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20251224_1#0",
+      "name": "SNS投稿ミッション開催",
+      "label": "ミッション挑戦可能期間",
+      "start": "2025-12-24T12:00:00+09:00",
+      "end": "2025-12-26T03:59:00+09:00",
+      "raw": "2025年12月24日(水)12:00〜12月26日(金)3:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": "2025-12-28T03:59:00+09:00"
+}

@@ -1,0 +1,26 @@
+{
+  "id": "20260319_1",
+  "url": "https://www.monster-strike.com/news/20260319_1.html",
+  "title": "ガチャ「RED STARS」3/20より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-03-19",
+  "fetched_at": "2026-10-24T17:20:49+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:f820e6a3bb147b8175f153f56a4efe767119e185d51cd2ee5ff56f3066fc83b8",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260319_1#0",
+      "name": "ガチャ「RED STARS」3/20より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-03-20T12:00:00+09:00",
+      "end": "2026-03-22T11:59:00+09:00",
+      "raw": "2026年3月20日(金)12:00〜3月22日(日)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

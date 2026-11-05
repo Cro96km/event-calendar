@@ -1,0 +1,26 @@
+{
+  "id": "20260723_5",
+  "url": "https://www.monster-strike.com/news/20260723_5.html",
+  "title": "2つの超究極・傑クエストが期間限定で再登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-07-23",
+  "fetched_at": "2026-10-24T17:07:58+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:78fc510501656dabf2b4447ad566377b984524aba02209fcc9cffc7b19452f4c",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260723_5#0",
+      "name": "2つの超究極・傑クエストが期間限定で再登場！ #1",
+      "label": "バトルカード購入可能期間",
+      "start": "2026-07-24T12:00:00+09:00",
+      "end": "2026-08-17T03:59:00+09:00",
+      "raw": "2026年7月24日(金)12:00〜8月17日(月)3:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

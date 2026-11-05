@@ -1,0 +1,26 @@
+{
+  "id": "20260712_7",
+  "url": "https://www.monster-strike.com/news/20260712_7.html",
+  "title": "ガチャ「モンコレDX 〜アルセーヌ編〜」7/13 0時より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-07-12",
+  "fetched_at": "2026-10-24T17:08:23+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:099812a3f4ff64f63eb6aa3dec70cf4ce768c54629e11e5897081f6a8ae72e78",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260712_7#0",
+      "name": "ガチャ「モンコレDX 〜アルセーヌ編〜」7/13 0時より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-07-13T00:00:00+09:00",
+      "end": "2026-07-19T11:59:00+09:00",
+      "raw": "2026年7月13日(月)0:00〜7月19日(日)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

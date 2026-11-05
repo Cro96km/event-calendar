@@ -1,0 +1,26 @@
+{
+  "id": "20261029_2",
+  "url": "https://www.monster-strike.com/news/20261029_2.html",
+  "title": "お得なパックが再度購入可能！「もう1回！期間限定！13周年記念パック」が11/1 より再登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-10-29",
+  "fetched_at": "2026-10-30T17:36:48+09:00",
+  "lastmod": "2026-10-29T17:26:31+09:00",
+  "content_hash": "sha256:f023dc6fd7a0908243d32da60c3b39a685ddf0a8e436d09b93f03270a5273dcb",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20261029_2#0",
+      "name": "お得なパックが再度購入可能！「もう1回！期間限定！13周年記念パック」が11/1 より再登場！ #1",
+      "label": "購入可能期間",
+      "start": "2026-11-01T00:00:00+09:00",
+      "end": "2026-11-20T23:59:00+09:00",
+      "raw": "2026年11月1日(日)0:00〜11月20日(金)23:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

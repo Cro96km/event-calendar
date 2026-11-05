@@ -1,0 +1,26 @@
+{
+  "id": "20260331_1",
+  "url": "https://www.monster-strike.com/news/20260331_1.html",
+  "title": "【12.5th Half Anniversary】モンパスお試しキャンペーンが4/2より開催！",
+  "category": "campaign",
+  "categories": [
+    "campaign"
+  ],
+  "published": "2026-03-31",
+  "fetched_at": "2026-10-24T17:20:10+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:00140b4e702d613772cbb88b00c246bc5ee99d46054f4f6823a2c47ec36373bd",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260331_1#0",
+      "name": "【12.5th Half Anniversary】モンパスお試しキャンペーンが4/2より開催！ #1",
+      "label": "キャンペーン開催期間",
+      "start": "2026-04-02T04:00:00+09:00",
+      "end": "2026-04-09T03:59:00+09:00",
+      "raw": "2026年4月2日(木)4:00〜4月9日(木)3:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

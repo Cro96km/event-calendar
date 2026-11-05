@@ -1,0 +1,26 @@
+{
+  "id": "20260505_2",
+  "url": "https://www.monster-strike.com/news/20260505_2.html",
+  "title": "ガチャ「復刻♪モンストバレンタイン」5/6より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-05-05",
+  "fetched_at": "2026-10-24T17:18:45+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:634f35a7ac434b90b4016dac799171108226dac58022fb5ba0012b282bf70e92",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260505_2#0",
+      "name": "ガチャ「復刻♪モンストバレンタイン」5/6より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-05-06T12:00:00+09:00",
+      "end": "2026-05-08T11:59:00+09:00",
+      "raw": "2026年5月6日(水)12:00〜5月8日(金)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

@@ -1,0 +1,25 @@
+{
+  "id": "20260219_2",
+  "url": "https://www.monster-strike.com/news/20260219_2.html",
+  "title": "新爆絶クエスト（カード）が2/27より初登場！「トレジャー9」も開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-02-19",
+  "fetched_at": "2026-10-24T17:22:59+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:a50f9ff4e9340d13aa7049c45972456f3d0c1fb0a6338599970d2ca20c644b0f",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260219_2#0",
+      "name": "トレジャー9開催!",
+      "label": "「トレジャー9」挑戦可能期間",
+      "start": "2026-02-27T19:00:00+09:00",
+      "end": "2026-05-01T03:59:00+09:00",
+      "raw": "2026年2月27日(金)19:00〜5月1日(金)3:59"
+    }
+  ],
+  "reward_until": null
+}

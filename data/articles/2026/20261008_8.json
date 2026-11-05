@@ -1,0 +1,26 @@
+{
+  "id": "20261008_8",
+  "url": "https://www.monster-strike.com/news/20261008_8.html",
+  "title": "「期間限定！13周年記念パック」が10/10より登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-10-08",
+  "fetched_at": "2026-10-24T14:53:10+09:00",
+  "lastmod": "2026-10-08T17:36:31+09:00",
+  "content_hash": "sha256:08aacd10a0bfce6a5bb382e1876be9c3ccd3a711cee1f329df1078639c818a79",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20261008_8#0",
+      "name": "「期間限定！13周年記念パック」が10/10より登場！ #1",
+      "label": "購入可能期間",
+      "start": "2026-10-10T00:00:00+09:00",
+      "end": "2026-10-31T23:59:00+09:00",
+      "raw": "2026年10月10日(土)0:00〜10月31日(土)23:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

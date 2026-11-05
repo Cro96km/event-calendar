@@ -1,0 +1,26 @@
+{
+  "id": "20260731_1",
+  "url": "https://www.monster-strike.com/news/20260731_1.html",
+  "title": "【2026年8月のガチャギフト】★6キャラ1体確定10連ガチャがフレンドに贈れる！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-07-31",
+  "fetched_at": "2026-10-24T17:07:36+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:09215251233314498655cc3e002b05b25fdf794ea5e9ed5710165eedde8c8621",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260731_1#0",
+      "name": "「2026年8月のガチャギフト」詳細",
+      "label": "販売期間",
+      "start": "2026-08-01T04:00:00+09:00",
+      "end": "2026-09-01T03:59:00+09:00",
+      "raw": "2026年8月1日(土)4:00〜9月1日(火)3:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

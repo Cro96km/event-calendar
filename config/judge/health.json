@@ -1,0 +1,7 @@
+{
+  "_doc": "更新PRを自動マージしてよいかの健全性チェックの閾値(spec §運用)。満たさなければ『要確認』で待機する。maxChangedArticles と maxChangedRatio は『既存の記事の書き換え』の上限(どちらか大きい方まで許す。公式サイトの構造が変わってパーサが崩れると既存の記事が大量に変わる)。minNewArticles 以上の新規があるとき、期間が取れない新規の割合が maxUnparsedRatio を超えたら要確認。運用しながら調整する。",
+  "maxChangedArticles": 10,
+  "maxChangedRatio": 0.2,
+  "minNewArticles": 4,
+  "maxUnparsedRatio": 0.5
+}

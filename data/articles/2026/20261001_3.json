@@ -1,0 +1,26 @@
+{
+  "id": "20261001_3",
+  "url": "https://www.monster-strike.com/news/20261001_3.html",
+  "title": "【13周年感謝キャンペーン】モンパスお試しキャンペーンが10/3より開催！",
+  "category": "campaign",
+  "categories": [
+    "campaign"
+  ],
+  "published": "2026-10-01",
+  "fetched_at": "2026-10-24T14:53:40+09:00",
+  "lastmod": "2026-10-19T10:20:58+09:00",
+  "content_hash": "sha256:4c5c9a15bc024bb352c8dc9d8bdb17ef383f988f3e68883b6671f273abe08ee0",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20261001_3#0",
+      "name": "【13周年感謝キャンペーン】モンパスお試しキャンペーンが10/3より開催！ #1",
+      "label": "キャンペーン開催期間",
+      "start": "2026-10-03T04:00:00+09:00",
+      "end": "2026-10-11T03:59:00+09:00",
+      "raw": "2026年10月3日(土)4:00〜10月11日(日)3:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

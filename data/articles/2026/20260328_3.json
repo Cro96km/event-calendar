@@ -1,0 +1,26 @@
+{
+  "id": "20260328_3",
+  "url": "https://www.monster-strike.com/news/20260328_3.html",
+  "title": "【12.5th Half Anniversary】新規ユーザー限定！登録から7日間は10連ガチャが50％OFF！",
+  "category": "campaign",
+  "categories": [
+    "campaign"
+  ],
+  "published": "2026-03-28",
+  "fetched_at": "2026-10-24T17:20:22+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:9b54a27bb61b4a464c96e23c78b9a62ef92de093a473b87df7699d3267982ccd",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260328_3#0",
+      "name": "【12.5th Half Anniversary】新規ユーザー限定！登録から7日間は10連ガチャが50％OFF！ #1",
+      "label": "開催期間",
+      "start": "2026-03-29T00:00:00+09:00",
+      "end": "2026-04-30T03:59:00+09:00",
+      "raw": "2026年3月29日(日)0:00〜4月30日(木)3:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

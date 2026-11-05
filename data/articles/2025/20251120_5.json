@@ -1,0 +1,26 @@
+{
+  "id": "20251120_5",
+  "url": "https://www.monster-strike.com/news/20251120_5.html",
+  "title": "2つの「冬のモンスト10選！限定α確定10連パック」が11/21より期間限定で登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2025-11-20",
+  "fetched_at": "2026-10-24T17:26:40+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:36a33d97cb28e314e4f06685736e470e6fa0e1fca09e55112764a0fc270d0bb4",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20251120_5#0",
+      "name": "2つの「冬のモンスト10選！限定α確定10連パック」が11/21より期間限定で登場！ #1",
+      "label": "販売期間",
+      "start": "2025-11-21T12:00:00+09:00",
+      "end": "2025-12-04T11:59:00+09:00",
+      "raw": "2025年11月21日(金)12:00〜12月4日(木)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

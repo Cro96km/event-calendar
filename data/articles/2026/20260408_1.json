@@ -1,0 +1,26 @@
+{
+  "id": "20260408_1",
+  "url": "https://www.monster-strike.com/news/20260408_1.html",
+  "title": "ガチャ「STARLIGHT MIRAGE」4/9より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-04-08",
+  "fetched_at": "2026-10-24T17:19:56+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:d598ae75f904e70ff1b5a7c81e995f7f18c52acf4070252b10000dba04bbb5df",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260408_1#0",
+      "name": "ガチャ「STARLIGHT MIRAGE」4/9より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-04-09T12:00:00+09:00",
+      "end": "2026-04-11T11:59:00+09:00",
+      "raw": "2026年4月9日(木)12:00〜4月11日(土)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

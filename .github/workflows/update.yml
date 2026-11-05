@@ -1,0 +1,133 @@
+# 更新: 収集 → 差分レポート → ブランチ+PR →(健全なら自動マージ → 反映)。毎週金曜 00:00 JST(木曜 15:00 UTC)+手動実行。
+# 手動実行(Actions → update → Run workflow)の入力: collect=false なら収集せず、設定の変更だけ反映して判定とレポートを作り直す。
+# 健全でなければ PR にラベル『要確認』と理由を付けて待機(公開サイトは前回のまま)。要対応(要判断など)があれば Issue を作る。
+# 必要なリポジトリ設定: Settings → Actions → General →『Allow GitHub Actions to create and approve pull requests』。手順は docs/operations.md §13。
+name: update
+
+on:
+  workflow_dispatch:
+    inputs:
+      collect:
+        description: '公式ニュースを収集する(false: 設定の反映だけ)'
+        type: boolean
+        default: true
+      pages:
+        description: '巡回するページ数(収集するとき。既定2)'
+        type: string
+        default: '2'
+      since:
+        description: 'この公開日(YYYY-MM-DD)より古くなるまで巡回(任意。初回・過去分用。負荷が大きい)'
+        type: string
+        default: ''
+  schedule:
+    - cron: '0 15 * * 4'
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+  actions: write
+
+concurrency:
+  group: update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - run: npm ci
+
+      # 収集→判定→差分レポート。礼節(間隔・直列・429で中断)は収集本体が守る。中断してもレポートとサマリは作られ、健全性チェックが『要確認』にする。
+      - name: Update
+        env:
+          IN_COLLECT: ${{ github.event.inputs.collect }}
+          IN_PAGES: ${{ github.event.inputs.pages }}
+          IN_SINCE: ${{ github.event.inputs.since }}
+        run: |
+          args=()
+          if [ "$IN_COLLECT" = "false" ]; then args+=(--no-collect); else
+            args+=(--pages "${IN_PAGES:-2}")
+            if [ -n "$IN_SINCE" ]; then args+=(--since "$IN_SINCE"); fi
+          fi
+          npm run update -- "${args[@]}"
+
+      # CI相当(lint・テスト・公開データ生成)と点検。失敗しても止めず、結果で自動マージか要確認かを決める。
+      - name: Verify
+        id: verify
+        run: |
+          set +e
+          npm run lint && npm test && npm run build:public
+          echo "ci=$?" >> "$GITHUB_OUTPUT"
+          npm run check -- --summary update-report.json
+          echo "check=$?" >> "$GITHUB_OUTPUT"
+
+      - name: Branch, PR and merge
+        id: pr
+        env:
+          CI_RESULT: ${{ steps.verify.outputs.ci }}
+          CHECK_RESULT: ${{ steps.verify.outputs.check }}
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          if [ -z "$(git status --porcelain data config)" ]; then
+            echo "変更なし: PR を作らない"
+            echo "changed=false" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          echo "changed=true" >> "$GITHUB_OUTPUT"
+          day=$(date -u +%Y-%m-%d-%H%M)
+          branch="update/$day"
+          git switch -c "$branch"
+          git add data config
+          git commit -m "data: 更新 $day"
+          git push origin "$branch"
+          gh label create "自動マージ" --color 0e8a16 --description "健全性チェックを通り自動でマージした更新" 2>/dev/null || true
+          gh label create "要確認" --color d93f0b --description "健全性チェックを通らず、人の確認が必要な更新" 2>/dev/null || true
+          healthy=false
+          if [ "$CI_RESULT" = "0" ] && [ "$CHECK_RESULT" = "0" ]; then healthy=true; fi
+          {
+            cat update-report.md
+            echo
+            echo "---"
+            if [ "$healthy" = "true" ]; then echo "健全性チェックOK(CI相当=$CI_RESULT / 点検=$CHECK_RESULT)。自動でマージします。"
+            else
+              echo "**要確認**: 自動マージしません(CI相当=$CI_RESULT / 点検=$CHECK_RESULT)。理由:"
+              jq -r '.health.reasons[]? | "- " + .' update-report.json
+              echo "- Actions のログ(Verify)で lint・テスト・ビルド・点検の結果を確認してください。"
+            fi
+          } > pr-body.md
+          url=$(gh pr create --base "${{ github.event.repository.default_branch }}" --head "$branch" --title "更新 $day" --body-file pr-body.md)
+          echo "pr_url=$url" >> "$GITHUB_OUTPUT"
+          if [ "$healthy" = "true" ]; then
+            gh pr edit "$url" --add-label "自動マージ"
+            gh pr merge "$url" --squash --delete-branch
+            # GITHUB_TOKEN によるマージは push イベントを起こさないので、反映(deploy)を明示的に起動する
+            gh workflow run deploy.yml --ref "${{ github.event.repository.default_branch }}"
+          else
+            gh pr edit "$url" --add-label "要確認"
+          fi
+
+      # 要対応(要判断・新クエスト・長いラベル・期間が取れない記事)があれば Issue を作る。要判断はチェックボックス(/apply で取り込み)。
+      - name: Open action-needed issue
+        run: |
+          if [ -f update-issue.md ]; then
+            title=$(head -n 1 update-issue.md)
+            tail -n +3 update-issue.md > issue-body.md
+            gh issue create --title "$title" --body-file issue-body.md
+          fi
+
+      # 収集や点検が例外で落ちたとき(中断ではなくプログラムの失敗)は Issue で知らせる。
+      - name: Report failure
+        if: failure()
+        run: |
+          gh issue create --title "更新の失敗 ($(date -u +%Y-%m-%d))" --body "更新のワークフローが失敗しました。ログ: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}"

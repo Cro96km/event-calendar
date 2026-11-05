@@ -1,0 +1,26 @@
+{
+  "id": "20260413_1",
+  "url": "https://www.monster-strike.com/news/20260413_1.html",
+  "title": "「未開の砂宮」が4/14より期間限定で登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-04-13",
+  "fetched_at": "2026-10-24T17:19:42+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:90a22bb3747467672cc77cc797b2bbe287bd049475ed64ae6faf3ac75fb3e76e",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260413_1#0",
+      "name": "「未開の砂宮」が4/14より期間限定で登場！ #1",
+      "label": "出現期間",
+      "start": "2026-04-14T12:00:00+09:00",
+      "end": "2026-04-29T11:59:00+09:00",
+      "raw": "2026年4月14日(火)12:00〜4月29日(水)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

@@ -1,0 +1,26 @@
+{
+  "id": "20260825_2",
+  "url": "https://www.monster-strike.com/news/20260825_2.html",
+  "title": "「絶級トーナメント」が8/26 12時より期間限定で登場！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-08-25",
+  "fetched_at": "2026-10-24T17:06:33+09:00",
+  "lastmod": "2026-08-25T17:21:11+09:00",
+  "content_hash": "sha256:4beb2b3a658a9a9b09e7e77a1c313931b3d06ca30f25d88bd113e915a70475fc",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260825_2#0",
+      "name": "「絶級トーナメント」が8/26 12時より期間限定で登場！ #1",
+      "label": "出現期間",
+      "start": "2026-08-26T12:00:00+09:00",
+      "end": "2026-09-06T11:59:00+09:00",
+      "raw": "2026年8月26日(水)12:00〜9月6日(日)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

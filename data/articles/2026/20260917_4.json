@@ -1,0 +1,26 @@
+{
+  "id": "20260917_4",
+  "url": "https://www.monster-strike.com/news/20260917_4.html",
+  "title": "「ホップ！ステップ！限定！ガチャ」が9/19より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-09-17",
+  "fetched_at": "2026-10-24T17:05:34+09:00",
+  "lastmod": "2026-09-25T12:25:09+09:00",
+  "content_hash": "sha256:0ddbb45ef41519709d0f7ae53d11708fe39ea91ef205e3c35ffa02c03c99c357",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260917_4#0",
+      "name": "「ホップ！ステップ！限定！ガチャ」が9/19より開催！ #1",
+      "label": "ガチャ開催期間",
+      "start": "2026-09-19T12:00:00+09:00",
+      "end": "2026-09-25T11:59:00+09:00",
+      "raw": "2026年9月19日(土)12:00〜 9月25日(金)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

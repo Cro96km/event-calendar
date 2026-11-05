@@ -1,0 +1,26 @@
+{
+  "id": "20260824_1",
+  "url": "https://www.monster-strike.com/news/20260824_1.html",
+  "title": "ガチャ「RED STARS」8/25より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-08-24",
+  "fetched_at": "2026-10-24T17:06:37+09:00",
+  "lastmod": "2026-08-24T16:57:17+09:00",
+  "content_hash": "sha256:973ff8917585bf780be7467e117c848d189180dbd35eb6f24a2f19a4c2976132",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260824_1#0",
+      "name": "ガチャ「RED STARS」8/25より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-08-25T12:00:00+09:00",
+      "end": "2026-08-27T11:59:00+09:00",
+      "raw": "2026年8月25日(火)12:00〜8月27日(木)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

@@ -1,0 +1,35 @@
+{
+  "id": "20260326_1",
+  "url": "https://www.monster-strike.com/news/20260326_1.html",
+  "title": "2026年前期「ストライカーレコード」開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-03-26",
+  "fetched_at": "2026-10-24T17:20:33+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:a9aef832cf165cea7116357124388c6ac5deacf29621ce6b1fef6b3c6a6cfb2d",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260326_1#0",
+      "name": "2026年前期「ストライカーレコード」開催！ #1",
+      "label": "開催期間",
+      "start": "2026-04-02T04:00:00+09:00",
+      "end": "2026-10-01T03:59:00+09:00",
+      "raw": "2026年4月2日(木)4:00〜10月1日(木)3:59",
+      "title_named": true
+    },
+    {
+      "id": "20260326_1#1",
+      "name": "平均ランク報酬",
+      "label": "報酬獲得可能期間",
+      "start": "2026-04-02T04:00:00+09:00",
+      "end": "2026-10-02T03:59:00+09:00",
+      "raw": "2026年4月2日(木)4:00〜10月2日(金)3:59",
+      "anchor": "2"
+    }
+  ],
+  "reward_until": null
+}

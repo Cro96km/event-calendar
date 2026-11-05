@@ -1,0 +1,26 @@
+{
+  "id": "20260831_2",
+  "url": "https://www.monster-strike.com/news/20260831_2.html",
+  "title": "モンストWebショップで三井住友カードを利用するとオーブがもらえるキャンペーンを実施！",
+  "category": "web-shop",
+  "categories": [
+    "web-shop"
+  ],
+  "published": "2026-08-31",
+  "fetched_at": "2026-10-24T17:06:19+09:00",
+  "lastmod": "2026-08-31T18:05:22+09:00",
+  "content_hash": "sha256:ac89939f867af20f988a7cc9d01332842354f063cfa18fecc60ac0fd2eda2eec",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260831_2#0",
+      "name": "モンストWebショップで三井住友カードを利用するとオーブがもらえるキャンペーンを実施！ #1",
+      "label": "開催期間",
+      "start": "2026-09-01T09:00:00+09:00",
+      "end": "2026-10-31T23:59:00+09:00",
+      "raw": "2026年9月1日(火)9:00〜10月31日(土)23:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

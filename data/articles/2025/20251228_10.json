@@ -1,0 +1,26 @@
+{
+  "id": "20251228_10",
+  "url": "https://www.monster-strike.com/news/20251228_10.html",
+  "title": "1/1より「新春オーブ福袋」販売！お正月仕様の「ナイトメア」「マギア」の専用フレームに変化する称号付き！",
+  "category": "web-shop",
+  "categories": [
+    "web-shop"
+  ],
+  "published": "2025-12-28",
+  "fetched_at": "2026-10-24T17:24:49+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:dc0366cea340210bc63a3fb6d1bb96353233bf48aac10f921fa717ff938fec0e",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20251228_10#0",
+      "name": "1/1より「新春オーブ福袋」販売！お正月仕様の「ナイトメア」「マギア」の専用フレームに変化する称号付き！ #1",
+      "label": "販売期間",
+      "start": "2026-01-01T12:00:00+09:00",
+      "end": "2026-01-07T23:59:00+09:00",
+      "raw": "2026年1月1日(木)12:00〜1月7日(水) 23:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}

@@ -1,0 +1,26 @@
+{
+  "id": "20260507_3",
+  "url": "https://www.monster-strike.com/news/20260507_3.html",
+  "title": "【超ストライカー応援WEEK！ GWキャンペーン】「3回引ける！限限限定アップガチャ」が5/10より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-05-07",
+  "fetched_at": "2026-10-24T17:18:39+09:00",
+  "lastmod": null,
+  "content_hash": "sha256:cb14c937c2d4e6f5c27ef3cf57ef5056c50bce8fad6e7770adb4c21b0a01f1a0",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20260507_3#0",
+      "name": "【超ストライカー応援WEEK！ GWキャンペーン】「3回引ける！限限限定アップガチャ」が5/10より開催！ #1",
+      "label": "ガチャ開催期間",
+      "start": "2026-05-10T12:00:00+09:00",
+      "end": "2026-05-15T11:59:00+09:00",
+      "raw": "2026年5月10日(日)12:00〜5月15日(金)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}
