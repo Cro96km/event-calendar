@@ -85,13 +85,13 @@ describe('撮影モードの描画', () => {
       expect(root.querySelectorAll('.g-maint')).toHaveLength(1);
     }
   });
-  it('概要は3セクションとも出し、操作・詳細・注意書きは出さず、非公式表記と収集時刻を隅に出す', () => {
+  it('概要は3セクションとも出し、操作・詳細・注意書きは出さず、フッター(注記)も出さない', () => {
     const root = draw('summary');
     expect([...root.querySelectorAll<HTMLElement>('.g-section')].map((x) => x.dataset.section)).toEqual(['quest', 'campaign', 'gacha']);
     expect(root.querySelector('.view-nav')).toBeNull();
     expect(root.querySelector('[data-testid="detail"]')).toBeNull();
     expect(root.querySelector('.site-footer')).toBeNull();
-    expect(root.querySelector('.shot-note')?.textContent).toContain('非公式・非営利');
-    expect(root.querySelector('.shot-note')?.textContent).toContain('11/05(木) 08:00');
+    expect(root.querySelector('.shot-note')).toBeNull();
+    expect(root.textContent).not.toContain('非公式');
   });
 });

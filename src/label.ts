@@ -5,9 +5,6 @@ import { CAMPAIGN_ORDER } from './sections';
 /** 定例キーワード(config/display/recurring.json)。 */
 export const RECURRING_KEYWORDS: readonly string[] = recurring.keywords;
 
-/** ラベルの最大文字数。超えたら末尾を … で切る(全文はバーのツールチップ)。 */
-const MAX_LABEL = 24;
-
 /** 定例キーワードに一致すればそのキーワード。 */
 export function recurringKeyword(name: string, keywords: readonly string[] = RECURRING_KEYWORDS): string | null {
   return keywords.find((k) => name.includes(k)) ?? null;
@@ -27,13 +24,12 @@ function trimBoilerplate(name: string): string {
   return s || base;
 }
 
-/** ガント行・詳細に出す短いラベル。定例 > 定型句除去 > 長さ上限。 */
+/** ガント行・詳細に出す短いラベル。定例 > 定型句除去(長さでは省略しない)。 */
 export function shortLabel(name: string, keywords: readonly string[] = RECURRING_KEYWORDS): string {
   const k = recurringKeyword(name, keywords);
   if (k) return k;
   const s = trimBoilerplate(name);
-  const cps = [...s];
-  return cps.length > MAX_LABEL ? `${cps.slice(0, MAX_LABEL - 1).join('')}…` : s;
+  return s;
 }
 
 /** 詳細パネルの項目名。定例 > 定型句除去。長さで省略しない(ユーザ指示)。括弧・句読点は付けない。 */
@@ -55,7 +51,6 @@ export function superUltimateLabel(name: string): string | null {
 }
 
 /** 2行目(説明)の最大文字数。 */
-const MAX_DESC = 40;
 
 export interface LabelLines {
   /** 1行目: 対象 */
@@ -64,7 +59,6 @@ export interface LabelLines {
   desc: string | null;
 }
 
-const cut = (s: string, max: number): string => ([...s].length > max ? `${[...s].slice(0, max - 1).join('')}…` : s);
 const stripParticle = (s: string): string => s.replace(/^[のでがをにはも]/, '').trim();
 
 /**
@@ -85,7 +79,7 @@ function labelLinesRaw(
   const s = trimBoilerplate(name);
   const split = (t: string, rest: string): LabelLines | null => {
     const d = stripParticle(rest);
-    return t && d ? { title: cut(t, MAX_LABEL), desc: cut(d, MAX_DESC) } : null;
+    return t && d ? { title: t, desc: d } : null;
   };
   const br = s.match(/^(?:「([^」]+)」|『([^』]+)』|≪([^≫]+)≫|〈([^〉]+)〉)(.*)$/);
   if (br) {
@@ -98,8 +92,8 @@ function labelLinesRaw(
     if (r) return r;
   }
   const pm = s.match(/^(.+?)([(（][^()（）]+[)）])$/);
-  if (pm) return { title: cut((pm[1] as string).trim(), MAX_LABEL), desc: cut(pm[2] as string, MAX_DESC) };
-  return { title: cut(s, MAX_LABEL), desc: null };
+  if (pm) return { title: (pm[1] as string).trim(), desc: pm[2] as string };
+  return { title: s, desc: null };
 }
 
 /** 表示ラベルから括弧(中身は残す)と句読点を除く(ユーザ指示)。 */

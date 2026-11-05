@@ -224,6 +224,6 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 1. `npm run update`(または `npm run collect`)→ `npm run build:public` で `dist/` と `dist/data` を作る。
 2. `npm run discord:images` → `out/discord/` に4枚(`summary.png` 概要・`quest.png`・`campaign.png`・`gacha.png`)。`-- --date YYYY-MM-DD` で基準日を固定、`-- --only quest` で1枚だけ。`out/` は git に含めない。
 - 初回は `npx playwright install chromium`。日本語フォント(Linux は `fonts-noto-cjk` など)が必要。ブラウザのタイムゾーンは Asia/Tokyo、ライト固定。
-- メンテナンスの帯は4枚とも出る。隅に「非公式・非営利」と公式サイトの収集時刻を入れる。公式の画像・ロゴは使わない。公式サイト・公開サイトにはアクセスしない(`dist/` をローカルで配信して撮る)。
+- メンテナンスの帯は4枚とも出る。画像にはフッター(注記)を入れない。公式の画像・ロゴは使わない。公式サイト・公開サイトにはアクセスしない(`dist/` をローカルで配信して撮る)。
 - 画面でも `?shot=summary|quest|campaign|gacha`(と `&date=YYYY-MM-DD`)を付けると撮影モードで見られる(`npm run dev` / `npm run preview`)。
 - **概要の絞り込みは `config/display/discord.json` の `summary` だけを直す**(コード変更は要らない)。`sections`(出すセクション)・`hide_groups`(外す小見出し)・`hide_keywords`(項目名にこの語を含む行を外す)・`only_keywords`(空でなければこの語を含む行だけ残す)・`max_rows`(セクションごとの最大行数)。初期値は絞らない。クエスト・キャンペーン・ガチャの画像は絞らない。書式は `npm run check` が点検する。

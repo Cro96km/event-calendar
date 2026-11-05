@@ -554,9 +554,7 @@ export function render(root: HTMLElement, state: AppState): void {
     const frame = el('div', 'shot');
     frame.dataset.testid = 'shot';
     frame.dataset.shot = state.shot;
-    const note = el('p', 'shot-note');
-    note.append(el('span', undefined, '非公式・非営利'), el('span', undefined, `公式サイト収集: ${state.collectedAt ? `${formatJst(state.collectedAt)} (JST)` : '不明'}`));
-    frame.append(grid, note);
+    frame.append(grid);
     root.append(frame);
     return;
   }
