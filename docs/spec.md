@@ -162,7 +162,7 @@
 
 ### 4.12 撮影モード(Discord 用の画像。`src/shot.ts` / `src/ui.ts` / `scripts/discord-images.ts` / `config/display/discord.json`)
 - URL パラメータ `?shot=summary|character|quest|campaign|gacha` で撮影モード(`&date=YYYY-MM-DD` で基準日を固定。無ければ今日〈ゲーム日〉)。常に**週表示**(基準日から7日)。操作ボタン・詳細パネル・注意書き・ドラッグ・畳みは無く、日付ヘッダの行から始まり、フッター(「非公式・非営利」・収集時刻などの注記)は出さない。`.shot` が撮影の対象(ライト固定の幅760px)。
-- `character` / `quest` / `campaign` / `gacha` はそのセクションだけ(絞り込みなし)。`summary` は `config/display/discord.json` の `summary`(sections と、セクションidごとの hide_groups・hide_keywords・only_keywords・start_day_only・max_rows)で行を絞る。判定順: 小見出しで外す→語で外す→only で残す→開催日だけ(start_day_only)→行数で切る。**開催日だけ**=その週に始まるバーを開始日の列だけ(開始時刻〜その日の終わり)に縮め(矢印なし)、週より前に始まったものは出さない。行が無くなったセクションは見出しも出さない。現在の設定は operations §18。
+- `character` / `quest` / `campaign` / `gacha` はそのセクションだけ(絞り込みなし)。`summary` は `config/display/discord.json` の `summary`(sections と、セクションidごとの hide_groups・hide_keywords・only_keywords・start_day_only・max_rows)で行を絞る。判定順: 小見出しで外す→語で外す→only で残す→開催日だけ(start_day_only)→行数で切る。**開催日だけ**=その週に始まるバーを開始日の列1日分(罫線から罫線まで。開始時刻は問わない)に縮め(矢印なし)、週より前に始まったものは出さない。行が無くなったセクションは見出しも出さない。現在の設定は operations §18。
 - メンテナンスの帯(§4.3.6)は5枚とも出る。
 - **4:00 の位置**: 4:00(ゲーム日の境目。03:59含む)は列の1/6の位置だが、端の矢印が入らないため、撮影モードだけ**開始・終了とも**列の0.2の位置へずらす(`shotStartFrac`・`shotEndFrac`。同じ線の上に置き、バーの端の余白(2px)も付けない)。端の矢印は線に寄せる(`.shot .bar-ev.clip-l/clip-r`)。0:00開始・24:00(23:59含む)終了のバーは余白なしで罫線に接する。いずれも通常表示は変えない。
 - `npm run discord:images` が `dist/` をローカルで配信し、Playwright(Chromium・Asia/Tokyo・2倍解像度)で5枚の PNG を `out/discord/` に出す(ファイル名は画像に写る期間 `<開始日>_<終了日>_<kind>.png`)。送信は含まない。設定の点検は `npm run check`(`shotConfigProblems`)。

@@ -119,9 +119,9 @@ export function filterSummaryRows(sectionId: string, rows: BarSpan[][], groupOf:
   return max === undefined ? out : out.slice(0, max);
 }
 
-/** 開催日だけの表示: その表示期間に始まるバーを、開始日の列だけ(開始時刻〜その日の終わり)にする。表示期間より前に始まったものは出さない。 */
+/** 開催日だけの表示: その表示期間に始まるバーを、開始日の列1日分(罫線から罫線まで。開始時刻は問わない)にする。表示期間より前に始まったものは出さない。 */
 export function startDayBars(bars: BarSpan[]): BarSpan[] {
-  return bars.filter((b) => !b.clippedLeft).map((b) => ({ ...b, to: b.from, endFrac: 1, clippedRight: false, openEnded: false }));
+  return bars.filter((b) => !b.clippedLeft).map((b) => ({ ...b, to: b.from, startFrac: 0, endFrac: 1, clippedRight: false, openEnded: false }));
 }
 
 const FOUR_AM = 4 / 24;

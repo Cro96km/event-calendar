@@ -142,11 +142,11 @@ describe('開催日だけの表示(start_day_only)', () => {
   const only = cfg({ start_day_only: { quest: ['期間限定クエスト'] } });
   const f = (events: ExportEvent[]) => filterSummaryRows('quest', rows(events), questGroup, only);
 
-  it('その週に始まるものは、開始日の列だけ(開始時刻〜その日の終わり)に縮め、矢印も付けない', () => {
+  it('その週に始まるものは、開始日の列1日分(罫線から罫線まで。開始時刻は問わない)に縮め、矢印も付けない', () => {
     const e = ev('t#0', 'event', '期間限定クエスト テスト', '2026-11-06T12:00:00+09:00', '2026-11-12T03:59:00+09:00', { group: '期間限定クエスト' });
     const b = f([e])[0]![0]!;
     expect([b.from, b.to, b.endFrac, b.clippedRight, b.openEnded]).toEqual([1, 1, 1, false, false]);
-    expect(b.startFrac).toBeCloseTo(0.5);
+    expect(b.startFrac).toBe(0);
   });
   it('その週より前に始まったものは出さない。対象外の小見出しはそのまま', () => {
     const old = ev('t#1', 'event', '期間限定クエスト 古い', '2026-11-01T12:00:00+09:00', '2026-11-12T03:59:00+09:00', { group: '期間限定クエスト' });
