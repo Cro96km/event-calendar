@@ -1,5 +1,5 @@
 // npm run export-public -- --src public/data --out dist/data
-// 公開用export(直近12ヶ月・表示対象のみ)を --out に書く。--out は作り直す。selection.json は出力しない(絞り込み済みのため)。
+// 公開用export(表示範囲=過去・未来12か月・表示対象のみ)を --out に書く。--out は作り直す。selection.json は出力しない(絞り込み済みのため)。
 import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import type { IndexFile, MonthFile } from '../src/data/export';
@@ -7,7 +7,7 @@ import { buildPublic } from '../src/data/public-export';
 import { showHelpIfRequested } from './_help';
 
 showHelpIfRequested(`npm run build:public  (内部: tsx scripts/export-public.ts --src public/data --out dist/data)
-  目的: 公開用ビルド。型チェック+ビルドのあと、公開用のデータ(直近12ヶ月・表示対象のみ)を dist/data に作る。
+  目的: 公開用ビルド。型チェック+ビルドのあと、公開用のデータ(表示範囲=過去・未来12か月・表示対象のみ)を dist/data に作る。
   使う場面: 公開サイトのビルド(ワークフローが実行)、公開前のローカル確認。事前に npm run update が必要(public/data と selection.json を作る)。
   オプション: --src DIR(元の表示用データ。既定の指定は上記)、--out DIR(出力先。作り直す)
   入力: public/data(index.json・events・selection.json)。selection.json が無いと未判断の項目まで公開してしまうためエラーにする。
