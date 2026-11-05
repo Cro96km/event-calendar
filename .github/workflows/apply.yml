@@ -70,7 +70,7 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           branch="judge/issue-$ISSUE_NUMBER-$(date -u +%Y%m%d%H%M)"
           git switch -c "$branch"
-          git add config/judge/decisions.json config/judge/selection
+          git add config/judge/decisions.json config/judge/selection config/judge/calendar
           git commit -m "config: apply judgments (#$ISSUE_NUMBER)"
           git push origin "$branch"
           gh label create "要確認" --color d93f0b 2>/dev/null || true
