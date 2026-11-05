@@ -87,10 +87,17 @@ export function matchGroup(section: string, name: string): string | null {
 /** 年代別の行 `ガチャ「<定例ガチャ名> 2013＆2014」`(年代の表由来)。 */
 const ERA_GACHA = /^ガチャ「(.+?) (?:(\d{4})(?:[＆&]\d{4})?|Vol\.(\d+))」$/;
 
-/** 定例ガチャの語の順位(GACHA_REGULAR の添字)。定例でなければ -1。名称が `ガチャ「語」` を含むか、年代別の行(`ガチャ「語 2013＆2014」`)。 */
+/** 定例ガチャの語の順位(GACHA_REGULAR の添字)。定例でなければ -1。名称が `ガチャ「語` で始まる(派生を含む)か、年代別の行(`ガチャ「語 2013＆2014」`)。 */
 export function regularGachaIndex(name: string): number {
   const era = ERA_GACHA.exec(name)?.[1];
-  return GACHA_REGULAR.findIndex((k) => name.includes(`ガチャ「${k}」`) || k === era);
+  // `ガチャ「語」`、および語で始まる派生(`ガチャ「モンコレDX 〜アルセーヌ編〜」`・`ガチャ「モンストジェネレーション2019 〜ソロモン編〜」`)も定例ガチャ
+  return GACHA_REGULAR.findIndex((k) => name.includes(`ガチャ「${k}`) || k === era);
+}
+
+/** 定例ガチャの行のうち、`ガチャ「語」` そのもの(0)か、語のあとに続く派生(`ガチャ「モンコレDX 〜ビナー編〜」`。1)か。同じ定例ガチャの中で、本体を派生の前に並べる。 */
+export function regularGachaDerived(name: string): number {
+  const k = GACHA_REGULAR[regularGachaIndex(name)];
+  return k !== undefined && name.includes(`ガチャ「${k}」`) ? 0 : 1;
 }
 
 /** 年代別の行の年代(先頭の西暦。2013＆2014 は 2013)。年代別でなければ 0。同じ定例ガチャ内の並び(年代順)に使う。 */

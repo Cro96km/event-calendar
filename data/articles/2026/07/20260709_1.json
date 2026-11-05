@@ -61,5 +61,9 @@
       "attr": "木",
       "gacha": "グリーンファンタジー"
     }
-  ]
+  ],
+  "gacha_alias": {
+    "from": "Ultra Charismatic LIVE!!",
+    "to": "グリーンファンタジー"
+  }
 }

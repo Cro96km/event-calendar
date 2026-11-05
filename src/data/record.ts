@@ -5,7 +5,7 @@ import type { ListItem } from '../scraper/list';
 import { parseArticle, type ParseStatus, type PeriodEvent } from '../period';
 import { JST_OFFSET_MS } from '../jst';
 import { GACHA_REGULAR } from '../sections';
-import { gachaPeriod, parseCharacters, type CharacterEntry } from '../characters';
+import { gachaAlias, gachaPeriod, parseCharacters, type CharacterEntry, type GachaAlias } from '../characters';
 
 export interface ArticleRecord {
   id: string;
@@ -22,6 +22,8 @@ export interface ArticleRecord {
   reward_until: string | null;
   /** 本文から取り出したキャラクター(新限定・進化の解禁)。無ければ省略(spec §4.13) */
   characters?: CharacterEntry[];
+  /** 新限定の実装にあたる特殊ガチャを定例ガチャの名前で表記するための別名(表示のとき、項目名のガチャ名を置き換える。spec §4.13) */
+  gacha_alias?: GachaAlias;
 }
 
 
@@ -44,7 +46,9 @@ export interface BuildInput {
 export function buildRecord({ item, html, fetchedAtMs, lastmod, prev }: BuildInput): ArticleRecord {
   const input = parseDetail(item.id, html);
   const parsed = input ? parseArticle(input) : null;
-  const characters = input ? parseCharacters({ title: item.title, lines: input.lines }, gachaPeriod(parsed?.events ?? []), GACHA_REGULAR) : [];
+  const gacha = gachaPeriod(parsed?.events ?? []);
+  const characters = input ? parseCharacters({ title: item.title, lines: input.lines }, gacha, GACHA_REGULAR) : [];
+  const alias = input ? gachaAlias(item.title, gacha, input.lines, GACHA_REGULAR) : null;
   const next: ArticleRecord = {
     id: item.id,
     url: item.url,
@@ -59,6 +63,7 @@ export function buildRecord({ item, html, fetchedAtMs, lastmod, prev }: BuildInp
     events: parsed?.events ?? [],
     reward_until: parsed?.reward_until ?? null,
     ...(characters.length > 0 ? { characters } : {}),
+    ...(alias ? { gacha_alias: alias } : {}),
   };
   if (prev && JSON.stringify({ ...next, fetched_at: '' }) === JSON.stringify({ ...prev, fetched_at: '' })) return prev;
   return next;

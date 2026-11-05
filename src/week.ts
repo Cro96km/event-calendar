@@ -1,6 +1,6 @@
 // 週表示の純ロジック（DOMなし）。spec §4.3。日付はゲーム日 YYYY-MM-DD(JST)。
 import { gameDayOf, isOnGameDay } from './gameday';
-import { CHARACTER_GROUPS, characterGroup, GACHA_EVENT, GACHA_GROUPS, GACHA_REGULAR_GROUP, QUEST_DEFAULT, QUEST_EVENT, QUEST_GROUPS, QUEST_RAID, QUEST_SUPER, gachaEra, gachaGroup, matchGroup, regularGachaIndex, CAMPAIGN_ALIASES, CAMPAIGN_GROUPS, ROW_RULES, MAINTENANCE_CATEGORY, EVENT_QUEST_SUFFIX, SECTIONS, sectionOf, sectionOfEvent, type Section } from './sections';
+import { CHARACTER_GROUPS, characterGroup, GACHA_EVENT, GACHA_GROUPS, GACHA_REGULAR_GROUP, QUEST_DEFAULT, QUEST_EVENT, QUEST_GROUPS, QUEST_RAID, QUEST_SUPER, gachaEra, gachaGroup, regularGachaDerived, matchGroup, regularGachaIndex, CAMPAIGN_ALIASES, CAMPAIGN_GROUPS, ROW_RULES, MAINTENANCE_CATEGORY, EVENT_QUEST_SUFFIX, SECTIONS, sectionOf, sectionOfEvent, type Section } from './sections';
 import type { ExportEvent } from './data/export';
 import { labelLines, shortLabel, superUltimateLabel, superUltimateParts } from './label';
 import { labelOverride } from './label-override';
@@ -333,7 +333,7 @@ function gachaCmp(a: ExportEvent, b: ExportEvent, works: Map<string, number>): n
     return Number(a.category === 'collab') - Number(b.category === 'collab') || start(a) - start(b) || workOf(a).localeCompare(workOf(b)) || rank(a) - rank(b);
   }
   if (ga !== GACHA_REGULAR_GROUP || ROW_RULES.gacha?.[ga]?.sort !== 'fixed') return groupSortCmp(ga, 'gacha', a, b);
-  return regularGachaIndex(a.name) - regularGachaIndex(b.name) || gachaEra(a.name) - gachaEra(b.name);
+  return regularGachaIndex(a.name) - regularGachaIndex(b.name) || gachaEra(a.name) - gachaEra(b.name) || regularGachaDerived(a.name) - regularGachaDerived(b.name);
 }
 
 /** キャンペーンの並び順(CAMPAIGN_GROUPSの上から。一致しないものは末尾=その他)。spec §4.3.3。 */

@@ -71,5 +71,9 @@
       "attr": "闇",
       "gacha": "ミッドナイト・パーティー"
     }
-  ]
+  ],
+  "gacha_alias": {
+    "from": "Jumping Dark LIVE!!",
+    "to": "ミッドナイト・パーティー"
+  }
 }
