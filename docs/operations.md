@@ -92,7 +92,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 | フォルダ | 役割 | ファイル(いつ直すか) |
 |---|---|---|
 | `config/judge/` | 表示・非表示の判断 | `rules.json`(自動判定のルール。上から最初の一致)、`decisions.json`(判断の記憶。`npm run candidates` が要判断ファイルから取り込む生成物なので、通常は手で編集しない)。`selection/YYYY/MM.md`(表示の判断の月別の表。記事の月ごと。自動生成・git管理・読む用)、`calendar/YYYY/MM.md`(カレンダーに出る項目の台帳。記事・期間・内容・項目ID。自動生成・git管理・読む用。§16)。ローカルの生成物 `needs-review.md`(要判断の一覧・編集する)はgit管理外 |
-| `config/display/` | 表記・並び・色・表示範囲 | `window.json`(カレンダーの表示範囲。過去・未来それぞれの月数。公開データ・移動の限界・判断の表・`npm run prune` が使う)、`label-overrides.json`(長いラベルを短くする)、`order.json`(**並び順の唯一の設定**。セクション・小見出し・行の並び方。spec §4.3.8)(分類は `classify`)、`quest-colors.json`(禁忌の獄の属性色と色の定義)、`recurring.json`(定例のラベル) |
+| `config/display/` | 表記・並び・色・表示範囲 | `window.json`(カレンダーの表示範囲。過去・未来それぞれの月数。公開データ・移動の限界・判断の表・`npm run prune` が使う)、`label-overrides.json`(長いラベルを短くする)、`order.json`(**並び順の唯一の設定**。セクション・小見出し・行の並び方。spec §4.3.8。記入例は `order.md`)(分類は `classify`)、`quest-colors.json`(禁忌の獄の属性色と色の定義)、`recurring.json`(定例のラベル) |
 | `config/schedule/` | ニュースに載らない日程・事実 | `manual.json`(手動の調整。公式に無い項目の追加・項目の非表示。§14)、`overrides.json`(項目IDごとの修正。期間・名前・セクション・詳細の内容。§17)、`hakai.json`(星墓のクエスト名→色と、固定の階層。§8)、`monthly-days.json`(毎月決まった日に出る項目)、`normal-quest-attributes.json`(ノーマルクエストの曜日別の対象属性) |
 
 過去記事を全体から判断し直す仕組み(`npm run review-year`・`config/review/`)は廃止した。更新ごとの差分で判断する(運用の再設計。。
@@ -202,7 +202,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 - 表示範囲(`config/display/window.json`)の月だけで、範囲外の月は消える。
 
 ## 17. 項目ごとの修正 `npm run override`
-自動収集の期間・内容の誤りは、台帳(§16)で項目IDを調べて `config/schedule/overrides.json` で直す(各キーの意味は先頭の `_doc` と spec §4.11)。公式の項目だけが対象。
+自動収集の期間・内容の誤りは、台帳(§16)で項目IDを調べて `config/schedule/overrides.json` で直す(各キーの意味は先頭の `_doc` と spec §4.11、**記入例は同じフォルダの `config/schedule/overrides.md`**)。公式の項目だけが対象。
 
 | やりたいこと | コマンド例 |
 |---|---|
