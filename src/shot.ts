@@ -130,7 +130,7 @@ const nameOnly = (label: string): string => label.replace(/（[^（）]*）$/, '
 
 /**
  * 撮影モードのキャラクターの行を詰める(行数対策。通常のカレンダーは変えない)。
- * - 新限定: 同じガチャ・同じ期間のキャラを1行にまとめる(`shot_names` に名前と属性色。期間が違えば別の行のまま)。
+ * - 新限定: 同じガチャ・同じ期間のキャラを1行にまとめる(`shot_names` に名前と属性色。期間が違えば別の行のまま)。ラベルはガチャ名、名前は期間の線の上に書く(ui.ts)。
  * - 進化: 種別(獣神化・獣神化改・真獣神化)ごとに1行にまとめる(バーは1日分なので、同じ日の名前は日付の枠に縦に並ぶ。ui.ts)。
  * rows は ganttSections の行(新限定→進化の順、各々登場順)。出力も 新限定→進化。キャラクターでない行はそのまま。
  */
@@ -147,10 +147,10 @@ export function compactCharacterRows(rows: BarSpan[][]): BarSpan[][] {
     } else evo.set(e.character.kind, [...(evo.get(e.character.kind) ?? []), ...bars]);
   }
   const merged = [...news.values()].map((group) => {
-    if (group.length === 1) return group[0] as BarSpan[];
     const first = (group[0] as BarSpan[])[0] as BarSpan;
     const parts = group.map((g) => (g[0] as BarSpan).event).map((e) => ({ name: nameOnly(e.name), ...(e.color ? { color: e.color } : {}) }));
     const gacha = first.event.character?.gacha;
+    // 1行1ガチャ(期間)。ラベルはガチャ名、期間の線の上に名前を属性色で書く(ui.ts)。ガチャ名が無ければ名前を並べる
     return [{ ...first, event: { ...first.event, name: `${parts.map((x) => x.name).join('・')}${gacha ? `（${gacha}）` : ''}`, shot_names: parts, color: undefined } }];
   });
   const evoRows = CHARACTER_KINDS.filter((k) => evo.has(k)).map((k) => (evo.get(k) as BarSpan[]).sort((a, b) => a.from - b.from || (a.event.character?.at ?? '').localeCompare(b.event.character?.at ?? '')));

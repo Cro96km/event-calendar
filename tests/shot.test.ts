@@ -218,7 +218,7 @@ describe('撮影モードの行数対策(キャラクター)', () => {
     const merged = r[0]![0]!.event;
     expect(merged.shot_names).toEqual([{ name: 'カーミラ', color: '#eb0043' }, { name: 'ツクモ', color: '#007d32' }]);
     expect(merged.name).toBe('カーミラ・ツクモ（彩・獣神祭）');
-    expect(r[1]![0]!.event.shot_names).toBeUndefined();
+    expect(r[1]![0]!.event.shot_names).toEqual([{ name: 'ほか' }]); // 1体でも同じ形(ラベルはガチャ名、名前は線の上)
     const kai = r[2]!;
     expect(kai.map((b) => b.event.name)).toEqual(['A（獣神化・改）', 'B（獣神化・改）']); // 同じ日は解禁の時刻順
     expect(r[3]!.map((b) => b.event.name)).toEqual(['C（真獣神化）']);
@@ -236,19 +236,24 @@ describe('撮影モードの行数対策(キャラクター)', () => {
     render(root, state);
     return root;
   };
-  it('撮影モード: 新限定は1行に名前を色付きで並べ、進化は日付の枠に名前を縦に並べる(バーなし・種別ラベルに色なし)', () => {
+  it('撮影モード: 新限定はラベルがガチャ名で、名前(属性色)の下に両端矢印の線で期間を表す。進化は日付の枠に名前を縦に並べる(バーなし・種別ラベルに色なし)', () => {
     const root = draw('character');
     const labels = [...root.querySelectorAll('.g-row:not(.g-dates) > .g-label')].map((x) => x.textContent);
-    expect(labels).toEqual(['カーミラ・ツクモ（彩・獣神祭）', 'ほか（グリーンファンタジー）', '獣神化・改', '真獣神化']);
-    expect(root.querySelectorAll('.g-name.colored')).toHaveLength(2);
+    expect(labels).toEqual(['彩・獣神祭', 'グリーンファンタジー', '獣神化・改', '真獣神化']);
+    const spans = [...root.querySelectorAll<HTMLElement>('.g-span')];
+    expect(spans).toHaveLength(2);
+    expect(spans[0]!.querySelector('.g-span-names')?.textContent).toBe('カーミラツクモ');
+    expect(spans[0]!.querySelector('.g-span-line')).not.toBeNull();
+    expect(spans[0]!.style.gridColumn.replace(/\s/g, '')).toBe('4/8'); // 11/7 12:00〜11/10 11:59 → 11/7〜11/10 の4列(11/5 起点。ラベルの列が1なので grid は 4/8)
+    expect(root.querySelectorAll('.g-span .g-name.colored')).toHaveLength(2);
     expect(root.querySelectorAll('.g-chips')).toHaveLength(14); // 2行 × 7日
     const chips = [...root.querySelectorAll('.g-chip')].map((x) => x.textContent);
     expect(chips).toEqual(['A', 'B', 'C']);
     expect(root.querySelectorAll('.g-chip.colored')).toHaveLength(1);
     const kind = root.querySelector('.g-row:not(.g-dates) > .g-label.colored');
     expect(kind).toBeNull();
-    // 進化の行にバーは出ない(新限定の2行は出る)
-    expect(root.querySelectorAll('.bar-ev')).toHaveLength(2);
+    // キャラクターの行にバーは出ない(新限定は線、進化は名前)
+    expect(root.querySelectorAll('.bar-ev')).toHaveLength(0);
   });
   it('通常表示(撮影モードでない)は1キャラ1行のまま', () => {
     const root = document.createElement('div');

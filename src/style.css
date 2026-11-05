@@ -143,6 +143,13 @@ body:has(.shot) { padding: 0; background: #fff; }
 .shot .bar-ev { height: 1.5rem; margin-top: .4rem; margin-bottom: .4rem; }
 .shot .g-section { padding-top: .12rem; padding-bottom: .12rem; }
 .shot .g-group { padding-top: .05rem; padding-bottom: .05rem; }
+/* 新限定: 名前(属性色)の下に、両端が矢印の細い線で期間を表す(線の色はセクションの色。矢印はバーの端の矢印と同じ三角) */
+.g-span { grid-row: 1; align-self: center; margin: 0 2px; display: flex; flex-direction: column; gap: .12rem; }
+.g-span-names { display: flex; flex-wrap: wrap; gap: .15rem .6rem; font-size: .76rem; font-weight: 700; line-height: 1.2; }
+.g-span-line { position: relative; height: 2px; background: hsl(var(--hue) 60% 38%); margin: 0 .12rem; }
+.g-span-line::before, .g-span-line::after { content: ''; position: absolute; top: 50%; transform: translateY(-50%); width: 0; height: 0; border: .25rem solid transparent; }
+.g-span-line::before { left: -.12rem; border-left-width: 0; border-right: .4rem solid hsl(var(--hue) 60% 38%); }
+.g-span-line::after { right: -.12rem; border-right-width: 0; border-left: .4rem solid hsl(var(--hue) 60% 38%); }
 /* 進化: 種別ごとの1行。解禁日の枠にキャラ名を縦に並べる(属性色) */
 .g-chips { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .05rem; padding: .15rem .1rem; height: 100%; }
 .g-chip { font-size: .72rem; font-weight: 700; line-height: 1.2; text-align: center; }

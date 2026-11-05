@@ -537,17 +537,9 @@ export function render(root: HTMLElement, state: AppState): void {
       const lines = rowLabel(section.id, event);
       const evolutionChips = state.shot !== undefined && section.id === 'character' && event.character !== undefined && event.character.kind !== '新限定';
       if (event.shot_names) {
-        // 同じガチャ・期間の新限定を1行にしたもの: 名前ごとに属性色
-        const l1 = el('span', 'g-l1');
-        event.shot_names.forEach((n, i) => {
-          if (i > 0) l1.append('・');
-          const part = el('span', 'g-name', n.name);
-          if (n.color) paint(part, n.color);
-          l1.append(part);
-        });
-        label.append(l1);
+        // 撮影モードの新限定: ラベルはガチャ名(無ければ名前)。名前は期間の線の上に書く
         const gacha = event.character?.gacha;
-        if (gacha) label.append(el('span', 'g-l2', `（${gacha}）`));
+        label.append(el('span', 'g-l1', gacha ?? event.shot_names.map((n) => n.name).join('・')));
       } else if (evolutionChips) {
         label.append(el('span', 'g-l1', event.character?.kind ?? ''));
       } else {
@@ -580,6 +572,26 @@ export function render(root: HTMLElement, state: AppState): void {
       }
       for (const bar of rowBars) {
         const ev = bar.event;
+        if (ev.shot_names) {
+          // 撮影モードの新限定: バーの代わりに、名前(属性色)の下に両端が矢印の細い線で期間を表す(線の色はセクションの色)
+          const span = el('div', 'g-span');
+          span.dataset.eventId = ev.id;
+          span.style.gridColumn = `${bar.from + 2} / ${bar.to + 3}`;
+          const n = bar.to - bar.from + 1;
+          const sf = shotStartFrac(bar.startFrac);
+          const ef = shotEndFrac(bar.endFrac);
+          if (!bar.clippedLeft && sf > 0) span.style.marginLeft = `calc(${((sf / n) * 100).toFixed(3)}%)`;
+          if (!bar.clippedRight && !bar.openEnded && ef < 1) span.style.marginRight = `calc(${(((1 - ef) / n) * 100).toFixed(3)}%)`;
+          const names = el('div', 'g-span-names');
+          for (const part of ev.shot_names) {
+            const nm = el('span', 'g-name', part.name);
+            if (part.color) paint(nm, part.color);
+            names.append(nm);
+          }
+          span.append(names, el('div', 'g-span-line'));
+          row.append(span);
+          continue;
+        }
         const b = el('button', 'bar-ev');
         b.dataset.eventId = ev.id;
         b.style.gridColumn = `${bar.from + 2} / ${bar.to + 3}`;
