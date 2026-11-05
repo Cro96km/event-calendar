@@ -279,6 +279,12 @@ function attachDrag(grid: HTMLElement, state: AppState, rerender: () => void): v
   );
 }
 
+/** セクションの色(色相 --hue・明るさの補正 --lit。CSS の --c-head など)を要素に渡す。 */
+function paintSection(node: HTMLElement, section: { hue: number; lit?: number }): void {
+  node.style.setProperty('--hue', String(section.hue));
+  node.style.setProperty('--lit', `${section.lit ?? 0}%`);
+}
+
 /** 公式の色を要素に渡す(`--pc`。CSSの `.colored` が文字・点・バーに使う)。`#rrggbb` 以外は無視する。 */
 function paint(node: HTMLElement, color: string): boolean {
   if (!/^#[0-9a-f]{6}$/i.test(color)) return false;
@@ -436,7 +442,7 @@ export function render(root: HTMLElement, state: AppState): void {
     const folded = !state.shot && state.collapsed.has(section.id);
     const h = el('div', 'g-section', folded ? `${section.label}(${rows.length})` : section.label);
     h.dataset.section = section.id;
-    h.style.setProperty('--hue', String(section.hue));
+    paintSection(h, section);
     h.setAttribute('role', 'button');
     h.setAttribute('aria-expanded', String(!folded));
     h.tabIndex = 0;
@@ -485,7 +491,7 @@ export function render(root: HTMLElement, state: AppState): void {
         const sub = el('div', 'g-group', groupFolded ? `${title}(${groupRows.get(g) ?? 0})` : title);
         sub.dataset.group = g;
         sub.dataset.groupKey = groupKey;
-        sub.style.setProperty('--hue', String(section.hue));
+        paintSection(sub, section);
         if (!state.shot) {
           sub.setAttribute('role', 'button');
           sub.setAttribute('aria-expanded', String(!groupFolded));
@@ -510,7 +516,7 @@ export function render(root: HTMLElement, state: AppState): void {
       }
       if (groupFolded) continue;
       const row = el('div', 'g-row');
-      row.style.setProperty('--hue', String(section.hue));
+      paintSection(row, section);
       const label = el('div', 'g-label');
       const open = () => {
         state.selection = { day: days[first.from] as string, eventId: event.id };

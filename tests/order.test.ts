@@ -36,6 +36,15 @@ describe('表示順・小見出しの設定(order.json)', () => {
     c.groups.quest?.splice(2, 0, { name: '新しい小見出し', match: { includes: ['新語'] } });
     expect(orderProblems(c)).toEqual([]);
   });
+  it('色: 現在の設定は4色とも色相が離れ、lit は −15〜15 の整数だけ許す', () => {
+    const c = cfg();
+    expect(c.sections.map((x) => [x.id, x.hue, x.lit ?? 0])).toEqual([['character', 268, 0], ['quest', 224, 0], ['campaign', 174, -6], ['gacha', 346, 0]]);
+    const bad = cfg();
+    bad.sections = bad.sections.map((x) => (x.id === 'quest' ? { ...x, lit: 20 } : x));
+    expect(orderProblems(bad).join()).toContain('lit は −15〜15');
+    bad.sections = bad.sections.map((x) => (x.id === 'quest' ? { ...x, lit: 2.5 } : x));
+    expect(orderProblems(bad).join()).toContain('lit は −15〜15');
+  });
   it('誤りを検出する', () => {
     const bad = cfg();
     bad.sections = [{ id: 'quest', label: 'クエスト', hue: 215, categories: ['event'] }];

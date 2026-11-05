@@ -43,15 +43,17 @@ button { font: inherit; color: inherit; }
 .g-date.sun { color: #e0393e; }
 @media (prefers-color-scheme: dark) { .g-date.sat { color: #7aa2ff; } .g-date.sun { color: #ff7b80; } }
 .g-date.today .dnum { background: var(--accent); color: var(--on-accent); border-radius: 999px; padding: 0 .45rem; }
-.g-section { cursor: pointer; padding: .2rem .5rem; font-size: .8rem; font-weight: 700; color: #fff; background: hsl(var(--hue) 45% 38%); border-top: 1px solid var(--border); }
-.bar-ev { grid-row: 1; align-self: center; height: 2.2rem; margin: .7rem 2px; border: 0; border-radius: .4rem; position: relative; background: hsl(var(--hue) 60% 38%); color: #fff; padding: 0; overflow: hidden; cursor: pointer; }
+/* セクションの色(色相 --hue と明るさの補正 --lit は order.json の sections。docs/spec.md §4.3.8)。見出し・バー・小見出し・線で共通 */
+.g-section, .g-group, .g-row { --c-head: hsl(var(--hue) 44% calc(36% + var(--lit, 0%))); --c-bar: hsl(var(--hue) 54% calc(41% + var(--lit, 0%))); --c-bar-dark: hsl(var(--hue) 54% calc(35% + var(--lit, 0%))); --c-text: hsl(var(--hue) 55% calc(36% + var(--lit, 0%))); --c-dot: hsl(var(--hue) 54% calc(52% + var(--lit, 0%))); }
+.g-section { cursor: pointer; padding: .2rem .5rem; font-size: .8rem; font-weight: 700; color: #fff; background: var(--c-head); border-top: 1px solid var(--border); }
+.bar-ev { grid-row: 1; align-self: center; height: 2.2rem; margin: .7rem 2px; border: 0; border-radius: .4rem; position: relative; background: var(--c-bar); color: #fff; padding: 0; overflow: hidden; cursor: pointer; }
 .bar-ev:hover { filter: brightness(1.15); outline: 2px solid var(--accent); }
 .bar-ev.clip-l { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: 0; }
 .bar-ev.clip-r { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: 0; }
 .bar-ev.clip-l::before, .bar-ev.clip-r::after { content: ''; position: absolute; top: 50%; transform: translateY(-50%); width: 0; height: 0; border: .25rem solid transparent; }
 .bar-ev.clip-l::before { left: .4rem; border-left-width: 0; border-right: .4rem solid #fff; }
 .bar-ev.clip-r::after { right: .4rem; border-right-width: 0; border-left: .4rem solid #fff; }
-.bar-ev.open { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: 0; background: repeating-linear-gradient(90deg, hsl(var(--hue) 60% 38%) 0 6px, hsl(var(--hue) 60% 32%) 6px 12px); }
+.bar-ev.open { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: 0; background: repeating-linear-gradient(90deg, var(--c-bar) 0 6px, var(--c-bar-dark) 6px 12px); }
 .empty { padding: 1rem; color: var(--muted); }
 .detail:not(:empty) { margin-top: 1rem; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); border-radius: 10px; padding: 1rem; }
 .detail .close { float: right; background: var(--surface-2); color: var(--danger); border: 1px solid var(--danger); border-radius: 6px; cursor: pointer; position: relative; width: 2rem; height: 2rem; padding: 0; font-size: 0; }
@@ -99,7 +101,7 @@ button { font: inherit; color: inherit; }
 .gantt.dragging { cursor: grabbing; user-select: none; }
 .gantt:not(.month) { touch-action: pan-y; }
 .vbtn:disabled { opacity: .45; cursor: default; }
-.g-group { cursor: pointer; padding: .1rem .5rem .1rem 1rem; font-size: .7rem; font-weight: 700; color: hsl(var(--hue) 55% 42%); background: var(--surface-2); border-top: 1px solid var(--border); border-left: 4px solid hsl(var(--hue) 45% 38%); }
+.g-group { cursor: pointer; padding: .1rem .5rem .1rem 1rem; font-size: .7rem; font-weight: 700; color: var(--c-text); background: var(--surface-2); border-top: 1px solid var(--border); border-left: 4px solid var(--c-head); }
 @media (prefers-color-scheme: dark) { .g-group { color: hsl(var(--hue) 70% 75%); } }
 .g-group::before { content: '▾ ' / ''; }
 .g-group[aria-expanded="false"]::before { content: '▸ ' / ''; }
@@ -115,7 +117,7 @@ button { font: inherit; color: inherit; }
 .detail-table td.sched-name { vertical-align: middle; font-weight: 600; border-right: 1px solid var(--border); }
 .g-label.pickup { padding-left: 1.1rem; }
 .g-label.pickup .g-l1 { font-size: .92em; color: var(--muted); display: flex; align-items: center; gap: .45rem; }
-.g-label.pickup .g-l1::before { content: ''; flex: none; width: .4rem; height: .4rem; border-radius: 50%; background: hsl(var(--hue) 60% 55%); opacity: .85; }
+.g-label.pickup .g-l1::before { content: ''; flex: none; width: .4rem; height: .4rem; border-radius: 50%; background: var(--c-dot); opacity: .85; }
 /* 公式サイトの色(ピックアップ名)。ダークでも読めるよう、文字は本文色と混ぜる */
 .g-label.pickup.colored .g-l1 { color: color-mix(in srgb, var(--pc) 78%, var(--text)); }
 .g-label.pickup.colored .g-l1::before { background: var(--pc); opacity: 1; }
@@ -146,7 +148,7 @@ body:has(.shot) { padding: 0; background: #fff; }
 /* 新限定: 名前(属性色。線の上で中央揃え)の下に、先端が平たい線で期間を表す(線の色はセクションの色) */
 .g-span { grid-row: 1; align-self: center; margin: 0 2px; display: flex; flex-direction: column; gap: .15rem; }
 .g-span-names { display: flex; flex-wrap: wrap; justify-content: center; gap: .15rem .6rem; font-size: .76rem; font-weight: 700; line-height: 1.2; text-align: center; }
-.g-span-line { height: 4px; background: hsl(var(--hue) 60% 38%); }
+.g-span-line { height: 4px; background: var(--c-bar); }
 /* 進化: 種別ごとの1行。解禁日の枠にキャラ名を縦に並べる(属性色) */
 .g-chips { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .05rem; padding: .15rem .1rem; height: 100%; }
 .g-chip { font-size: .72rem; font-weight: 700; line-height: 1.2; text-align: center; }
