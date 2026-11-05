@@ -65,6 +65,22 @@ button { font: inherit; color: inherit; }
   .gantt { --label: 8rem; }
   .stamp { margin-left: 0; width: 100%; }
 }
+/* スマホ(縦): 余白と行ラベルを詰めて、週表示の7日が横スクロールなしで収まるようにする。タップ対象は約40px以上 */
+@media (max-width: 600px) {
+  body { padding: 8px; }
+  .bar h1 { font-size: 1.1rem; margin-right: 0; width: 100%; }
+  .gantt { --label: 5.5rem; --colw: 2.4rem; }
+  .gantt.month { --colw: 1.7rem; }
+  .g-label { padding: .3rem .35rem; font-size: .75rem; }
+  .g-label.pickup { padding-left: .7rem; }
+  .bar > button, .vbtn { min-height: 2.5rem; min-width: 2.5rem; }
+  .g-date { padding: .4rem 0; }
+  .detail:not(:empty) { padding: .75rem; }
+  .detail-item { padding: .75rem; }
+  .detail-table { display: block; overflow-x: auto; max-width: 100%; }
+  .detail-table th, .detail-table td { padding: .5rem .6rem; }
+  .detail .close { width: 2.5rem; height: 2.5rem; }
+}
 .detail-block h4 { margin: .5rem 0 .2rem; font-size: .85rem; }
 .detail-block ul { margin: 0; padding-left: 1.2rem; font-size: .9rem; line-height: 1.8; }
 .detail-table { border-collapse: separate; border-spacing: 0; font-size: .9rem; margin: .4rem 0 .75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
