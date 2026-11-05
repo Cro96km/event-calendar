@@ -573,7 +573,7 @@ export function render(root: HTMLElement, state: AppState): void {
       for (const bar of rowBars) {
         const ev = bar.event;
         if (ev.shot_names) {
-          // 撮影モードの新限定: バーの代わりに、名前(属性色)の下に両端が矢印の細い線で期間を表す(線の色はセクションの色)
+          // 撮影モードの新限定: バーの代わりに、名前(属性色。中央揃え)の下に、先端が平たい線で期間を表す(線の色はセクションの色)
           const span = el('div', 'g-span');
           span.dataset.eventId = ev.id;
           span.style.gridColumn = `${bar.from + 2} / ${bar.to + 3}`;
