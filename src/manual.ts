@@ -12,6 +12,8 @@ export interface ManualAdd {
   start: string;
   end: string;
   group?: string;
+  /** true なら期間(年月日)を表示しない。仮置きの期間の常設クエスト用 */
+  hide_period?: boolean;
   note?: string;
 }
 
@@ -55,6 +57,7 @@ export function manualEvents(add: readonly ManualAdd[] = MANUAL.add): ExportEven
     url: '',
     item: `manual:${a.name}`,
     ...(a.group !== undefined ? { group: a.group } : {}),
+    ...(a.hide_period ? { hide_period: true as const } : {}),
   }));
 }
 
@@ -77,6 +80,7 @@ export function manualProblems(cfg: ManualConfig, knownIds?: ReadonlySet<string>
     if (validTime(a.start) && validTime(a.end) && a.start >= a.end) problems.push(`${where}: end は start より後にしてください`);
     const groups: readonly string[] = a.category === 'campaign' ? CAMPAIGN_GROUPS : QUEST_GROUPS;
     if (a.group !== undefined && !groups.includes(a.group)) problems.push(`${where}: group「${a.group}」は ${groups.join(' / ')} のいずれか`);
+    if (a.hide_period !== undefined && typeof a.hide_period !== 'boolean') problems.push(`${where}: hide_period は true か false`);
     const key = `${a.name}\u0000${a.start}`;
     if (seen.has(key)) problems.push(`${where}: 同じ name と start の項目が重複しています`);
     seen.add(key);
