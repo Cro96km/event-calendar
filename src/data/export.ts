@@ -37,6 +37,8 @@ export interface ExportEvent {
   section?: string;
   /** キャラクターの項目(新限定・進化の解禁。§4.13)。at=進化の解禁の日時(バーは解禁日の暦日1日分。詳細には開催期間でなくこれを出す)、gacha=新限定の実装ガチャ名 */
   character?: { kind: CharacterKind; at?: string; gacha?: string };
+  /** 撮影モード専用(書き出しには含まれない。src/shot.ts compactCharacterRows): 同じ期間・同じガチャの新限定キャラを1行にまとめたときの、各キャラの名前と属性色 */
+  shot_names?: { name: string; color?: string }[];
   /** 手動の修正が入っている(config/schedule/overrides.json)。fields=直した項目、notes=詳細に出す注記、hide_blocks=詳細で出さないブロック */
   fix?: { fields: string[]; notes?: string[]; hide_blocks?: string[] };
 }

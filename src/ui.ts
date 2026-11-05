@@ -9,7 +9,7 @@ import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
 import { isQuestNameBlock, questNameColor, withFixedFloors } from './quest-color';
-import { SHOT_4AM_FRAC, filterSummaryRows, shotEndFrac, shotStartFrac, summaryHasSection, type ShotKind } from './shot';
+import { SHOT_4AM_FRAC, compactCharacterRows, filterSummaryRows, shotEndFrac, shotStartFrac, summaryHasSection, type ShotKind } from './shot';
 
 interface Selection {
   day: string;
@@ -429,7 +429,9 @@ export function render(root: HTMLElement, state: AppState): void {
     if (state.shot && state.shot !== 'summary' && state.shot !== section.id) continue;
     if (state.shot === 'summary' && !summaryHasSection(section.id)) continue;
     // 撮影モード: 概要だけ設定(config/display/discord.json)で絞る。畳みは無視する
-    const rows = state.shot === 'summary' ? filterSummaryRows(section.id, allRows, (e) => (section.id === 'character' ? characterGroup(e) : section.id === 'quest' ? questGroup(e) : section.id === 'gacha' ? gachaGroup(e) : campaignGroup(e))) : allRows;
+    const filtered = state.shot === 'summary' ? filterSummaryRows(section.id, allRows, (e) => (section.id === 'character' ? characterGroup(e) : section.id === 'quest' ? questGroup(e) : section.id === 'gacha' ? gachaGroup(e) : campaignGroup(e))) : allRows;
+    // 撮影モードだけ、キャラクターの行を詰める(同じガチャ・期間の新限定を1行に、進化を種別ごと1行に)
+    const rows = state.shot && section.id === 'character' ? compactCharacterRows(filtered) : filtered;
     if (state.shot === 'summary' && rows.length === 0) continue; // 絞り込みで行が無くなったセクションは、見出しだけを出さない
     const folded = !state.shot && state.collapsed.has(section.id);
     const h = el('div', 'g-section', folded ? `${section.label}(${rows.length})` : section.label);
@@ -518,7 +520,8 @@ export function render(root: HTMLElement, state: AppState): void {
       label.tabIndex = 0;
       label.onclick = open;
       // 超究極・絶級のボス名の公式の色(ラベルの文字だけ。バーは既定)
-      if (event.color) paint(label, event.color);
+      // (撮影モードの進化の種別ラベルは、キャラごとに色が違うので色を付けない)
+      if (event.color && !(state.shot && section.id === 'character' && event.character !== undefined && event.character.kind !== '新限定')) paint(label, event.color);
       if (event.pickup) {
         // ピックアップの行: インデント表示。ホバーで `作品｜ピックアップ名`
         label.classList.add('pickup');
@@ -532,9 +535,35 @@ export function render(root: HTMLElement, state: AppState): void {
         }
       };
       const lines = rowLabel(section.id, event);
-      label.append(el('span', lines.wrap ? 'g-l1 wrap' : 'g-l1', lines.l1));
-      if (lines.l2) label.append(el('span', 'g-l2', lines.l2));
+      const evolutionChips = state.shot !== undefined && section.id === 'character' && event.character !== undefined && event.character.kind !== '新限定';
+      if (event.shot_names) {
+        // 撮影モードの新限定: ラベルはガチャ名(無ければ名前)。名前は期間の線の上に書く
+        const gacha = event.character?.gacha;
+        label.append(el('span', 'g-l1', gacha ?? event.shot_names.map((n) => n.name).join('・')));
+      } else if (evolutionChips) {
+        label.append(el('span', 'g-l1', event.character?.kind ?? ''));
+      } else {
+        label.append(el('span', lines.wrap ? 'g-l1 wrap' : 'g-l1', lines.l1));
+        if (lines.l2) label.append(el('span', 'g-l2', lines.l2));
+      }
       row.append(label);
+      if (evolutionChips) {
+        // 撮影モードの進化: 種別ごとの1行。解禁日の枠にキャラ名を縦に並べる(属性色)
+        for (let i = 0; i < days.length; i++) {
+          const cell = el('div', i === days.indexOf(state.today) ? 'g-cell today' : 'g-cell');
+          cell.style.gridColumn = String(i + 2);
+          const box = el('div', 'g-chips');
+          for (const bar of rowBars.filter((b) => b.from === i)) {
+            const chip = el('span', 'g-chip', bar.event.name.replace(/（[^（）]*）$/, ''));
+            if (bar.event.color) paint(chip, bar.event.color);
+            box.append(chip);
+          }
+          cell.append(box);
+          row.append(cell);
+        }
+        rowsBox.append(row);
+        continue;
+      }
       for (let i = 0; i < days.length; i++) {
         // 列を明示する。auto だとバーの占める列を避けて暗黙列へはみ出し、罫線が消え行が横に伸びる
         const cell = el('div', i === days.indexOf(state.today) ? 'g-cell today' : 'g-cell');
@@ -543,6 +572,26 @@ export function render(root: HTMLElement, state: AppState): void {
       }
       for (const bar of rowBars) {
         const ev = bar.event;
+        if (ev.shot_names) {
+          // 撮影モードの新限定: バーの代わりに、名前(属性色)の下に両端が矢印の細い線で期間を表す(線の色はセクションの色)
+          const span = el('div', 'g-span');
+          span.dataset.eventId = ev.id;
+          span.style.gridColumn = `${bar.from + 2} / ${bar.to + 3}`;
+          const n = bar.to - bar.from + 1;
+          const sf = shotStartFrac(bar.startFrac);
+          const ef = shotEndFrac(bar.endFrac);
+          if (!bar.clippedLeft && sf > 0) span.style.marginLeft = `calc(${((sf / n) * 100).toFixed(3)}%)`;
+          if (!bar.clippedRight && !bar.openEnded && ef < 1) span.style.marginRight = `calc(${(((1 - ef) / n) * 100).toFixed(3)}%)`;
+          const names = el('div', 'g-span-names');
+          for (const part of ev.shot_names) {
+            const nm = el('span', 'g-name', part.name);
+            if (part.color) paint(nm, part.color);
+            names.append(nm);
+          }
+          span.append(names, el('div', 'g-span-line'));
+          row.append(span);
+          continue;
+        }
         const b = el('button', 'bar-ev');
         b.dataset.eventId = ev.id;
         b.style.gridColumn = `${bar.from + 2} / ${bar.to + 3}`;

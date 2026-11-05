@@ -224,6 +224,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 1. `npm run update`(または `npm run collect`)→ `npm run build:public` で `dist/` と `dist/data` を作る。
 2. `npm run discord:images` → `out/discord/` に5枚。**ファイル名は画像に写る期間**: `2026-11-06_2026-11-12_summary.png`(概要)・`…_character.png`・`…_quest.png`・`…_campaign.png`・`…_gacha.png`。`-- --date YYYY-MM-DD` で基準日を固定、`-- --only quest` で1枚だけ。`out/` は git に含めない。
 - 初回は `npx playwright install chromium`。日本語フォント(Linux は `fonts-noto-cjk` など)が必要。ブラウザのタイムゾーンは Asia/Tokyo、ライト固定。
+- 画像は行数が増えないよう、撮影モードだけ行を詰める(行の高さ・長いラベルの文字の大きさ。進化は種別ごと1行で解禁日の枠に名前を縦に並べ、同じガチャ・期間の新限定は1行にまとめ、ラベルをガチャ名に、名前を属性色で書いてその下に両端矢印の細い線で期間を表す。docs/spec.md §4.12)。通常のカレンダーは変わらない。
 - メンテナンスの帯は5枚とも出る。画像にはフッター(注記)を入れない。公式の画像・ロゴは使わない。公式サイト・公開サイトにはアクセスしない(`dist/` をローカルで配信して撮る)。
 - 画面でも `?shot=summary|character|quest|campaign|gacha`(と `&date=YYYY-MM-DD`)を付けると撮影モードで見られる(`npm run dev` / `npm run preview`)。
 - **概要の絞り込みは `config/display/discord.json` の `summary` だけを直す**(コード変更は要らない)。`sections`(出すセクション)と、セクションidごとの `hide_groups`(外す小見出し)・`hide_keywords`(項目名にこの語を含む行を外す)・`only_keywords`(空でなければこの語を含む行だけ残す)・`start_day_only`(開催日だけ出す小見出し。その週に始まるものを開始日の列だけに描き、それ以前に始まったものは出さない)・`max_rows`(最大行数)。**現在の設定**: キャラクター(新限定・進化)は全部、クエストは 常設クエスト と その他 を外し、絶級・期間限定・超究極は開催日だけ、キャンペーンは「モンストの日」「特Lの園」だけ、ガチャは 期間限定ガチャ だけ(イベントガチャ・定例ガチャを外す)。絞り込みで行が無くなったセクションは見出しも出さない。キャラクター・クエスト・キャンペーン・ガチャの各画像は絞らない。

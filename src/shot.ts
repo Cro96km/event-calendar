@@ -1,5 +1,6 @@
 // 撮影モード(Discord 用の画像。URL パラメータ ?shot=…&date=…)。純関数(DOMなし)。docs/spec.md §4.12
 import config from '../config/display/discord.json';
+import { CHARACTER_KINDS } from './characters';
 import { SECTIONS } from './sections';
 import type { BarSpan } from './week';
 
@@ -122,6 +123,38 @@ export function filterSummaryRows(sectionId: string, rows: BarSpan[][], groupOf:
 /** 開催日だけの表示: その表示期間に始まるバーを、開始日の列1日分(罫線から罫線まで。開始時刻は問わない)にする。表示期間より前に始まったものは出さない。 */
 export function startDayBars(bars: BarSpan[]): BarSpan[] {
   return bars.filter((b) => !b.clippedLeft).map((b) => ({ ...b, to: b.from, startFrac: 0, endFrac: 1, clippedRight: false, openEnded: false }));
+}
+
+/** `名前（種別）`/`名前（ガチャ名）` の名前だけ(行名の括弧の前)。 */
+const nameOnly = (label: string): string => label.replace(/（[^（）]*）$/, '');
+
+/**
+ * 撮影モードのキャラクターの行を詰める(行数対策。通常のカレンダーは変えない)。
+ * - 新限定: 同じガチャ・同じ期間のキャラを1行にまとめる(`shot_names` に名前と属性色。期間が違えば別の行のまま)。ラベルはガチャ名、名前は期間の線の上に書く(ui.ts)。
+ * - 進化: 種別(獣神化・獣神化改・真獣神化)ごとに1行にまとめる(バーは1日分なので、同じ日の名前は日付の枠に縦に並ぶ。ui.ts)。
+ * rows は ganttSections の行(新限定→進化の順、各々登場順)。出力も 新限定→進化。キャラクターでない行はそのまま。
+ */
+export function compactCharacterRows(rows: BarSpan[][]): BarSpan[][] {
+  const news = new Map<string, BarSpan[][]>();
+  const evo = new Map<string, BarSpan[]>();
+  const rest: BarSpan[][] = [];
+  for (const bars of rows) {
+    const e = (bars[0] as BarSpan).event;
+    if (e.character === undefined) rest.push(bars);
+    else if (e.character.kind === '新限定') {
+      const k = `${e.character.gacha ?? ''}|${e.start}|${e.end ?? ''}`;
+      news.set(k, [...(news.get(k) ?? []), bars]);
+    } else evo.set(e.character.kind, [...(evo.get(e.character.kind) ?? []), ...bars]);
+  }
+  const merged = [...news.values()].map((group) => {
+    const first = (group[0] as BarSpan[])[0] as BarSpan;
+    const parts = group.map((g) => (g[0] as BarSpan).event).map((e) => ({ name: nameOnly(e.name), ...(e.color ? { color: e.color } : {}) }));
+    const gacha = first.event.character?.gacha;
+    // 1行1ガチャ(期間)。ラベルはガチャ名、期間の線の上に名前を属性色で書く(ui.ts)。ガチャ名が無ければ名前を並べる
+    return [{ ...first, event: { ...first.event, name: `${parts.map((x) => x.name).join('・')}${gacha ? `（${gacha}）` : ''}`, shot_names: parts, color: undefined } }];
+  });
+  const evoRows = CHARACTER_KINDS.filter((k) => evo.has(k)).map((k) => (evo.get(k) as BarSpan[]).sort((a, b) => a.from - b.from || (a.event.character?.at ?? '').localeCompare(b.event.character?.at ?? '')));
+  return [...rest, ...merged, ...evoRows];
 }
 
 const FOUR_AM = 4 / 24;
