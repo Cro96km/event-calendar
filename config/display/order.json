@@ -48,7 +48,12 @@
         "then": "start"
       },
       {
-        "name": "常設クエスト"
+        "name": "常設クエスト",
+        "sort": "fixed",
+        "words": [
+          "天魔の孤城"
+        ],
+        "then": "name"
       },
       {
         "name": "絶級クエスト",
