@@ -86,6 +86,10 @@ jobs:
           esac
           npm run manual -- "${args[@]}"
 
+      # 検証(ビルド)に使う表示用データを、正本と設定から作る(収集しない)
+      - name: Regenerate data
+        run: npm run update -- --no-collect
+
       - name: Verify
         id: verify
         run: |
