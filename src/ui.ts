@@ -129,7 +129,9 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
       item.append(box);
     }
     const derived = normalQuestBlock(event);
-    const blocks: DetailBlock[] = [...(event.details ?? []), ...(derived ? [derived] : [])];
+    // 手動の修正(overrides.json): 注記を出し、指定のブロックは出さない
+    for (const note of event.fix?.notes ?? []) item.append(el('p', 'detail-note', note));
+    const blocks: DetailBlock[] = [...(event.details ?? []), ...(derived ? [derived] : [])].filter((b) => !event.fix?.hide_blocks?.includes(b.label));
     for (const block0 of blocks) {
       const block = withFixedFloors(event.name, block0, event.start);
       const box = el('div', 'detail-block');

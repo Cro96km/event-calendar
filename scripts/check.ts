@@ -6,6 +6,7 @@ import { checkHakai } from '../src/hakai-check';
 import { judgeHealth } from '../src/health';
 import { MANUAL, manualProblems } from '../src/manual';
 import { orderProblems } from '../src/order-check';
+import { OVERRIDES, overrideProblems, type OfficialValue } from '../src/overrides';
 import cfgOverrides from '../config/display/label-overrides.json';
 import { labelWidth, MAX_LABEL_WIDTH } from '../src/label-override';
 
@@ -18,8 +19,9 @@ const HELP = `npm run check [-- --summary FILE]
     2. 判断の設定(config/judge/rules.json・decisions.json)が正しい書式か。
     3. ラベルの上書き(config/display/label-overrides.json)が全角15.5文字相当以内か。
     4. 手動の調整(config/schedule/manual.json)の書式・日時・小見出し(誤り=要確認)。存在しない項目IDは警告。
-    5. 表示順の設定(config/display/order.json)の書式・小見出しの過不足(誤り=要確認)。
-    6. 健全性(--summary を渡したとき): 収集の完了・既存記事の書き換え量・期間が取れない新規の割合(config/judge/health.json の閾値)。
+    5. 項目ごとの手動の修正(config/schedule/overrides.json)の書式(誤り=要確認)。存在しない項目ID・公式の値の変化(was との食い違い)・不要になった修正は警告。
+    6. 表示順の設定(config/display/order.json)の書式・小見出しの過不足(誤り=要確認)。
+    7. 健全性(--summary を渡したとき): 収集の完了・既存記事の書き換え量・期間が取れない新規の割合(config/judge/health.json の閾値)。
   オプション:
     --summary FILE  npm run update が出したサマリ(update-report.json)。健全性の点検に使う。
     --help          この説明
@@ -59,6 +61,12 @@ const man = manualProblems(MANUAL, new Set(records.flatMap((r) => [r.id, ...r.ev
 for (const p of man.problems) fails.push(`手動の調整の誤り: ${p}`);
 for (const u of man.unknown) warns.push(`manual.json の hide に、存在しない項目ID/記事ID: ${u}`);
 
+const officialById = new Map<string, OfficialValue>(records.flatMap((r) => r.events.map((e) => [e.id, { name: e.name, start: e.start, end: e.end }] as const)));
+const ov = overrideProblems(OVERRIDES, officialById);
+for (const p of ov.problems) fails.push(`手動の修正(overrides.json)の誤り: ${p}`);
+for (const u of ov.unknown) warns.push(`overrides.json に、存在しない項目ID: ${u}`);
+for (const x of ov.stale) warns.push(`overrides.json: 公式の値が修正時から変わりました。修正を見直してください: ${x}`);
+for (const x of ov.redundant) warns.push(`overrides.json: 修正が今の公式の値と同じです(不要。unset で外せます): ${x}`);
 for (const p of orderProblems()) fails.push(`表示順の設定の誤り: ${p}`);
 
 const summaryFile = arg('--summary');

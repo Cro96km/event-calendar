@@ -15,11 +15,16 @@ const esc = (t: string): string => t.replace(/\|/g, '｜').replace(/\n/g, ' ');
 /** 内容の列: ブロックごとに `見出し: 行 / 行`。長いものは先頭だけ(全文は公式記事)。 */
 function contentOf(e: ExportEvent): string {
   const derived = normalQuestBlock(e);
-  const blocks: DetailBlock[] = [...(e.details ?? []), ...(derived ? [derived] : [])];
+  const blocks: DetailBlock[] = [...(e.details ?? []), ...(derived ? [derived] : [])].filter((b) => !e.fix?.hide_blocks?.includes(b.label));
   const text = blocks.map((b) => `${b.label}: ${b.lines.slice(0, 3).join(' / ')}${b.lines.length > 3 ? ` 他${b.lines.length - 3}件` : ''}`).join(' ; ');
   const slots = e.slots?.length ? `日別の時間帯 ${e.slots.length}件` : '';
-  return esc([text, slots].filter((x) => x !== '').join(' ; '));
+  const notes = e.fix?.notes?.length ? `注記: ${e.fix.notes.join(' / ')}` : '';
+  return esc([text, slots, notes].filter((x) => x !== '').join(' ; '));
 }
+
+const FIELD_LABEL: Record<string, string> = { name: '名前', start: '開始', end: '終了', group: '小見出し', section: 'セクション', notes: '注記', hide_blocks: '内容の非表示', add_blocks: '内容の追加' };
+/** 修正の列: `修正: 開始・終了`(overrides.json)。 */
+const fixedOf = (e: ExportEvent): string => (e.fix ? `修正: ${e.fix.fields.map((f) => FIELD_LABEL[f] ?? f).join('・')}` : '');
 
 const day = (iso: string): string => iso.slice(0, 10);
 /** 年付きの JST `YYYY-MM-DD HH:MM`(manual.json の書式と同じ。誤りの修正にそのまま使える)。 */
@@ -36,6 +41,8 @@ export interface LedgerRow {
   end: string | null;
   url: string;
   content: string;
+  /** 手動の修正が入っている項目(直した項目名。無ければ空) */
+  fixed: string;
 }
 
 /** その月に掛かる項目を、画面と同じ順で。events は表示の選択・手動の調整を適用済みで、同ラベル統合の前のもの。 */
@@ -76,13 +83,14 @@ export function ledgerRows(events: ExportEvent[], month: string): LedgerRow[] {
           start: s.start,
           end: monthlyRow ? null : s.end,
           url: s.url,
+          fixed: monthlyRow ? '' : fixedOf(s),
           content: monthlyRow ? `毎月 ${srcs.map((x) => Number(day(x.start).slice(8))).join('・')}日` : contentOf(s),
         });
       }
     }
   }
   for (const e of events.filter((x) => x.category === MAINTENANCE_CATEGORY && barSpan(x, days)).sort((a, b) => a.start.localeCompare(b.start))) {
-    out.push({ section: 'メンテナンス', group: '', label: e.name, id: e.id, source: sourceOf(e), start: e.start, end: e.end, url: e.url, content: contentOf(e) });
+    out.push({ section: 'メンテナンス', group: '', label: e.name, id: e.id, source: sourceOf(e), start: e.start, end: e.end, url: e.url, content: contentOf(e), fixed: fixedOf(e) });
   }
   return out;
 }
@@ -101,13 +109,13 @@ export function renderLedger(events: ExportEvent[], today: string): Map<string, 
         LEDGER_MARK,
         `# カレンダーの台帳 ${m}`,
         '',
-        '自動生成です(`npm run update` が作り直します)。**編集しないでください**。カレンダーにこの月に出る項目を、画面と同じ順(セクション→小見出し→行)で並べています。誤りを見つけたら、項目ID(`id`)を控えて修正してください(修正の方法は docs/operations.md)。',
+        '自動生成です(`npm run update` が作り直します)。**編集しないでください**。カレンダーにこの月に出る項目を、画面と同じ順(セクション→小見出し→行)で並べています。誤りを見つけたら、項目ID(`id`)を控えて修正してください(修正は `config/schedule/overrides.json`。方法は docs/operations.md §17)。「修正」の列は手動の修正が入っている項目で、表の期間・内容・名前は修正後の値です。',
         '',
         `${rows.length}件。カレンダーの暦(JST 0:00〜24:00)でこの月に掛かる項目です。同じ名前の行は画面では1行にまとまります。内容は先頭の数件だけで、全文は公式記事です。`,
         '',
-        '| セクション | 小見出し | 表示名 | 期間 | 内容 | 出どころ | 項目ID | 記事 |',
-        '|---|---|---|---|---|---|---|---|',
-        ...rows.map((r) => `| ${r.section} | ${r.group} | ${esc(r.label)} | ${r.id.startsWith('monthly:') ? '' : period(r)} | ${r.content} | ${r.source} | \`${esc(r.id)}\` | ${link(r)} |`),
+        '| セクション | 小見出し | 表示名 | 期間 | 内容 | 出どころ | 修正 | 項目ID | 記事 |',
+        '|---|---|---|---|---|---|---|---|---|',
+        ...rows.map((r) => `| ${r.section} | ${r.group} | ${esc(r.label)} | ${r.id.startsWith('monthly:') ? '' : period(r)} | ${r.content} | ${r.source} | ${r.fixed} | \`${esc(r.id)}\` | ${link(r)} |`),
         '',
       ].join('\n'),
     );

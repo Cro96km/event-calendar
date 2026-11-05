@@ -3,6 +3,7 @@ import { mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { dirname, join } from 'node:path';
 import { renderLedger } from '../ledger';
 import { applyManual } from '../manual';
+import { applyOverrides } from '../overrides';
 import { applySelection, type SelectionJson } from '../selection';
 import { mergeEvents } from '../week';
 import { jstDay } from '../window';
@@ -14,7 +15,7 @@ export async function writeLedger(publicDir: string, outDir: string, generatedAt
   const index = await readJson<IndexFile>(join(publicDir, 'index.json'));
   const months = await Promise.all(index.months.map((m) => readJson<MonthFile>(join(publicDir, 'events', `${m}.json`))));
   const selection = await readJson<SelectionJson>(join(publicDir, 'selection.json')).catch(() => null);
-  const events = applyManual(applySelection(mergeEvents(months.map((m) => m.events)), selection));
+  const events = applyManual(applyOverrides(applySelection(mergeEvents(months.map((m) => m.events)), selection)));
   const nowMs = Date.parse(generatedAt);
   const files = renderLedger(events, jstDay(Number.isNaN(nowMs) ? Date.now() : nowMs));
   await rm(outDir, { recursive: true, force: true });
