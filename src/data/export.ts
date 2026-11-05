@@ -27,6 +27,8 @@ export interface ExportEvent {
   pickup?: PickupInfo;
   /** 超究極・絶級のボス名の公式の色(行ラベルの文字用) */
   color?: string;
+  /** 小見出しの指定(手動で足した項目用。config/schedule/manual.json) */
+  group?: string;
 }
 
 export interface MonthFile {

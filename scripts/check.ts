@@ -4,6 +4,7 @@ import { readDecisions, readRules } from '../src/data/selection-store';
 import { readAllRecords } from '../src/data/store';
 import { checkHakai } from '../src/hakai-check';
 import { judgeHealth } from '../src/health';
+import { MANUAL, manualProblems } from '../src/manual';
 import cfgOverrides from '../config/display/label-overrides.json';
 import { labelWidth, MAX_LABEL_WIDTH } from '../src/label-override';
 
@@ -15,7 +16,8 @@ const HELP = `npm run check [-- --summary FILE]
        色の対応が無い階層名(=新クエスト)は警告(要対応。Issueに出る)。
     2. 判断の設定(config/judge/rules.json・decisions.json)が正しい書式か。
     3. ラベルの上書き(config/display/label-overrides.json)が全角15.5文字相当以内か。
-    4. 健全性(--summary を渡したとき): 収集の完了・既存記事の書き換え量・期間が取れない新規の割合(config/judge/health.json の閾値)。
+    4. 手動の調整(config/schedule/manual.json)の書式・日時・小見出し(誤り=要確認)。存在しない項目IDは警告。
+    5. 健全性(--summary を渡したとき): 収集の完了・既存記事の書き換え量・期間が取れない新規の割合(config/judge/health.json の閾値)。
   オプション:
     --summary FILE  npm run update が出したサマリ(update-report.json)。健全性の点検に使う。
     --help          この説明
@@ -50,6 +52,10 @@ for (const r of cfgOverrides.rules) {
   const w = labelWidth(r.label);
   if (w > MAX_LABEL_WIDTH) fails.push(`ラベルの上書きが長すぎます(約${w.toFixed(1)}文字 > ${MAX_LABEL_WIDTH}): ${r.label}`);
 }
+
+const man = manualProblems(MANUAL, new Set(records.flatMap((r) => [r.id, ...r.events.map((e) => e.id)])));
+for (const p of man.problems) fails.push(`手動の調整の誤り: ${p}`);
+for (const u of man.unknown) warns.push(`manual.json の hide に、存在しない項目ID/記事ID: ${u}`);
 
 const summaryFile = arg('--summary');
 if (summaryFile !== undefined) {

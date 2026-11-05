@@ -11,6 +11,7 @@ export interface CommandInfo {
 export const COMMANDS: readonly CommandInfo[] = [
   { name: 'update', summary: '収集→判定の再生成→差分レポート(PR本文)。更新の中心。--no-collect で設定だけ反映', group: '日常の運用', cli: 'scripts/update.ts' },
   { name: 'judge', summary: '要判断の判断(Issueのチェック/要判断ファイル)を判断の記憶に取り込む', group: '日常の運用', cli: 'scripts/judge.ts' },
+  { name: 'manual', summary: '手動の調整(公式に無い項目の追加・項目の非表示)を manual.json に書式を守って反映する', group: '日常の運用', cli: 'scripts/manual.ts' },
   { name: 'check', summary: '設定と収集データの点検。終了コードで自動マージ可否を返す(0=可 / 1=要確認)', group: '日常の運用', cli: 'scripts/check.ts' },
   { name: 'collect', summary: '収集だけ(判定・レポートなし)。通常は update を使う', group: '保守・調査', cli: 'scripts/collect.ts' },
   { name: 'rebuild', summary: 'キャッシュ済みの生HTML(data/raw)から正本を作り直す(再取得なし。パーサを直した後)', group: '保守・調査', cli: 'scripts/collect.ts' },
