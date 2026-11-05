@@ -67,6 +67,12 @@ describe('画面の色(ライト/ダーク)', () => {
     expect(v2.title).toBe('週表示にする');
   });
 
+  it('「今日に戻る」の ● は、小さい記号用の dot-btn(ほかのボタンは付かない)', () => {
+    const root = draw();
+    expect(root.querySelector('[data-testid="nav-today"]')?.classList.contains('dot-btn')).toBe(true);
+    expect(root.querySelector('[data-testid="nav-prev"]')?.classList.contains('dot-btn')).toBe(false);
+  });
+
   it('撮影モード(Discord の画像)には切替ボタンを出さない', () => {
     document.body.innerHTML = '<div id="app"></div>';
     const root = document.querySelector('#app') as HTMLElement;

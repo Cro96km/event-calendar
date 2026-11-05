@@ -367,6 +367,7 @@ export function render(root: HTMLElement, state: AppState): void {
   );
   const atBase = month ? state.monthStart === state.today : state.weekStart === state.today;
   (nav.querySelector('[data-testid="nav-today"]') as HTMLButtonElement).disabled = atBase;
+  (nav.querySelector('[data-testid="nav-today"]') as HTMLButtonElement).classList.add('dot-btn'); // ● を少し小さく
   // 表示範囲(過去・未来それぞれ config/display/window.json の月数)を超えて移動できない
   const range = windowRange(state.today);
   const cur = month ? state.monthStart : state.weekStart;
