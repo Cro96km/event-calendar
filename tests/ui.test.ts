@@ -1295,4 +1295,12 @@ describe('ガチャセクション', () => {
     expect(q('detail')?.textContent).not.toContain('開催期間');
     expect(bar('h#0').title).toBe('歴戦の跡地');
   });
+
+  it('メンテナンスの帯を押しても詳細は1件だけ', () => {
+    const m = ev('m#0', 'maintenance', '2026-10-27T00:00:00+09:00', '2026-10-27T05:00:00+09:00', { name: 'メンテナンス' });
+    state = initialState('2026-10-27', [m], INDEX);
+    render(root, state);
+    click(root.querySelector('.g-maint'));
+    expect(q('detail')?.querySelectorAll('.detail-item')).toHaveLength(1);
+  });
 });
