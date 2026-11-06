@@ -19,7 +19,7 @@ button { font: inherit; color: inherit; }
 .gantt { --label: 14rem; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); overflow-x: auto; }
 .g-row { display: grid; grid-template-columns: var(--label) repeat(var(--cols, 7), minmax(var(--colw, 2.5rem), 1fr)); align-items: stretch; border-top: 1px solid var(--border); position: relative; }
 .g-label { grid-row: 1; grid-column: 1; position: sticky; left: 0; z-index: 3; background: var(--surface); padding: .3rem .5rem; font-size: .8rem; display: flex; flex-direction: column; justify-content: center; overflow-wrap: anywhere; line-height: 1.3; }
-.g-row:not(.g-dates) > .g-label { min-height: 3.6rem; cursor: pointer; }
+.g-row:not(.g-dates) > .g-label { min-height: 2.7rem; cursor: pointer; } /* 行の高さ = バー1.7rem + 上下の余白.5rem×2 = 2.7rem(スマホのタップ対象 約40px 以上) */
 .g-row:not(.g-dates) > .g-label:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
 /* ラベルは省略(…)しない。長ければ折り返して行が高くなる */
 .g-l1 { font-weight: 700; white-space: normal; }
@@ -46,7 +46,7 @@ button { font: inherit; color: inherit; }
 /* セクションの色(色相 --hue と明るさの補正 --lit は order.json の sections。docs/spec.md §4.3.8)。見出し・バー・小見出し・線で共通 */
 .g-section, .g-group, .g-row { --c-head: hsl(var(--hue) 44% calc(36% + var(--lit, 0%))); --c-bar: hsl(var(--hue) 54% calc(41% + var(--lit, 0%))); --c-bar-dark: hsl(var(--hue) 54% calc(35% + var(--lit, 0%))); --c-text: hsl(var(--hue) 55% calc(36% + var(--lit, 0%))); --c-dot: hsl(var(--hue) 54% calc(52% + var(--lit, 0%))); }
 .g-section { cursor: pointer; padding: .2rem .5rem; font-size: .8rem; font-weight: 700; color: #fff; background: var(--c-head); border-top: 1px solid var(--border); }
-.bar-ev { grid-row: 1; align-self: center; height: 2.2rem; margin: .7rem 2px; border: 0; border-radius: .4rem; position: relative; background: var(--c-bar); color: #fff; padding: 0; overflow: hidden; cursor: pointer; }
+.bar-ev { grid-row: 1; align-self: center; height: 1.7rem; margin: .5rem 2px; border: 0; border-radius: .4rem; position: relative; background: var(--c-bar); color: #fff; padding: 0; overflow: hidden; cursor: pointer; }
 .bar-ev:hover { filter: brightness(1.15); outline: 2px solid var(--accent); }
 .bar-ev.clip-l { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: 0; }
 .bar-ev.clip-r { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: 0; }
