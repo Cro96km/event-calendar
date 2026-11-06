@@ -194,7 +194,12 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
               if (ac && paint(td, ac)) td.classList.add('qname');
             }
             // キャンペーンの対象属性の表: 火・水・木・光・闇の字をそれぞれ属性色で
-            if (t.head[2] === '対象属性' && i === 2) colorAttrs(td, c);
+            if (t.head[2] === '対象属性' && i === 2) {
+              // 名前が固定のクエスト(特Lの園など)はその属性色でセルの文字すべて。属性が1つならセルの文字すべて、複数なら属性の字だけ
+              const qc = questNameColor(c);
+              if (qc && paint(td, qc)) td.classList.add('qname');
+              else colorAttrs(td, c);
+            }
             // 階層クエストの名前(2列目)に属性色(config/display/quest-colors.json)
             if (qnames && i === 1) {
               const qc = questNameColor(c);
@@ -315,8 +320,14 @@ function attrColorInText(text: string): string | undefined {
   return attributeColor(a);
 }
 
-/** セルの文字の中の属性の字(火・水・木・光・闇)を、それぞれ属性色にする。 */
+/** セルの文字の色: 属性が1つならセルの文字すべてをその属性色に、複数なら属性の字(火・水・木・光・闇)をそれぞれの属性色にする。 */
 function colorAttrs(node: HTMLElement, text: string): void {
+  const attrs = new Set(text.match(/[火水木光闇]/g) ?? []);
+  if (attrs.size === 1) {
+    const only = attributeColor([...attrs][0] as Attribute);
+    if (only && paint(node, only)) node.classList.add('qname');
+    return;
+  }
   node.textContent = '';
   for (const part of text.split(/([火水木光闇])/)) {
     if (part === '') continue;

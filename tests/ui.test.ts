@@ -425,9 +425,23 @@ describe('詳細パネルの改善', () => {
     const rows = [...(q('detail')?.querySelectorAll('.detail-table tbody tr') ?? [])].map((r) => [...r.querySelectorAll('td')].map((c) => c.textContent));
     expect(rows).toEqual([['10/27', '火', '火属性'], ['10/28', '水', '水属性'], ['10/29', '木', '木属性']]);
     expect([...(q('detail')?.querySelectorAll('.detail-table th') ?? [])].map((c) => c.textContent)).toEqual(['日付', '曜日', '対象属性']);
-    // 対象属性の字は属性色(火=赤・水=青・木=緑)
-    const colored = [...(q('detail')?.querySelectorAll('.detail-table td .qname') ?? [])].map((x) => [x.textContent, (x as HTMLElement).style.getPropertyValue('--pc')]);
-    expect(colored).toEqual([['火', '#eb0043'], ['水', '#3154ef'], ['木', '#007d32']]);
+    // 対象属性のセルの文字すべてが属性色(火=赤・水=青・木=緑)
+    const colored = [...(q('detail')?.querySelectorAll('.detail-table td.qname') ?? [])].map((x) => [x.textContent, (x as HTMLElement).style.getPropertyValue('--pc')]);
+    expect(colored).toEqual([['火属性', '#eb0043'], ['水属性', '#3154ef'], ['木属性', '#007d32']]);
+  });
+  it('特Lの園: 対象クエスト(獄炎の神殿=火 など、名前に属性を結び付けた設定)のセルが、その属性色の文字になる。複数属性のセルは属性の字だけ色が付く', () => {
+    const e = ev('t#0', 'campaign', '2026-10-08T00:00:00+09:00', '2026-10-12T23:59:00+09:00', {
+      name: '「英雄の神殿」に期間限定で「特Lの園」が出現!',
+      details: [{ label: '対象クエスト', lines: ['10/8(木) 獄炎の神殿 特Lの園', '10/9(金) 秘泉の神殿 特Lの園', '10/10(土) 樹縛の神殿 特Lの園', '10/11(日) 光明の神殿 特Lの園', '10/12(月) 常闇の神殿 特Lの園'] }],
+    });
+    render(root, initialState('2026-10-08', [e], INDEX));
+    click(bar('t#0'));
+    const cells = [...(q('detail')?.querySelectorAll('.detail-table td.qname') ?? [])].map((x) => [x.textContent, (x as HTMLElement).style.getPropertyValue('--pc')]);
+    expect(cells).toEqual([['獄炎の神殿 特Lの園', '#eb0043'], ['秘泉の神殿 特Lの園', '#3154ef'], ['樹縛の神殿 特Lの園', '#007d32'], ['光明の神殿 特Lの園', '#a16800'], ['常闇の神殿 特Lの園', '#a237c3']]);
+    const multi = ev('t#1', 'campaign', '2026-10-27T00:00:00+09:00', '2026-10-27T23:59:00+09:00', { name: NQ, details: [{ label: '対象クエスト', lines: ['10/27(火) 火・水属性クエスト'] }] });
+    render(root, initialState('2026-10-27', [multi], INDEX));
+    click(bar('t#1'));
+    expect([...(q('detail')?.querySelectorAll('.detail-table td span.qname') ?? [])].map((x) => x.textContent)).toEqual(['火', '水']);
   });
   it('event.details(対象ステージ等)を見出し付きで表示する。同ラベルの統合で項目が和集合になる', () => {
     const a = ev('k#0', 'event', '2026-10-27T12:00:00+09:00', '2026-10-29T11:59:00+09:00', {
@@ -1179,7 +1193,7 @@ describe('ガチャセクション', () => {
     ]);
   });
 
-  it('超究極・絶級のボス名の公式色: 行ラベルの文字だけ(--pc とクラス)。バーは既定。#rrggbb 以外は無視', () => {
+  it('超究極・絶級のボス名の公式色: 行ラベルの文字とバーの縁(--pc とクラス)。#rrggbb 以外は無視', () => {
     const a = ev('b#0', 'event', '2026-11-03T12:00:00+09:00', '2026-11-09T11:59:00+09:00', { name: '超究極・兵クエスト（ミザリー）が出現', color: '#3154ef' });
     const b = ev('b#1', 'event', '2026-11-03T12:00:00+09:00', '2026-11-09T11:59:00+09:00', { name: '超究極・傑クエスト（ララバイ）が出現', color: 'expression(1)' });
     state.events = [a, b];
@@ -1191,7 +1205,9 @@ describe('ガチャセクション', () => {
     expect(la.style.getPropertyValue('--pc')).toBe('#3154ef');
     expect(la.classList.contains('colored')).toBe(true);
     expect(la.classList.contains('pickup')).toBe(false);
-    expect((row('b#0').querySelector('.bar-ev') as HTMLElement).style.getPropertyValue('--pc')).toBe(''); // バーは既定
+    const barA = row('b#0').querySelector('.bar-ev') as HTMLElement;
+    expect(barA.style.getPropertyValue('--pc')).toBe('#3154ef'); // バーの縁もラベルと同じ色
+    expect(barA.classList.contains('edge-attr')).toBe(true);
     const lb = row('b#1').querySelector('.g-label') as HTMLElement;
     expect(lb.classList.contains('colored')).toBe(false);
   });
