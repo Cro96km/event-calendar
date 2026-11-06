@@ -33,9 +33,15 @@ describe('日ごとの対象属性の縁(day-edge)', () => {
     const segs = dayEdgeSegments({ from: 0, to: 1, startFrac: 0, endFrac: 1 }, days, new Map([['2026-10-10', [RED, BLUE]], ['2026-10-11', [GREEN]]]));
     expect(segs?.map((s) => [s.color, s.a, s.b])).toEqual([[RED, 0, 0.25], [BLUE, 0.25, 0.5], [GREEN, 0.5, 1]]);
   });
-  it('色のある日が2日未満なら null(従来の縁)', () => {
-    expect(dayEdgeSegments({ from: 1, to: 1, startFrac: 0, endFrac: 1 }, days, colors)).toBeNull();
+  it('イベント全体で色のある日が2日未満なら null(従来の縁)', () => {
     expect(dayEdgeSegments({ from: 1, to: 4, startFrac: 0, endFrac: 1 }, days, new Map([['2026-10-11', [BLUE]]]))).toBeNull();
+  });
+  it('表示中の日が1日だけ(初日だけ・最終日だけが映る)でも、その日の色を付ける。表示中に色のある日が無ければ null', () => {
+    const first = dayEdgeSegments({ from: 1, to: 1, startFrac: 0, endFrac: 1 }, days, colors);
+    expect(first?.map((s) => [s.color, s.a, s.b])).toEqual([[BLUE, 0, 1]]);
+    const last = dayEdgeSegments({ from: 3, to: 3, startFrac: 0, endFrac: 1 }, days, colors);
+    expect(last?.map((s) => s.color)).toEqual([RED]);
+    expect(dayEdgeSegments({ from: 5, to: 6, startFrac: 0, endFrac: 1 }, days, colors)).toBeNull();
   });
   it('グラデーションの文字列: 属性色は --ep・--ek で縁の濃さに合わせ、色なしは既定の縁', () => {
     const g = edgeGradient([{ color: BLUE, a: 0, b: 0.5 }, { color: null, a: 0.5, b: 1 }]);

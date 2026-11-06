@@ -44,7 +44,8 @@ export interface EdgeSegment {
 }
 
 /**
- * バーの縁を、日(列)ごとの対象属性の色に区切る。色のある日が2日未満なら null(従来の縁)。
+ * バーの縁を、日(列)ごとの対象属性の色に区切る。判定はイベント全体(colors)で行い、色のある日が2日未満なら null(従来の縁)。
+ * 表示中の日が1日だけ(週の初日だけ・最終日だけが映る)でも、その日の色を付ける(表示中に色のある日が無ければ null)。
  * 1日に属性が複数あれば、その日の幅を等分する。色の無い日は既定の縁(color: null)。区間はバーの幅(開始・終了の時刻の割合を含む)に対する割合。
  */
 export function dayEdgeSegments(bar: Pick<BarSpan, 'from' | 'to' | 'startFrac' | 'endFrac'>, days: readonly string[], colors: ReadonlyMap<string, string[]>): EdgeSegment[] | null {
@@ -54,7 +55,7 @@ export function dayEdgeSegments(bar: Pick<BarSpan, 'from' | 'to' | 'startFrac' |
     const hi = c === bar.to ? bar.endFrac : 1;
     cols.push({ color: colors.get(days[c] as string) ?? null, w: Math.max(0, hi - lo) });
   }
-  if (cols.filter((x) => x.color !== null).length < 2) return null;
+  if (colors.size < 2 || cols.every((x) => x.color === null)) return null;
   const total = cols.reduce((s, x) => s + x.w, 0);
   if (total <= 0) return null;
   const out: EdgeSegment[] = [];
