@@ -450,7 +450,7 @@ describe('詳細パネルの改善', () => {
     click(bar('t#1'));
     expect([...(q('detail')?.querySelectorAll('.detail-table td span.qname') ?? [])].map((x) => x.textContent)).toEqual(['火', '水']);
   });
-  it('進化のバー: 週表示だけ、バーの中に `12:00に解禁`(属性色)。月表示には出さない', () => {
+  it('進化のバー: 週表示だけ、バーの中に `12:00解禁`(属性色)。月表示には出さない', () => {
     const e = ev('e#c0', 'character', '2026-11-10T00:00:00+09:00', '2026-11-11T00:00:00+09:00', {
       name: '蒲公英（真獣神化）',
       character: { kind: '真獣神化', at: '2026-11-10T12:00:00+09:00' },
@@ -459,11 +459,23 @@ describe('詳細パネルの改善', () => {
     const state = initialState('2026-11-09', [e], INDEX);
     render(root, state);
     const t = root.querySelector('.bar-ev[data-event-id="e#c0"] .bar-unlock') as HTMLElement;
-    expect(t.textContent).toBe('12:00に解禁');
+    expect(t.textContent).toBe('12:00解禁');
     expect(t.style.getPropertyValue('--pc')).toBe('#007d32');
     state.view = 'month';
     render(root, state);
     expect(root.querySelector('.bar-unlock')).toBeNull();
+  });
+  it('1日に属性が複数(ノーマルクエストの土曜: 火・水・木)なら、色ごとにバーを作る。境目は角を丸めず余白なし', () => {
+    const e = ev('s#0', 'campaign', '2026-10-24T00:00:00+09:00', '2026-10-25T23:59:00+09:00', { name: NQ });
+    render(root, initialState('2026-10-24', [e], INDEX));
+    const pieces = [...root.querySelectorAll<HTMLElement>('.bar-days .bar-ev')];
+    // 土=火・水・木、日=光・闇 → 5つ
+    expect(pieces.map((x) => x.style.getPropertyValue('--pc'))).toEqual(['#eb0043', '#3154ef', '#007d32', '#a16800', '#a237c3']);
+    expect(pieces.map((x) => x.classList.contains('cont-l'))).toEqual([false, true, true, true, true]);
+    expect(pieces.map((x) => x.classList.contains('cont-r'))).toEqual([true, true, true, true, false]);
+    expect(pieces.slice(1, 4).every((x) => x.style.marginLeft === '0px' && x.style.marginRight === '0px')).toBe(true);
+    // 日(セル)ごとの入れ物: 土に3つ、日に2つ
+    expect([...root.querySelectorAll('.bar-days .day-cell')].map((c) => c.querySelectorAll('.bar-ev').length)).toEqual([3, 2]);
   });
   it('event.details(対象ステージ等)を見出し付きで表示する。同ラベルの統合で項目が和集合になる', () => {
     const a = ev('k#0', 'event', '2026-10-27T12:00:00+09:00', '2026-10-29T11:59:00+09:00', {

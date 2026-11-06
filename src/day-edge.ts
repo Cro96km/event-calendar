@@ -71,12 +71,3 @@ export function dayEdgeSegments(bar: Pick<BarSpan, 'from' | 'to' | 'startFrac' |
 
 /** 縁の色の CSS(属性色は縁と同じ濃さ。null は既定の縁)。 */
 export const edgeColorCss = (color: string | null): string => (color === null ? 'var(--c-bar-edge)' : `color-mix(in srgb, ${color} var(--ep), var(--ek))`);
-
-/** 区間 → CSS の linear-gradient(90deg)。色は縁と同じ濃さに合わせる(--ep・--ek。ライト=属性色85%+黒、ダーク=60%+白。style.css)。 */
-export function edgeGradient(segs: readonly EdgeSegment[]): string {
-  const stops = segs.map((s) => {
-    const c = edgeColorCss(s.color);
-    return `${c} ${(s.a * 100).toFixed(3)}% ${(s.b * 100).toFixed(3)}%`;
-  });
-  return `linear-gradient(90deg, ${stops.join(', ')})`;
-}

@@ -146,26 +146,22 @@ body:has(.shot) { padding: 0; background: #fff; }
 .shot .bar-ev { height: 1.5rem; margin-top: .4rem; margin-bottom: .4rem; }
 .shot .g-section { padding-top: .12rem; padding-bottom: .12rem; }
 .shot .g-group { padding-top: .05rem; padding-bottom: .05rem; }
-/* 新限定: 週表示(撮影モード含む)はガチャのバーの中に `NEW：名前・名前`(「NEW：」は本文色、名前は属性色)を中央揃えで折り返して書き、バーの高さは中身に合わせて伸びる(行も伸びる)。月表示は「NEW」だけを中央に(名前はツールチップ・詳細)。属性色はバーの面で読める濃さ(ライト=元の色を25%暗く、ダーク=本文色と混ぜる)。 */
+/* 新限定: 週表示(撮影モード含む)はガチャのバーの中に `NEW！名前・名前`(1人なら「NEW！」も属性色、2人以上は「NEW！」は既定の色で名前だけ属性色)を中央揃えで折り返して書き、バーの高さは中身に合わせて伸びる(行も伸びる)。月表示は「NEW」だけを中央に(名前はツールチップ・詳細)。属性色はバーの面で読める濃さ(ライト=元の色を25%暗く、ダーク=本文色と混ぜる)。 */
 .bar-ev.has-names { height: auto; min-height: 1.7rem; }
 .shot .bar-ev.has-names { height: auto; min-height: 1.5rem; }
 .bar-names { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; padding: .22rem .5rem; font-size: .74rem; font-weight: 800; -webkit-text-stroke: .35px currentColor; line-height: 1.25; pointer-events: none; }
 .bar-names > span { flex: none; }
-.bar-names .g-name.colored { color: color-mix(in srgb, var(--pc) 75%, #000); }
-:root[data-theme="dark"] .bar-names .g-name.colored { color: color-mix(in srgb, var(--pc) 32%, var(--text)); }
+.bar-names .g-name.colored, .bar-names .bar-new-label.colored, .bar-new.colored { color: color-mix(in srgb, var(--pc) 75%, #000); }
+:root[data-theme="dark"] .bar-names .g-name.colored, :root[data-theme="dark"] .bar-names .bar-new-label.colored, :root[data-theme="dark"] .bar-new.colored { color: color-mix(in srgb, var(--pc) 32%, var(--text)); }
 .bar-new { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: .62rem; font-weight: 800; -webkit-text-stroke: .3px currentColor; line-height: 1; letter-spacing: .03em; white-space: nowrap; overflow: hidden; color: var(--c-hd-fg); pointer-events: none; }
 /* 縁(輪郭)の属性色: 新限定・ピックアップ・進化。面は青灰のまま。ライトは元の色を15%暗く、ダークは明るく。2人は左右半分ずつ(左=最初の名前) */
 .bar-ev.edge-attr { --edge: color-mix(in srgb, var(--pc) 85%, #000); }
 :root[data-theme="dark"] .bar-ev.edge-attr { --edge: color-mix(in srgb, var(--pc) 60%, #fff); }
 .bar-ev.edge-split { --edge: color-mix(in srgb, var(--e1) 50%, var(--e2)); --e1: color-mix(in srgb, var(--pc1) 85%, #000); --e2: color-mix(in srgb, var(--pc2) 85%, #000); border-color: transparent; background: linear-gradient(var(--c-bar), var(--c-bar)) padding-box, linear-gradient(90deg, var(--e1) 50%, var(--e2) 50%) border-box; }
 :root[data-theme="dark"] .bar-ev.edge-split { --e1: color-mix(in srgb, var(--pc1) 60%, #fff); --e2: color-mix(in srgb, var(--pc2) 60%, #fff); }
-.bar-ev .day-line, .bar-ev .day-stripe, .bar-ev .day-under { position: absolute; pointer-events: none; }
-.bar-ev .day-line { top: 0; bottom: 0; width: 3px; background: var(--dc); } /* 縁と同じ太さ */
-.bar-ev .day-line.left { transform: translateX(-100%); } /* 境目の左に左の日の色、右に右の日の色 */
+.bar-ev .day-stripe, .bar-ev .day-under { position: absolute; pointer-events: none; }
 .bar-ev .day-stripe { top: 0; bottom: 0; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--dc) 70%, transparent) 0 2px, transparent 2px 8px); }
 .bar-ev .day-under { bottom: 0; height: 5px; background: var(--dc); }
-.bar-ev.edge-days { border-color: transparent; background: linear-gradient(var(--c-bar), var(--c-bar)) padding-box, var(--edge-grad) border-box; }
-.bar-ev.edge-days.open { background: repeating-linear-gradient(90deg, var(--c-bar) 0 6px, var(--c-bar-alt) 6px 12px) padding-box, var(--edge-grad) border-box; }
 .bar-ev.edge-split.open { background: repeating-linear-gradient(90deg, var(--c-bar) 0 6px, var(--c-bar-alt) 6px 12px) padding-box, linear-gradient(90deg, var(--e1) 50%, var(--e2) 50%) border-box; }
 /* 進化: 種別ごとの1行。解禁日の枠にキャラ名を縦に並べる(属性色) */
 .g-chips { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .05rem; padding: .15rem .1rem; height: 100%; }
@@ -176,14 +172,13 @@ body:has(.shot) { padding: 0; background: #fff; }
 .shot .bar-ev.clip-r::after { right: .15rem; }
 /* 日ごとに分けたバー(罫線で区切られた日=セルごとにバー+縁。連続する日の境目は角を丸めない) */
 .bar-days { display: grid; grid-row: 1; align-self: center; }
-.bar-days > .bar-ev { align-self: center; margin-left: 0; margin-right: 0; }
-.bar-days > .bar-ev:first-child:not(.clip-l) { margin-left: 2px; }
-.bar-days > .bar-ev:last-child:not(.clip-r) { margin-right: 2px; }
+.bar-days > .day-cell { display: flex; min-width: 0; }
+.bar-days .bar-ev { flex: 1 1 0; min-width: 0; align-self: center; }
 .bar-ev.cont-l { border-top-left-radius: 0; border-bottom-left-radius: 0; }
 .bar-ev.cont-r { border-top-right-radius: 0; border-bottom-right-radius: 0; }
-.bar-days:hover > .bar-ev { filter: brightness(.96); outline: 2px solid var(--edge); }
-.bar-days.underline > .bar-ev.cont-l { border-left-width: 0; } /* underline: 境目の縁は1本 */
-/* 進化のバーの `12:00に解禁`(週表示のみ。属性色) */
+.bar-days:hover .bar-ev { filter: brightness(.96); outline: 2px solid var(--edge); }
+.bar-days.underline .bar-ev.cont-l { border-left-width: 0; } /* underline: 境目の縁は1本 */
+/* 進化のバーの `12:00解禁`(週表示のみ。属性色) */
 .bar-unlock { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: .74rem; font-weight: 800; -webkit-text-stroke: .35px currentColor; line-height: 1; white-space: nowrap; overflow: hidden; pointer-events: none; color: var(--c-hd-fg); }
 .bar-unlock.colored { color: color-mix(in srgb, var(--pc) 75%, #000); }
 :root[data-theme="dark"] .bar-unlock.colored { color: color-mix(in srgb, var(--pc) 32%, var(--text)); }

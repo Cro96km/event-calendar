@@ -266,9 +266,10 @@ describe('キャラクター・ガチャ: 新限定のバーへの畳み込み�
   it('通常表示: ガチャのバーの中に新限定の名前(属性色)が出る。ツールチップにも出る。進化と畳めなかった新限定は1キャラ1行', () => {
     const root = draw();
     const bar = [...root.querySelectorAll<HTMLElement>('.bar-ev')].find((b) => b.dataset.eventId === 'n#0')!;
-    expect(bar.querySelector('.bar-names')?.textContent).toBe('NEW：カーミラ・ツクモ');
-    expect(bar.querySelectorAll('.g-name.colored')).toHaveLength(2); // 名前だけが属性色(「NEW：」と「・」は本文色)
-    expect(bar.querySelector('.bar-new-label')?.textContent).toBe('NEW：');
+    expect(bar.querySelector('.bar-names')?.textContent).toBe('NEW！カーミラ・ツクモ');
+    expect(bar.querySelectorAll('.g-name.colored')).toHaveLength(2); // 2人以上: 名前だけが属性色(「NEW！」と「・」は既定の色)
+    expect(bar.querySelector('.bar-new-label')?.textContent).toBe('NEW！');
+    expect(bar.querySelector('.bar-new-label.colored')).toBeNull();
     expect(bar.title).toContain('新限定: カーミラ(火)・ツクモ(木)');
     expect(bar.classList.contains('has-names')).toBe(true);
     expect(root.querySelectorAll('.bar-names')).toHaveLength(1);
@@ -317,7 +318,7 @@ describe('キャラクター・ガチャ: 新限定のバーへの畳み込み�
     expect(root.querySelectorAll('.g-chip.colored')).toHaveLength(1);
     expect(root.querySelector('.g-row:not(.g-dates) > .g-label.colored')).toBeNull();
     expect(root.querySelectorAll('.bar-ev')).toHaveLength(2); // 彩・獣神祭 と ほか(進化はバーなし)
-    expect(root.querySelector('.bar-names')?.textContent).toBe('NEW：カーミラ・ツクモ');
+    expect(root.querySelector('.bar-names')?.textContent).toBe('NEW！カーミラ・ツクモ');
   });
   it('概要: 新限定(with_new_limited)のブロックは、名前を持つガチャの行だけ。ほかのブロックには出さない', () => {
     const secs = ganttSections(evs, weekDays('2026-11-05'));
@@ -378,11 +379,13 @@ describe('バーの縁の属性色(新限定・ピックアップ・進化)', ()
     expect(b['e#c0']!.style.getPropertyValue('--pc')).toBe('#a237c3');
     expect(b['e#c1']!.classList.contains('edge-attr')).toBe(false);
   });
-  it('バー内の文字: 週表示は「NEW：名前」(2人は「・」区切り)、月表示は「NEW」だけ(中央揃えはCSS)', () => {
+  it('バー内の文字: 週表示は「NEW！名前」(2人は「・」区切り。1人なら「NEW！」も属性色)、月表示は「NEW」だけ(1人なら属性色。中央揃えはCSS)', () => {
     const one = [host, chara('n#c0', 'マクスウェル（彩・獣神祭）', '#a237c3')];
-    expect(bars(one)['n#0']!.querySelector('.bar-names')?.textContent).toBe('NEW：マクスウェル');
+    expect(bars(one)['n#0']!.querySelector('.bar-names')?.textContent).toBe('NEW！マクスウェル');
+    expect(bars(one)['n#0']!.querySelector('.bar-new-label.colored')).not.toBeNull(); // 1人: 「NEW！」も属性色
+    expect((bars(one, true)['n#0']!.querySelector('.bar-new') as HTMLElement).classList.contains('colored')).toBe(true);
     const two = [host, chara('n#c0', 'A（彩・獣神祭）', '#eb0043'), chara('n#c1', 'B（彩・獣神祭）', '#007d32')];
-    expect(bars(two)['n#0']!.querySelector('.bar-names')?.textContent).toBe('NEW：A・B');
+    expect(bars(two)['n#0']!.querySelector('.bar-names')?.textContent).toBe('NEW！A・B');
     const m = bars(two, true)['n#0']!;
     expect(m.textContent).toBe('NEW');
     expect(m.querySelector('.bar-names')).toBeNull();

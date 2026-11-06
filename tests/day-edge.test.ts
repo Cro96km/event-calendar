@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { dayAttrColors, dayEdgeSegments, edgeGradient } from '../src/day-edge';
+import { dayAttrColors, dayEdgeSegments } from '../src/day-edge';
 
 const RED = '#eb0043', BLUE = '#3154ef', GREEN = '#007d32', YELLOW = '#a16800', PURPLE = '#a237c3';
 const base = { name: '「追憶の書庫」でスコア報酬に「5倍」のスペシャルボーナス!', start: '2026-10-11T04:00:00+09:00', end: '2026-10-15T03:59:00+09:00' };
@@ -42,9 +42,5 @@ describe('日ごとの対象属性の縁(day-edge)', () => {
     const last = dayEdgeSegments({ from: 3, to: 3, startFrac: 0, endFrac: 1 }, days, colors);
     expect(last?.map((s) => s.color)).toEqual([RED]);
     expect(dayEdgeSegments({ from: 5, to: 6, startFrac: 0, endFrac: 1 }, days, colors)).toBeNull();
-  });
-  it('グラデーションの文字列: 属性色は --ep・--ek で縁の濃さに合わせ、色なしは既定の縁', () => {
-    const g = edgeGradient([{ color: BLUE, a: 0, b: 0.5 }, { color: null, a: 0.5, b: 1 }]);
-    expect(g).toBe('linear-gradient(90deg, color-mix(in srgb, #3154ef var(--ep), var(--ek)) 0.000% 50.000%, var(--c-bar-edge) 50.000% 100.000%)');
   });
 });

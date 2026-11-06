@@ -7,7 +7,7 @@ import { type BarSpan, addDays, isOnCalendarDay, campaignGroup, questGroup, main
 import { EVENT_QUEST_SUFFIX, MAINTENANCE_CATEGORY, gachaGroup, sectionOf } from './sections';
 import { barEdgeColors, foldNewLimited } from './newlimited';
 import { attributeColor, type Attribute } from './characters';
-import { dayAttrColors, dayEdgeSegments, edgeColorCss, edgeGradient, type EdgeSegment } from './day-edge';
+import { dayAttrColors, dayEdgeSegments, edgeColorCss } from './day-edge';
 import { dayStyleOf, type DayStyle } from './bar-style';
 import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
@@ -322,46 +322,23 @@ function attrColorInText(text: string): string | undefined {
   return attributeColor(a);
 }
 
-/** 日ごとに分けたバー1つ(1日=1セル)の見た目。colors=その日の対象属性の色(無ければ既定の縁)。複数の属性がある日は、縁を等分して境目に縦線を左右の色で2本。 */
-function paintDayPiece(piece: HTMLElement, colors: readonly string[], style: DayStyle): void {
-  const at = (node: HTMLElement, left: number, width: number): HTMLElement => {
-    node.style.left = `${(left * 100).toFixed(3)}%`;
-    node.style.width = `${(width * 100).toFixed(3)}%`;
-    return node;
+/** 日ごと(複数の属性がある日は色ごと)に分けたバー1つの見た目。color=その属性の色(null は既定の縁)。 */
+function paintDayPiece(piece: HTMLElement, color: string | null, style: DayStyle): void {
+  if (color === null) return;
+  const full = (cls: string): void => {
+    const node = el('span', cls);
+    node.style.left = '0';
+    node.style.width = '100%';
+    node.style.setProperty('--dc', edgeColorCss(color));
+    piece.append(node);
   };
-  const k = colors.length;
   if (style === 'underline') {
-    // 縁は単色(境目の縁は1本)。下辺だけ属性色の帯
-    colors.forEach((c, i) => {
-      const u = at(el('span', 'day-under'), i / k, 1 / k);
-      u.style.setProperty('--dc', edgeColorCss(c));
-      piece.append(u);
-    });
+    full('day-under'); // 縁は単色。下辺だけ属性色の帯
     return;
   }
-  if (k === 1) {
-    piece.classList.add('edge-attr');
-    piece.style.setProperty('--pc', colors[0] as string);
-  } else if (k >= 2) {
-    piece.classList.add('edge-days');
-    piece.style.setProperty('--edge-grad', edgeGradient(colors.map((c, i): EdgeSegment => ({ color: c, a: i / k, b: (i + 1) / k }))));
-    for (let i = 1; i < k; i++) {
-      const left = at(el('span', 'day-line left'), i / k, 0);
-      left.style.width = '';
-      left.style.setProperty('--dc', edgeColorCss(colors[i - 1] as string));
-      const right = at(el('span', 'day-line right'), i / k, 0);
-      right.style.width = '';
-      right.style.setProperty('--dc', edgeColorCss(colors[i] as string));
-      piece.append(left, right);
-    }
-  }
-  if (style === 'stripes') {
-    colors.forEach((c, i) => {
-      const st = at(el('span', 'day-stripe'), i / k, 1 / k);
-      st.style.setProperty('--dc', edgeColorCss(c));
-      piece.prepend(st);
-    });
-  }
+  piece.classList.add('edge-attr');
+  piece.style.setProperty('--pc', color);
+  if (style === 'stripes') full('day-stripe');
 }
 
 /** セルの文字の色: 属性が1つならセルの文字すべてをその属性色に、複数なら属性の字(火・水・木・光・闇)をそれぞれの属性色にする。 */
@@ -732,24 +709,39 @@ export function render(root: HTMLElement, state: AppState): void {
           const wrap = el('div', `bar-days ${dayStyle}`);
           wrap.style.gridColumn = `${bar.from + 2} / ${bar.to + 3}`;
           wrap.style.gridTemplateColumns = `repeat(${n}, minmax(0, 1fr))`;
-          for (let i = 0; i < n; i++) {
-            const piece = el('button', 'bar-ev day-piece');
-            piece.style.gridColumn = String(i + 1);
-            wire(piece);
-            if (i === 0) {
-              if (bar.clippedLeft) piece.classList.add('clip-l');
-              const ml = leftMargin(1);
-              if (ml !== null) piece.style.marginLeft = ml;
-            } else piece.classList.add('cont-l');
-            if (i === n - 1) {
-              if (bar.clippedRight) piece.classList.add('clip-r');
-              if (bar.openEnded) piece.classList.add('open');
-              const mr = rightMargin(1);
-              if (mr !== null) piece.style.marginRight = mr;
-            } else piece.classList.add('cont-r');
-            paintDayPiece(piece, dayColors.get(days[bar.from + i] as string) ?? [], dayStyle);
-            wrap.append(piece);
-          }
+          // 1日(セル)に属性が複数あれば、色ごとにバーを作る(その日のセルを等分)。全体の左端・右端以外は角を丸めず、余白なしでつなぐ
+          const perDay = Array.from({ length: n }, (_, i) => {
+            const cs = (dayColors.get(days[bar.from + i] as string) ?? []).slice();
+            return cs.length === 0 ? [null] : cs;
+          });
+          perDay.forEach((cs, i) => {
+            const cell = el('div', 'day-cell');
+            cell.style.gridColumn = String(i + 1);
+            cs.forEach((c, j) => {
+              const piece = el('button', 'bar-ev day-piece');
+              wire(piece);
+              const isFirst = i === 0 && j === 0;
+              const isLast = i === n - 1 && j === cs.length - 1;
+              if (isFirst) {
+                if (bar.clippedLeft) piece.classList.add('clip-l');
+                piece.style.marginLeft = leftMargin(1) ?? (bar.clippedLeft ? '0' : '2px');
+              } else {
+                piece.classList.add('cont-l');
+                piece.style.marginLeft = '0';
+              }
+              if (isLast) {
+                if (bar.clippedRight) piece.classList.add('clip-r');
+                if (bar.openEnded) piece.classList.add('open');
+                piece.style.marginRight = rightMargin(1) ?? (bar.clippedRight || bar.openEnded ? '0' : '2px');
+              } else {
+                piece.classList.add('cont-r');
+                piece.style.marginRight = '0';
+              }
+              paintDayPiece(piece, c, dayStyle);
+              cell.append(piece);
+            });
+            wrap.append(cell);
+          });
           row.append(wrap);
           continue;
         }
@@ -765,11 +757,18 @@ export function render(root: HTMLElement, state: AppState): void {
         // 新限定キャラ: 週表示(撮影モード含む)はバーの中に名前(属性色)を折り返して書き、バーの高さは中身に合わせて伸びる。月表示は短く「NEW」だけ(名前はツールチップ・詳細パネル)
         if (ev.new_names?.length) {
           b.classList.add('has-names');
-          if (state.view === 'month') b.append(el('span', 'bar-new', 'NEW'));
-          else {
-            // `NEW：A・B`(「NEW：」と「・」は本文色、名前は属性色)
+          // 1人だけなら「NEW！」も属性色、2人以上なら「NEW！」は既定の色(名前だけが属性色)
+          const solo = ev.new_names.length === 1 ? ev.new_names[0]?.color : undefined;
+          if (state.view === 'month') {
+            const nw = el('span', 'bar-new', 'NEW');
+            if (solo) paint(nw, solo);
+            b.append(nw);
+          } else {
+            // `NEW！名前`(2人は `NEW！A・B`)
             const names = el('span', 'bar-names');
-            names.append(el('span', 'bar-new-label', 'NEW：'));
+            const label = el('span', 'bar-new-label', 'NEW！');
+            if (solo) paint(label, solo);
+            names.append(label);
             ev.new_names.forEach((x, i) => {
               if (i > 0) names.append(el('span', 'bar-sep', '・'));
               const nm = el('span', 'g-name', x.name);
@@ -779,9 +778,9 @@ export function render(root: HTMLElement, state: AppState): void {
             b.append(names);
           }
         }
-        // 進化: 週表示(撮影モードを除く)だけ、バーの中に `12:00に解禁`(属性色)
+        // 進化: 週表示(撮影モードを除く)だけ、バーの中に `12:00解禁`(属性色)
         if (ev.character !== undefined && ev.character.kind !== '新限定' && ev.character.at !== undefined && state.view === 'week' && !state.shot) {
-          const t = el('span', 'bar-unlock', `${ev.character.at.slice(11, 16)}に解禁`);
+          const t = el('span', 'bar-unlock', `${ev.character.at.slice(11, 16)}解禁`);
           if (ev.color) paint(t, ev.color);
           b.append(t);
         }
