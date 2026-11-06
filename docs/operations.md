@@ -153,9 +153,10 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 | `apply.yml` | 要対応Issue(タイトルが「要対応」)に `/apply` とコメント(所有者・メンバー・共同作業者のみ。Issueの作者も更新ワークフローのbotか所有者のものだけ) | Issue本文のチェックを `npm run judge` で判断の記憶に取り込み、検証して PR→自動マージ→`deploy.yml` 起動→Issue を閉じる。検証が通らなければ『要確認』で待機 |
 | `manual.yml` | 手動実行のみ(Actions → manual → Run workflow) | 入力(操作・項目名・期間など)で `npm run manual` を実行 → 検証(lint・テスト・ビルド・`npm run check`) → `config/schedule/manual.json` を更新する PR → 健全なら自動マージして `deploy.yml` を起動。検証が通らなければ『要確認』で待機。手順は §14 |
 | `prune.yml` | 手動実行のみ(Actions → prune → Run workflow) | 既定は確認だけ(`npm run prune`。対象の件数と月別の内訳を実行結果の概要に出す)。`apply=true` のときだけ、削除 → 表示用データの作り直し → 検証 → `data: prune old articles` の PR → 健全なら自動マージして `deploy.yml` を起動。手順は §15 |
+| `discord.yml` | `update.yml` の定例が健全に終わったあと(自動)、手動実行 | リポジトリのデータから週表示の画像5枚を作り、Discord の Webhook へ新しく投稿(§18)。Secret `DISCORD_WEBHOOK_URL` が無ければ投稿しない。`dry_run` で内容だけ確認 |
 | `ci.yml` | PR、main への push | lint・テスト・ビルド(人が作る PR 用) |
 
-**手動実行の入力(update.yml)**: `collect`(false にすると収集せず、設定の変更だけを反映して判定とレポートを作り直す)、`pages`(既定2)、`since`(初回・過去分用。公式サイトへの負荷が大きい)。
+**手動実行の入力(update.yml)**: `discord`(true なら健全に終わったあと Discord へ転送。既定 false)、`collect`(false にすると収集せず、設定の変更だけを反映して判定とレポートを作り直す)、`pages`(既定2)、`since`(初回・過去分用。公式サイトへの負荷が大きい)。
 
 **日常の使い方**
 - 金曜の朝: PR が『自動マージ』ならそのまま反映済み(PR の本文で何が増えたかを見られる)。『要確認』なら理由を見て対応する。
@@ -220,7 +221,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 - 反映は main への変更後の `deploy.yml`(収集は不要)。JSON を直接編集してもよい(書式の誤りは `npm run check` と CI が検知する)。
 
 ## 18. Discord 用の画像 `npm run discord:images`
-週表示(基準日から7日)のカレンダーを PNG にする。**ローカルで画像を作るだけで、Discord には送らない**(送信は別の段階)。
+週表示(基準日から7日)のカレンダーを PNG にする。**この節のコマンドはローカルで画像を作るだけ**(Discord への送信は下の「Discord への送信」)。
 1. `npm run update`(または `npm run collect`)→ `npm run build:public` で `dist/` と `dist/data` を作る。
 2. `npm run discord:images` → `out/discord/` に5枚。**ファイル名は画像に写る期間**: `2026-11-06_2026-11-12_summary.png`(概要)・`…_character.png`・`…_quest.png`・`…_campaign.png`・`…_gacha.png`。`-- --date YYYY-MM-DD` で基準日を固定、`-- --only quest` で1枚だけ。`out/` は git に含めない。
 - 初回は `npx playwright install chromium`。日本語フォント(Linux は `fonts-noto-cjk` など)が必要。ブラウザのタイムゾーンは Asia/Tokyo、ライト固定。
@@ -228,6 +229,14 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 - メンテナンスの帯は5枚とも出る。画像にはフッター(注記)を入れない。公式の画像・ロゴは使わない。公式サイト・公開サイトにはアクセスしない(`dist/` をローカルで配信して撮る)。
 - 画面でも `?shot=summary|character|quest|campaign|gacha`(と `&date=YYYY-MM-DD`)を付けると撮影モードで見られる(`npm run dev` / `npm run preview`)。
 - **概要の並びと中身は `config/display/discord.json` の `summary.blocks` だけを直す**(コード変更は要らない)。概要はセクションの大見出しを出さず、blocks を上から順に並べる。1ブロック: `section`(セクションid)・`groups`(出す小見出し。複数ならこの順)・`keywords`(この語を含む行だけ)・`hide_keywords`・`start_day_only`(開催日だけ。その週に始まるものを開始日の列1日分に描き、それ以前に始まったものは出さない)・`headings`(小見出しを出すか)・`max_rows`。**現在の並び**: ①モンストの日 ②特Lの園 ③イベントクエスト ④期間限定ガチャ ⑤絶級・期間限定・超究極クエスト(開催日だけ) ⑥新限定 ⑦進化 ⑧定例クエスト(常設クエスト・その他は出さない)。小見出しは groups を書いたブロックに出る(モンストの日・特Lの園には出ない)。行が無いブロックは出さない。キャラクター・クエスト・キャンペーン・ガチャの各画像は絞らない(大見出しあり)。
+
+### Discord への送信(`npm run discord:post` / `.github/workflows/discord.yml`)
+- **方式**: Webhook で、画像1枚ずつを**毎回新しく投稿**する(5メッセージ。見出し `**概要** 11/6〜11/12` + 画像。過去の投稿は書き換えない=履歴が残る)。メンション・`@` は解釈させない。通知を鳴らさないのは `--silent`(Actions では `silent` 入力)。
+- **毎週の自動転送**: 定例の `update.yml`(金曜 0:00 JST)が**健全に終わった**(自動マージ済み、または変更なし)あとに `discord.yml` を起動する。`要確認` の週(main が古い)は送らない。画像はリポジトリのデータからその場で作るので、deploy の完了は待たない。`update.yml` の手動実行は、入力 `discord=true` のときだけ転送する(既定は送らない)。
+- **臨時の転送**: Actions → discord → Run workflow。入力: `date`(基準日。空=今日〈JST〉)・`only`(all か1枚)・`dry_run`(true=送らず、内容を表示し、画像を Artifacts〈7日〉に残す)・`silent`。重複投稿になるので、本番では先に `dry_run=true` で確かめる。
+- **Webhook の URL は Secret `DISCORD_WEBHOOK_URL`**(Settings → Secrets and variables → Actions。登録はリポジトリ所有者が行う)。未登録なら警告を出して**何も投稿せずに成功で終わる**(dry-run は Secret 不要)。URL はログに出さない(形が違えば値を伏せて失敗)。URL が漏れたら Discord 側でウェブフックを削除して作り直す。
+- **ローカルで試す**: `npm run update && npm run build:public && npm run discord:images` のあと `npm run discord:post -- --dry-run`。実際に送るなら、リポジトリの外のファイルに URL を置き(例 `~/.config/monst/discord-test-webhook`。`chmod 600`)、`DISCORD_WEBHOOK_URL="$(cat ~/.config/monst/discord-test-webhook)" npm run discord:post`(テスト用チャンネルで)。`out/discord/` に複数の期間の画像があれば、最新の期間だけ送る。
+- **失敗したとき**: 送信は直列(1秒あけ)。429 は待って最大3回やり直す。途中で失敗したら止まり、送れた分は再送しない(`only` で残りだけ送る)。
 
 ## 19. キャラクターのセクション(新限定・獣神化・獣神化改・真獣神化)
 通常のカレンダーの**キャラクター**セクション(クエストの上。1キャラ=1行。仕様は docs/spec.md §4.13)。
