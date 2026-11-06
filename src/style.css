@@ -144,14 +144,20 @@ body:has(.shot) { padding: 0; background: #fff; }
 .shot .bar-ev { height: 1.5rem; margin-top: .4rem; margin-bottom: .4rem; }
 .shot .g-section { padding-top: .12rem; padding-bottom: .12rem; }
 .shot .g-group { padding-top: .05rem; padding-bottom: .05rem; }
-/* 新限定: 週表示(撮影モード含む)はガチャのバーの中に、キャラ名(属性色)を中央揃えで折り返して書き、バーの高さは中身に合わせて伸びる(行も伸びる)。月表示は「NEW」だけ(名前はツールチップ・詳細)。属性色はバーの面で読める濃さ(ライト=元の色を25%暗く、ダーク=本文色と混ぜる)。 */
+/* 新限定: 週表示(撮影モード含む)はガチャのバーの中に `NEW：名前・名前`(「NEW：」は本文色、名前は属性色)を中央揃えで折り返して書き、バーの高さは中身に合わせて伸びる(行も伸びる)。月表示は「NEW」だけを中央に(名前はツールチップ・詳細)。属性色はバーの面で読める濃さ(ライト=元の色を25%暗く、ダーク=本文色と混ぜる)。 */
 .bar-ev.has-names { height: auto; min-height: 1.7rem; }
 .shot .bar-ev.has-names { height: auto; min-height: 1.5rem; }
-.bar-names { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: .1rem .6rem; padding: .22rem .5rem; font-size: .74rem; font-weight: 700; line-height: 1.25; pointer-events: none; }
-.bar-names .g-name { flex: none; }
+.bar-names { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; padding: .22rem .5rem; font-size: .74rem; font-weight: 700; line-height: 1.25; pointer-events: none; }
+.bar-names > span { flex: none; }
 .bar-names .g-name.colored { color: color-mix(in srgb, var(--pc) 75%, #000); }
 :root[data-theme="dark"] .bar-names .g-name.colored { color: color-mix(in srgb, var(--pc) 32%, var(--text)); }
-.bar-new { display: block; padding: 0 .3rem; font-size: .62rem; font-weight: 700; line-height: 1.6rem; letter-spacing: .03em; white-space: nowrap; overflow: hidden; text-align: left; color: var(--c-hd-fg); pointer-events: none; }
+.bar-new { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: .62rem; font-weight: 700; line-height: 1; letter-spacing: .03em; white-space: nowrap; overflow: hidden; color: var(--c-hd-fg); pointer-events: none; }
+/* 縁(輪郭)の属性色: 新限定・ピックアップ・進化。面は青灰のまま。ライトは元の色を15%暗く、ダークは明るく。2人は左右半分ずつ(左=最初の名前) */
+.bar-ev.edge-attr { border-color: color-mix(in srgb, var(--pc) 85%, #000); }
+:root[data-theme="dark"] .bar-ev.edge-attr { border-color: color-mix(in srgb, var(--pc) 60%, #fff); }
+.bar-ev.edge-split { --e1: color-mix(in srgb, var(--pc1) 85%, #000); --e2: color-mix(in srgb, var(--pc2) 85%, #000); border-color: transparent; background: linear-gradient(var(--c-bar), var(--c-bar)) padding-box, linear-gradient(90deg, var(--e1) 50%, var(--e2) 50%) border-box; }
+:root[data-theme="dark"] .bar-ev.edge-split { --e1: color-mix(in srgb, var(--pc1) 60%, #fff); --e2: color-mix(in srgb, var(--pc2) 60%, #fff); }
+.bar-ev.edge-split.open { background: repeating-linear-gradient(90deg, var(--c-bar) 0 6px, var(--c-bar-alt) 6px 12px) padding-box, linear-gradient(90deg, var(--e1) 50%, var(--e2) 50%) border-box; }
 /* 進化: 種別ごとの1行。解禁日の枠にキャラ名を縦に並べる(属性色) */
 .g-chips { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .05rem; padding: .15rem .1rem; height: 100%; }
 .g-chip { font-size: .72rem; font-weight: 700; line-height: 1.2; text-align: center; }

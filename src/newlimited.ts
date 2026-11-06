@@ -6,6 +6,23 @@ import { gachaGroup, sectionOfEvent } from './sections';
 /** `名前（実装ガチャ名）` の名前だけ(行名の括弧の前)。 */
 export const nameOnly = (label: string): string => label.replace(/（[^（）]*）$/, '');
 
+const HEX = /^#[0-9a-f]{6}$/i;
+
+/**
+ * バーの縁(輪郭)に使う属性色。0個=既定の縁、1個=その色、2個=左右半分ずつ(左=最初の名前)。
+ * - 新限定の名前を持つガチャ: 1〜2人で全員に色があるときだけ(3人以上・色が不明なら既定)
+ * - コラボのピックアップ: 名前の色(pickup.color)
+ * - キャラクターの項目(進化・畳めなかった新限定): 属性色(color)
+ */
+export function barEdgeColors(e: Pick<ExportEvent, 'new_names' | 'pickup' | 'character' | 'color'>): string[] {
+  if (e.new_names?.length) {
+    const cs = e.new_names.map((n) => n.color);
+    return cs.length <= 2 && cs.every((c): c is string => c !== undefined && HEX.test(c)) ? cs : [];
+  }
+  const c = e.pickup ? e.pickup.color : e.character ? e.color : undefined;
+  return c !== undefined && HEX.test(c) ? [c] : [];
+}
+
 /** 項目IDの `#c<連番>` の連番(無ければ 0)。名前の並びを記事の順にする。 */
 const charIndex = (id: string): number => Number(/#c(\d+)$/.exec(id)?.[1] ?? 0);
 

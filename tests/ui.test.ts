@@ -1099,7 +1099,7 @@ describe('ガチャセクション', () => {
     expect([...root.querySelectorAll('.g-inner .g-rows > .g-row .g-l1')].map((x) => x.textContent).slice(-3)).toEqual(['作品M', 'ピ', '作品O']);
   });
 
-  it('ピックアップの公式色: ラベルとスケジュール表の対象名に --pc とクラス(バーは既定色のまま)。#rrggbb 以外は無視する', () => {
+  it('ピックアップの公式色: ラベルとスケジュール表の対象名に --pc とクラス、バーは面は既定色のまま縁だけその色(edge-attr)。#rrggbb 以外は無視する', () => {
     const m = ev('c#0', 'collab', '2026-11-02T12:00:00+09:00', '2026-11-09T11:59:00+09:00', {
       name: 'ガチャ「作品C」開催!',
       details: [{ label: 'ガチャ開催スケジュール', lines: ['ユルピックアップ | 11/3 12:00〜11/4 11:59'], colors: { ユルピックアップ: '#a237c3' } }],
@@ -1115,7 +1115,8 @@ describe('ガチャセクション', () => {
     expect(yuru.querySelector('.g-label')?.classList.contains('colored')).toBe(true);
     // バーは色を変えず既定(ユーザ指示)
     expect(yuru.querySelector('.bar-ev')?.classList.contains('pickup-bar')).toBe(false);
-    expect((yuru.querySelector('.bar-ev') as HTMLElement).style.getPropertyValue('--pc')).toBe('');
+    expect((yuru.querySelector('.bar-ev') as HTMLElement).style.getPropertyValue('--pc')).toBe('#a237c3'); // 縁の色(面は変えない)
+    expect(yuru.querySelector('.bar-ev')?.classList.contains('edge-attr')).toBe(true);
     const wal = row('ワル');
     expect(wal.querySelector('.g-label')?.classList.contains('colored')).toBe(false);
     expect(wal.querySelector('.bar-ev')?.classList.contains('pickup-bar')).toBe(false);

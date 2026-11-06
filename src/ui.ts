@@ -5,7 +5,7 @@ import { monthlyEvents, type MonthlyDef } from './monthly';
 import { clampToWindow, windowRange } from './window';
 import { type BarSpan, addDays, isOnCalendarDay, campaignGroup, questGroup, maintenanceBars, maintenanceOnDay, addMonthsToDay, dayLabel, monthWindow, eventsForDay, formatJst, ganttSections, mergeSameLabel, rowLabel, periodText, unlockText, whenText, slotRows, weekDays, weekdayOf } from './week';
 import { EVENT_QUEST_SUFFIX, MAINTENANCE_CATEGORY, gachaGroup, sectionOf } from './sections';
-import { foldNewLimited } from './newlimited';
+import { barEdgeColors, foldNewLimited } from './newlimited';
 import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
@@ -627,14 +627,27 @@ export function render(root: HTMLElement, state: AppState): void {
           b.classList.add('has-names');
           if (state.view === 'month') b.append(el('span', 'bar-new', 'NEW'));
           else {
+            // `NEW：A・B`(「NEW：」と「・」は本文色、名前は属性色)
             const names = el('span', 'bar-names');
-            for (const n of ev.new_names) {
+            names.append(el('span', 'bar-new-label', 'NEW：'));
+            ev.new_names.forEach((n, i) => {
+              if (i > 0) names.append(el('span', 'bar-sep', '・'));
               const nm = el('span', 'g-name', n.name);
               if (n.color) paint(nm, n.color);
               names.append(nm);
-            }
+            });
             b.append(names);
           }
+        }
+        // 縁の色: 新限定・ピックアップ・キャラクター(進化)は属性色。2人なら左右半分ずつ。色が無い・3人以上は既定の縁
+        const edge = barEdgeColors(ev);
+        if (edge.length === 1) {
+          b.classList.add('edge-attr');
+          b.style.setProperty('--pc', edge[0] as string);
+        } else if (edge.length === 2) {
+          b.classList.add('edge-split');
+          b.style.setProperty('--pc1', edge[0] as string);
+          b.style.setProperty('--pc2', edge[1] as string);
         }
         b.title = [ev.name, newText, whenText(ev)].filter(Boolean).join('\n');
         b.setAttribute('aria-label', [ev.pickup ? ev.name : shortLabel(ev.name), newText, whenText(ev)].filter(Boolean).join(' '));
