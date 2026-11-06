@@ -309,6 +309,11 @@ function attachDrag(grid: HTMLElement, state: AppState, rerender: () => void): v
   );
 }
 
+/** 文字列の数字の連続を span.num にする(数字は日本語の字より小さく見えるので、日付ヘッダでは数字だけ少し大きくする。テキストは変わらない)。 */
+function numSpans(text: string): (string | HTMLElement)[] {
+  return text.split(/(\d+)/).filter((t) => t !== '').map((t) => (/^\d+$/.test(t) ? el('span', 'num', t) : t));
+}
+
 /** セクションの色(色相 --hue・彩度 --sat〈省略時は CSS の既定〉・明るさの補正 --lit。CSS の --c-head など)を要素に渡す。 */
 function paintSection(node: HTMLElement, section: { hue: number; sat?: number; lit?: number }): void {
   node.style.setProperty('--hue', String(section.hue));
@@ -510,13 +515,19 @@ export function render(root: HTMLElement, state: AppState): void {
   const rowsBox = el('div', 'g-rows');
   grid.append(body);
   const dateRow = el('div', 'g-row g-dates');
-  dateRow.append(el('div', 'g-label', ((d: string) => `${d.slice(0, 4)}年${Number(d.slice(5, 7))}月`)(state.view === 'week' ? state.weekStart : state.monthStart)));
+  const ymLabel = el('div', 'g-label');
+  ymLabel.append(...numSpans(((d: string) => `${d.slice(0, 4)}年${Number(d.slice(5, 7))}月`)(state.view === 'week' ? state.weekStart : state.monthStart)));
+  dateRow.append(ymLabel);
   for (const day of days) {
     const wd = weekdayOf(day);
     const cls = ['day', 'g-date', wd === '土' ? 'sat' : wd === '日' ? 'sun' : '', day === state.today ? 'today' : ''].filter(Boolean).join(' ');
     const head = el('button', cls);
     head.dataset.day = day;
-    if (day.endsWith('-01') && day !== state.today) head.append(el('span', 'dmon', day.endsWith('-01-01') ? `${day.slice(0, 4)}年1月` : `${Number(day.slice(5, 7))}月`));
+    if (day.endsWith('-01') && day !== state.today) {
+      const mon = el('span', 'dmon');
+      mon.append(...numSpans(day.endsWith('-01-01') ? `${day.slice(0, 4)}年1月` : `${Number(day.slice(5, 7))}月`));
+      head.append(mon);
+    }
     head.append(el('span', 'dnum', String(Number(day.slice(8, 10)))), el('span', 'dwd', wd));
     head.title = dayLabel(day);
     head.onclick = () => {
