@@ -7,7 +7,8 @@ import { type BarSpan, addDays, isOnCalendarDay, campaignGroup, questGroup, main
 import { EVENT_QUEST_SUFFIX, MAINTENANCE_CATEGORY, gachaGroup, sectionOf } from './sections';
 import { barEdgeColors, foldNewLimited } from './newlimited';
 import { attributeColor, type Attribute } from './characters';
-import { dayAttrColors, dayEdgeSegments, edgeGradient } from './day-edge';
+import { dayAttrColors, dayEdgeSegments, edgeColorCss, edgeGradient, type EdgeSegment } from './day-edge';
+import { dayStyleOf, type DayStyle } from './bar-style';
 import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
@@ -319,6 +320,48 @@ function paintSection(node: HTMLElement, section: { hue: number; sat?: number; l
 function attrColorInText(text: string): string | undefined {
   const a = (['火', '水', '木', '光', '闇'] as const).find((x) => text.includes(x));
   return attributeColor(a);
+}
+
+/** 日ごとの属性バーの飾り(見せ方 style): 色が変わるところの縦線(左右の色で2本)・区画の斜線・下辺の帯。位置はバーの幅に対する割合。 */
+function dayDecor(segs: readonly EdgeSegment[], style: DayStyle): HTMLElement[] {
+  const out: HTMLElement[] = [];
+  const at = (node: HTMLElement, left: string, width?: string): HTMLElement => {
+    node.style.left = left;
+    if (width) node.style.width = width;
+    return node;
+  };
+  if (style === 'stripes') {
+    for (const s of segs) {
+      const stripe = at(el('span', 'day-stripe'), `${(s.a * 100).toFixed(3)}%`, `${((s.b - s.a) * 100).toFixed(3)}%`);
+      stripe.style.setProperty('--dc', edgeColorCss(s.color));
+      out.push(stripe);
+    }
+  }
+  if (style === 'underline') {
+    for (const s of segs) {
+      const u = at(el('span', 'day-under'), `${(s.a * 100).toFixed(3)}%`, `${((s.b - s.a) * 100).toFixed(3)}%`);
+      u.style.setProperty('--dc', edgeColorCss(s.color));
+      out.push(u);
+    }
+  }
+  if (style === 'lines' || style === 'stripes' || style === 'underline') {
+    for (let i = 0; i + 1 < segs.length; i++) {
+      const x = ((segs[i] as EdgeSegment).b * 100).toFixed(3);
+      if (style === 'underline') {
+        // 縁は単色なので、縦線も縁と同じ色の1本
+        const l = at(el('span', 'day-line'), `${x}%`);
+        l.style.setProperty('--dc', 'var(--c-bar-edge)');
+        out.push(l);
+        continue;
+      }
+      const left = at(el('span', 'day-line left'), `${x}%`);
+      left.style.setProperty('--dc', edgeColorCss((segs[i] as EdgeSegment).color));
+      const right = at(el('span', 'day-line right'), `${x}%`);
+      right.style.setProperty('--dc', edgeColorCss((segs[i + 1] as EdgeSegment).color));
+      out.push(left, right);
+    }
+  }
+  return out;
 }
 
 /** セルの文字の色: 属性が1つならセルの文字すべてをその属性色に、複数なら属性の字(火・水・木・光・闇)をそれぞれの属性色にする。 */
@@ -692,10 +735,15 @@ export function render(root: HTMLElement, state: AppState): void {
         // 縁の色: 新限定・ピックアップ・キャラクター(進化)は属性色。2人なら左右半分ずつ。色が無い・3人以上は既定の縁
         const edge = barEdgeColors(ev);
         // 日ごとに対象の属性が決まっているバー(書庫・特Lの園など)は、縁を日ごとの属性色に区切る
-        const segs = dayEdgeSegments(bar, days, dayAttrColors(ev));
+        const dayStyle = dayStyleOf(section.id);
+        const segs = dayStyle === 'off' ? null : dayEdgeSegments(bar, days, dayAttrColors(ev));
         if (segs) {
-          b.classList.add('edge-days');
-          b.style.setProperty('--edge-grad', edgeGradient(segs));
+          // 縁の色分け(underline 以外)。縦線・斜線・下辺の帯は子要素で描く(見せ方は config/display/bar-style.json)
+          if (dayStyle !== 'underline') {
+            b.classList.add('edge-days');
+            b.style.setProperty('--edge-grad', edgeGradient(segs));
+          }
+          b.prepend(...dayDecor(segs, dayStyle));
         } else if (edge.length === 1) {
           b.classList.add('edge-attr');
           b.style.setProperty('--pc', edge[0] as string);

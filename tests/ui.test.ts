@@ -438,6 +438,13 @@ describe('詳細パネルの改善', () => {
     click(bar('t#0'));
     const cells = [...(q('detail')?.querySelectorAll('.detail-table td.qname') ?? [])].map((x) => [x.textContent, (x as HTMLElement).style.getPropertyValue('--pc')]);
     expect(cells).toEqual([['獄炎の神殿 特Lの園', '#eb0043'], ['秘泉の神殿 特Lの園', '#3154ef'], ['樹縛の神殿 特Lの園', '#007d32'], ['光明の神殿 特Lの園', '#a16800'], ['常闇の神殿 特Lの園', '#a237c3']]);
+    // 縁の色分け+色が変わるところに縦線2本(左右の色)。4つの境目 × 2本
+    const barEl = q('detail') ? (root.querySelector('.bar-ev[data-event-id="t#0"]') as HTMLElement) : null;
+    expect(barEl?.classList.contains('edge-days')).toBe(true);
+    expect(barEl?.querySelectorAll('.day-line.left')).toHaveLength(4);
+    expect(barEl?.querySelectorAll('.day-line.right')).toHaveLength(4);
+    expect((barEl?.querySelector('.day-line.left') as HTMLElement).style.getPropertyValue('--dc')).toContain('#eb0043');
+    expect((barEl?.querySelector('.day-line.right') as HTMLElement).style.getPropertyValue('--dc')).toContain('#3154ef');
     const multi = ev('t#1', 'campaign', '2026-10-27T00:00:00+09:00', '2026-10-27T23:59:00+09:00', { name: NQ, details: [{ label: '対象クエスト', lines: ['10/27(火) 火・水属性クエスト'] }] });
     render(root, initialState('2026-10-27', [multi], INDEX));
     click(bar('t#1'));
