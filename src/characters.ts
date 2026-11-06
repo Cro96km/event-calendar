@@ -33,6 +33,12 @@ export function attributeColor(attr: Attribute | undefined): string | undefined 
   return name === undefined ? undefined : (colors.palette as Record<string, string>)[name];
 }
 
+/** 属性色 `#rrggbb` → 属性(attributeColor の逆。詳細パネルの「名前（属性）」用)。 */
+export function attributeOfColor(color: string | undefined): Attribute | undefined {
+  if (color === undefined) return undefined;
+  return (['火', '水', '木', '光', '闇'] as const).find((a) => attributeColor(a)?.toLowerCase() === color.toLowerCase());
+}
+
 /** 本文の行(htmlToLines の出力。h2/h3 は行頭 `# `)とタイトルから抽出する入力。 */
 export interface CharacterInput {
   title: string;

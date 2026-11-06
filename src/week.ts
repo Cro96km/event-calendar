@@ -1,7 +1,8 @@
 // 週表示の純ロジック（DOMなし）。spec §4.3。日付はゲーム日 YYYY-MM-DD(JST)。
 import { gameDayOf, isOnGameDay } from './gameday';
-import { groupDefs, CHARACTER_GROUPS, characterGroup, GACHA_EVENT, GACHA_GROUPS, GACHA_REGULAR_GROUP, QUEST_DEFAULT, QUEST_EVENT, QUEST_GROUPS, QUEST_RAID, QUEST_SUPER, gachaEra, gachaGroup, regularGachaDerived, matchGroup, regularGachaIndex, CAMPAIGN_ALIASES, CAMPAIGN_GROUPS, ROW_RULES, MAINTENANCE_CATEGORY, EVENT_QUEST_SUFFIX, SECTIONS, sectionOf, sectionOfEvent, type Section } from './sections';
+import { groupDefs, GACHA_EVENT, GACHA_GROUPS, GACHA_REGULAR_GROUP, QUEST_DEFAULT, QUEST_EVENT, QUEST_GROUPS, QUEST_RAID, QUEST_SUPER, gachaEra, gachaGroup, regularGachaDerived, matchGroup, regularGachaIndex, CAMPAIGN_ALIASES, CAMPAIGN_GROUPS, ROW_RULES, MAINTENANCE_CATEGORY, EVENT_QUEST_SUFFIX, SECTIONS, sectionOf, sectionOfEvent, type Section } from './sections';
 import type { ExportEvent } from './data/export';
+import { foldNewLimited } from './newlimited';
 import { labelLines, shortLabel, superUltimateLabel, superUltimateParts } from './label';
 import { labelOverride } from './label-override';
 import { MONTHLY } from './monthly';
@@ -416,7 +417,8 @@ export interface GanttSection {
 /** セクションごとの行。セクション設定順、行内は開始順。除外カテゴリ/空セクションは出さない。 */
 export function ganttSections(events: ExportEvent[], days: string[]): GanttSection[] {
   const map = new Map<string, GanttSection>();
-  for (const e of mergeSameLabel(events)) {
+  // 新限定キャラは、同じ記事・期間のガチャのバーに畳む(new_names。畳めなかったキャラは行のまま)
+  for (const e of mergeSameLabel(foldNewLimited(events))) {
     const section = sectionOfEvent(e);
     const bar = barSpan(e, days);
     if (!section || !bar) continue;
@@ -427,6 +429,7 @@ export function ganttSections(events: ExportEvent[], days: string[]): GanttSecti
     if (section.id === 'gacha' && gachaGroup(e) === GACHA_EVENT && !e.pickup) {
       const quest = SECTIONS.find((x) => x.id === 'quest');
       const copy = { ...e, id: `${e.id}${EVENT_QUEST_SUFFIX}`, name: rowLabel('gacha', e).l1 };
+      delete copy.new_names; // 新限定の名前はキャラクター・ガチャのバーだけ
       const cbar = barSpan(copy, days);
       if (quest && cbar) {
         const q = map.get(quest.id) ?? { section: quest, bars: [], rows: [] };
@@ -447,7 +450,6 @@ export function ganttSections(events: ExportEvent[], days: string[]): GanttSecti
           (g.section.id === 'campaign'
             ? campaignRank(a.event) - campaignRank(b.event) || groupSortCmp(campaignGroup(a.event) ?? '', 'campaign', a.event, b.event)
             : 0) ||
-          (g.section.id === 'character' ? CHARACTER_GROUPS.indexOf(characterGroup(a.event) ?? '') - CHARACTER_GROUPS.indexOf(characterGroup(b.event) ?? '') : 0) ||
           Date.parse(a.event.start) - Date.parse(b.event.start) ||
           (a.event.character?.at ?? '').localeCompare(b.event.character?.at ?? '') ||
           a.event.id.localeCompare(b.event.id),

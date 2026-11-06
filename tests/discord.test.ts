@@ -12,7 +12,7 @@ describe('Discord 送信の純関数', () => {
     expect(parseShotFile('2026-11-06_2026-11-12_summary.jpg')).toBeNull();
   });
 
-  it('最新の期間の画像だけを、概要→キャラクター→…の順で選ぶ(古い期間は送らない)', () => {
+  it('最新の期間の画像だけを、概要→クエスト→…の順で選ぶ(古い期間は送らない)', () => {
     expect(selectLatest([...old, ...week1, 'note.txt']).map((f) => f.kind)).toEqual(['summary', 'quest', 'gacha']);
     expect(selectLatest(week1, 'quest').map((f) => f.kind)).toEqual(['quest']);
     expect(selectLatest(['x.txt'])).toEqual([]);
@@ -28,7 +28,7 @@ describe('Discord 送信の純関数', () => {
   it('payload は添付1つ・メンション無効。silent のときだけ flags=4096', () => {
     const f = parseShotFile('2026-11-06_2026-11-12_gacha.png');
     if (!f) throw new Error('parse');
-    expect(buildPayload(f, false)).toEqual({ content: '**ガチャ** 11/6〜11/12', allowed_mentions: { parse: [] }, attachments: [{ id: 0, filename: f.file }] });
+    expect(buildPayload(f, false)).toEqual({ content: '**キャラクター・ガチャ** 11/6〜11/12', allowed_mentions: { parse: [] }, attachments: [{ id: 0, filename: f.file }] });
     expect(buildPayload(f, true).flags).toBe(4096);
   });
 

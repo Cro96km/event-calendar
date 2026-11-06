@@ -4,14 +4,15 @@ import { appTitle } from './app';
 import { monthlyEvents, type MonthlyDef } from './monthly';
 import { clampToWindow, windowRange } from './window';
 import { type BarSpan, addDays, isOnCalendarDay, campaignGroup, questGroup, maintenanceBars, maintenanceOnDay, addMonthsToDay, dayLabel, monthWindow, eventsForDay, formatJst, ganttSections, mergeSameLabel, rowLabel, periodText, unlockText, whenText, slotRows, weekDays, weekdayOf } from './week';
-import { EVENT_QUEST_SUFFIX, MAINTENANCE_CATEGORY, characterGroup, gachaGroup, sectionOf } from './sections';
+import { EVENT_QUEST_SUFFIX, MAINTENANCE_CATEGORY, gachaGroup, sectionOf } from './sections';
+import { foldNewLimited } from './newlimited';
 import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
 import { isQuestNameBlock, questNameColor, withFixedFloors } from './quest-color';
 import { icon } from './icons';
 import { applyTheme, currentTheme, saveTheme } from './theme';
-import { SHOT_4AM_FRAC, compactCharacterRows, shotEndFrac, shotStartFrac, summaryBlocks, type ShotKind } from './shot';
+import { SHOT_4AM_FRAC, compactEvolutionRows, shotEndFrac, shotStartFrac, summaryBlocks, type ShotKind } from './shot';
 
 interface Selection {
   day: string;
@@ -95,7 +96,8 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
   panel.dataset.testid = 'detail';
   const sel = state.selection;
   if (!sel) return panel;
-  const pool = [...state.events, ...monthlyEvents(addDays(sel.day, -1), addDays(sel.day, 1), state.monthly)];
+  // 新限定キャラは、同じ記事・期間のガチャの項目に畳む(ガチャの詳細に名前と属性を出す)
+  const pool = foldNewLimited([...state.events, ...monthlyEvents(addDays(sel.day, -1), addDays(sel.day, 1), state.monthly)]);
   // バーは暦日の列に描くので、バーを押したときは暦日で判定する(翌4:00終了などでも「イベントなし」にしない)
   // イベントクエスト行のバーは、ガチャ由来の写し(id末尾 ~event)。詳細は元のガチャイベントを、タイトルは行ラベル(「ガチャ」なし)で出す
   const baseId = sel.eventId?.endsWith(EVENT_QUEST_SUFFIX) ? sel.eventId.slice(0, -EVENT_QUEST_SUFFIX.length) : sel.eventId;
@@ -120,6 +122,7 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
     // 進化の解禁は開催期間でなく解禁の日時(12:00・22:00など)を出す
     if (unlockText(event) !== '') item.append(el('p', undefined, `解禁日時: ${unlockText(event)}`));
     else if (periodText(event) !== '') item.append(el('p', undefined, `${event.category === MAINTENANCE_CATEGORY ? '実施日程' : '開催期間'}: ${periodText(event)}`));
+    if (event.new_names?.length) item.append(el('p', 'detail-note', `新限定キャラクター: ${event.new_names.map((n) => (n.attr ? `${n.name}(${n.attr})` : n.name)).join('、')}`));
     // 報酬受取期限は表示しない(別記事の内容を取り込み大半が誤りのため)
     if (event.slots?.length) {
       const box = el('div', 'detail-block');
@@ -457,14 +460,14 @@ export function render(root: HTMLElement, state: AppState): void {
   if (sections.length === 0) rowsBox.append(el('p', 'empty', state.view === 'week' ? '今日から7日間に表示するイベントはありません' : 'この月に表示するイベントはありません'));
   // 描く単位: 概要(撮影)は設定の blocks の順(セクションの大見出しなし)、ほかはセクションごと(大見出しあり)
   const sectionGroup = (sectionId: string, e: ExportEvent): string | null =>
-    sectionId === 'character' ? characterGroup(e) : sectionId === 'quest' ? questGroup(e) : sectionId === 'gacha' ? gachaGroup(e) : campaignGroup(e);
+    sectionId === 'quest' ? questGroup(e) : sectionId === 'gacha' ? gachaGroup(e) : campaignGroup(e);
   const entries: { section: (typeof sections)[number]['section']; rows: BarSpan[][]; header: boolean; headings: boolean }[] =
     state.shot === 'summary'
       ? summaryBlocks(sections, sectionGroup).map((b) => ({ ...b, header: false }))
       : sections
           .filter((x) => !state.shot || state.shot === x.section.id)
-          // 撮影モードだけ、キャラクターの行を詰める(同じガチャ・期間の新限定を1行に、進化を種別ごと1行に)
-          .map((x) => ({ section: x.section, rows: state.shot && x.section.id === 'character' ? compactCharacterRows(x.rows) : x.rows, header: true, headings: true }));
+          // 撮影モードだけ、進化の行を詰める(種別ごと1行に)
+          .map((x) => ({ section: x.section, rows: state.shot && x.section.id === 'gacha' ? compactEvolutionRows(x.rows) : x.rows, header: true, headings: true }));
   for (const { section, rows, header, headings } of entries) {
     const folded = header && !state.shot && state.collapsed.has(section.id);
     if (header) {
@@ -495,7 +498,7 @@ export function render(root: HTMLElement, state: AppState): void {
     const shown = new Set<string>(); // 出した小見出し(同じ見出しを重複して出さない)
     // 小見出し(キャンペーン: 先頭固定の月次項目〈グループなし〉には見出しを付けず、グループの後ろのグループなしは「その他」。ほかは全行が小見出しに属する)
     const groupOf = (event: ExportEvent, shownCount: number): string | null =>
-      !headings ? null : section.id === 'character' ? characterGroup(event) : section.id === 'quest' ? questGroup(event) : section.id === 'gacha' ? gachaGroup(event) : (campaignGroup(event) ?? (shownCount > 0 ? 'other' : null));
+      !headings ? null : section.id === 'quest' ? questGroup(event) : section.id === 'gacha' ? gachaGroup(event) : (campaignGroup(event) ?? (shownCount > 0 ? 'other' : null));
     const groupRows = new Map<string, number>();
     {
       const seen = new Set<string>();
@@ -556,7 +559,8 @@ export function render(root: HTMLElement, state: AppState): void {
       label.onclick = open;
       // 超究極・絶級のボス名の公式の色(ラベルの文字だけ。バーは既定)
       // (撮影モードの進化の種別ラベルは、キャラごとに色が違うので色を付けない)
-      if (event.color && !(state.shot && section.id === 'character' && event.character !== undefined && event.character.kind !== '新限定')) paint(label, event.color);
+      const evolutionChips = state.shot !== undefined && event.character !== undefined && event.character.kind !== '新限定';
+      if (event.color && !evolutionChips) paint(label, event.color);
       if (event.pickup) {
         // ピックアップの行: インデント表示。ホバーで `作品｜ピックアップ名`
         label.classList.add('pickup');
@@ -570,12 +574,7 @@ export function render(root: HTMLElement, state: AppState): void {
         }
       };
       const lines = rowLabel(section.id, event);
-      const evolutionChips = state.shot !== undefined && section.id === 'character' && event.character !== undefined && event.character.kind !== '新限定';
-      if (event.shot_names) {
-        // 撮影モードの新限定: ラベルはガチャ名(無ければ名前)。名前は期間の線の上に書く
-        const gacha = event.character?.gacha;
-        label.append(el('span', 'g-l1', gacha ?? event.shot_names.map((n) => n.name).join('・')));
-      } else if (evolutionChips) {
+      if (evolutionChips) {
         label.append(el('span', 'g-l1', event.character?.kind ?? ''));
       } else {
         label.append(el('span', lines.wrap ? 'g-l1 wrap' : 'g-l1', lines.l1));
@@ -607,26 +606,6 @@ export function render(root: HTMLElement, state: AppState): void {
       }
       for (const bar of rowBars) {
         const ev = bar.event;
-        if (ev.shot_names) {
-          // 撮影モードの新限定: バーの代わりに、名前(属性色。中央揃え)の下に、先端が平たい線で期間を表す(線の色はセクションの色)
-          const span = el('div', 'g-span');
-          span.dataset.eventId = ev.id;
-          span.style.gridColumn = `${bar.from + 2} / ${bar.to + 3}`;
-          const n = bar.to - bar.from + 1;
-          const sf = shotStartFrac(bar.startFrac);
-          const ef = shotEndFrac(bar.endFrac);
-          if (!bar.clippedLeft && sf > 0) span.style.marginLeft = `calc(${((sf / n) * 100).toFixed(3)}%)`;
-          if (!bar.clippedRight && !bar.openEnded && ef < 1) span.style.marginRight = `calc(${(((1 - ef) / n) * 100).toFixed(3)}%)`;
-          const names = el('div', 'g-span-names');
-          for (const part of ev.shot_names) {
-            const nm = el('span', 'g-name', part.name);
-            if (part.color) paint(nm, part.color);
-            names.append(nm);
-          }
-          span.append(names, el('div', 'g-span-line'));
-          row.append(span);
-          continue;
-        }
         const b = el('button', 'bar-ev');
         b.dataset.eventId = ev.id;
         b.style.gridColumn = `${bar.from + 2} / ${bar.to + 3}`;
@@ -642,8 +621,19 @@ export function render(root: HTMLElement, state: AppState): void {
         if (bar.clippedLeft) b.classList.add('clip-l');
         if (bar.clippedRight) b.classList.add('clip-r');
         if (bar.openEnded) b.classList.add('open');
-        b.title = [ev.name, whenText(ev)].filter(Boolean).join('\n');
-        b.setAttribute('aria-label', [ev.pickup ? ev.name : shortLabel(ev.name), whenText(ev)].filter(Boolean).join(' '));
+        // 新限定キャラの名前(属性色)をバーの中に。幅が足りなければ右が切れる(省略記号は使わない)。全員の名前はツールチップ・詳細に出す
+        const newText = ev.new_names?.length ? `新限定: ${ev.new_names.map((n) => n.name).join('・')}` : '';
+        if (ev.new_names?.length) {
+          const names = el('span', 'bar-names');
+          for (const n of ev.new_names) {
+            const nm = el('span', 'g-name', n.name);
+            if (n.color) paint(nm, n.color);
+            names.append(nm);
+          }
+          b.append(names);
+        }
+        b.title = [ev.name, newText, whenText(ev)].filter(Boolean).join('\n');
+        b.setAttribute('aria-label', [ev.pickup ? ev.name : shortLabel(ev.name), newText, whenText(ev)].filter(Boolean).join(' '));
         b.onclick = () => {
           state.selection = { day: days[bar.from] as string, eventId: ev.id };
           rerender();

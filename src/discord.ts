@@ -2,7 +2,7 @@
 import { SHOT_KINDS, type ShotKind } from './shot';
 
 /** 各画像のメッセージの見出し語。 */
-export const KIND_LABELS: Record<ShotKind, string> = { summary: '概要', character: 'キャラクター', quest: 'クエスト', campaign: 'キャンペーン', gacha: 'ガチャ' };
+export const KIND_LABELS: Record<ShotKind, string> = { summary: '概要', quest: 'クエスト', campaign: 'キャンペーン', gacha: 'キャラクター・ガチャ' };
 
 /** Discord のメッセージの flags: 通知を鳴らさない(SUPPRESS_NOTIFICATIONS)。 */
 export const FLAG_SILENT = 4096;

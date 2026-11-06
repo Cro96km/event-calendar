@@ -144,15 +144,15 @@ body:has(.shot) { padding: 0; background: #fff; }
 .shot .bar-ev { height: 1.5rem; margin-top: .4rem; margin-bottom: .4rem; }
 .shot .g-section { padding-top: .12rem; padding-bottom: .12rem; }
 .shot .g-group { padding-top: .05rem; padding-bottom: .05rem; }
-/* 新限定: 名前(属性色。線の上で中央揃え)の下に、先端が平たい線で期間を表す(線の色はセクションの色) */
-.g-span { grid-row: 1; align-self: center; margin: 0 2px; display: flex; flex-direction: column; gap: .15rem; }
-.g-span-names { display: flex; flex-wrap: wrap; justify-content: center; gap: .15rem .6rem; font-size: .76rem; font-weight: 700; line-height: 1.2; text-align: center; }
-.g-span-line { height: 4px; background: var(--c-bar-edge); }
+/* 新限定: ガチャのバーの中に、キャラ名(属性色)を中央揃えで書く。幅が足りなければ右が切れる(省略記号は使わない)。全員の名前はツールチップ・詳細に出す。属性色はバーの面で読める濃さ(ライト=元の色を25%暗く、ダーク=本文色と混ぜる)。 */
+.bar-names { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: .6rem; padding: 0 .4rem; overflow: hidden; white-space: nowrap; font-size: .74rem; font-weight: 700; line-height: 1; pointer-events: none; }
+.bar-names .g-name { flex: none; }
+.bar-names .g-name.colored { color: color-mix(in srgb, var(--pc) 75%, #000); }
+:root[data-theme="dark"] .bar-names .g-name.colored { color: color-mix(in srgb, var(--pc) 32%, var(--text)); }
 /* 進化: 種別ごとの1行。解禁日の枠にキャラ名を縦に並べる(属性色) */
 .g-chips { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .05rem; padding: .15rem .1rem; height: 100%; }
 .g-chip { font-size: .72rem; font-weight: 700; line-height: 1.2; text-align: center; }
 .g-chip.colored { color: color-mix(in srgb, var(--pc) 78%, var(--text)); }
-.g-name.colored { color: color-mix(in srgb, var(--pc) 78%, var(--text)); }
 /* 端の矢印を線に寄せる(4:00 の位置をずらす幅を小さくできる) */
 .shot .bar-ev.clip-l::before { left: .15rem; }
 .shot .bar-ev.clip-r::after { right: .15rem; }
