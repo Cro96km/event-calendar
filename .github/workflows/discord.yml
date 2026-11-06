@@ -1,4 +1,4 @@
-# Discord へ、週表示のカレンダー画像(5枚)を Webhook で新しく投稿する。
+# Discord へ、週表示のカレンダー画像(4枚)を Webhook で新しく投稿する。
 # 毎週の更新(update.yml。定例=毎週金曜 0:00 JST)が健全に終わったあとに update.yml が起動する。手動実行も可(臨時の転送・dry-run)。
 # Webhook の URL は Secret DISCORD_WEBHOOK_URL(未登録なら投稿せずに終わる)。docs/operations.md §18。
 name: discord
@@ -11,9 +11,9 @@ on:
         type: string
         default: ''
       only:
-        description: '送る画像(all=5枚すべて)'
+        description: '送る画像(all=4枚すべて)'
         type: choice
-        options: [all, summary, character, quest, campaign, gacha]
+        options: [all, summary, quest, campaign, gacha]
         default: all
       dry_run:
         description: 'true=送らず、画像を作って内容だけ表示する(画像は Artifacts に残る)'

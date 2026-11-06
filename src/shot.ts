@@ -4,8 +4,8 @@ import { CHARACTER_KINDS } from './characters';
 import { SECTIONS, type Section } from './sections';
 import type { BarSpan } from './week';
 
-/** 撮影の種類。summary=概要(絞り込みあり)、他(character=キャラクター・quest・campaign・gacha)はそのセクションだけ(絞り込みなし)。 */
-export const SHOT_KINDS = ['summary', 'character', 'quest', 'campaign', 'gacha'] as const;
+/** 撮影の種類。summary=概要(絞り込みあり)、他(quest・campaign・gacha=キャラクター・ガチャ)はそのセクションだけ(絞り込みなし)。 */
+export const SHOT_KINDS = ['summary', 'quest', 'campaign', 'gacha'] as const;
 export type ShotKind = (typeof SHOT_KINDS)[number];
 
 export interface ShotParams {
@@ -44,6 +44,8 @@ export interface SummaryBlock {
   start_day_only?: boolean;
   /** 小見出しを出すか(既定: groups を指定したブロックは出す・語だけのブロックは出さない) */
   headings?: boolean;
+  /** true=新限定キャラの名前をバーの中に持つガチャの行だけ出す(キャラクター・ガチャの新限定)。このセクションの、ほかのブロックには出さない */
+  with_new_limited?: boolean;
   /** 最大行数(上から数える) */
   max_rows?: number;
 }
@@ -74,6 +76,7 @@ export function shotConfigProblems(cfg: SummaryConfig = SUMMARY, sectionIds: rea
     }
     if (b.start_day_only !== undefined && typeof b.start_day_only !== 'boolean') p.push(`${w}.start_day_only は true / false`);
     if (b.headings !== undefined && typeof b.headings !== 'boolean') p.push(`${w}.headings は true / false`);
+    if (b.with_new_limited !== undefined && typeof b.with_new_limited !== 'boolean') p.push(`${w}.with_new_limited は true / false`);
     if (b.max_rows !== undefined && !(Number.isInteger(b.max_rows) && b.max_rows >= 1)) p.push(`${w}.max_rows: 1以上の整数`);
   });
   return p;
@@ -89,21 +92,24 @@ export interface SummaryEntry {
 
 /**
  * 概要の行を、設定の blocks の順に並べる。sections=ganttSections の結果(セクションごとの行)。groupOf=行の小見出し(無ければ null)。
- * キャラクターの行は先に詰める(compactCharacterRows)。ブロックごとの判定順: 小見出し → 語で外す → only の語 → 開催日だけ → 行数。行が無いブロックは出さない。
+ * 進化の行は先に詰める(compactEvolutionRows)。ブロックごとの判定順: 小見出し → 語で外す → only の語 → 開催日だけ → 行数。行が無いブロックは出さない。
  */
 export function summaryBlocks(sections: { section: Section; rows: BarSpan[][] }[], groupOf: (sectionId: string, e: BarSpan['event']) => string | null, cfg: SummaryConfig = SUMMARY): SummaryEntry[] {
   const out: SummaryEntry[] = [];
   const compacted = new Map<string, BarSpan[][]>();
   const rowsOf = (sec: { section: Section; rows: BarSpan[][] }): BarSpan[][] => {
-    if (sec.section.id !== 'character') return sec.rows;
-    if (!compacted.has(sec.section.id)) compacted.set(sec.section.id, compactCharacterRows(sec.rows));
+    if (!compacted.has(sec.section.id)) compacted.set(sec.section.id, compactEvolutionRows(sec.rows));
     return compacted.get(sec.section.id) as BarSpan[][];
   };
+  // with_new_limited のブロックがあるセクションでは、新限定の名前を持つ行はそのブロックだけに出す(ほかのブロックと重ねない)
+  const newBlockSections = new Set(cfg.blocks.filter((b) => b.with_new_limited === true).map((b) => b.section));
   for (const b of cfg.blocks) {
     const sec = sections.find((x) => x.section.id === b.section);
     if (!sec) continue;
     let rows = rowsOf(sec).filter((bars) => {
       const e = (bars[0] as BarSpan).event;
+      const hasNew = (e.new_names?.length ?? 0) > 0;
+      if (b.with_new_limited === true ? !hasNew : hasNew && newBlockSections.has(b.section)) return false;
       if (b.groups !== undefined && !b.groups.includes(groupOf(sec.section.id, e) ?? '')) return false;
       if (b.hide_keywords?.some((k) => e.name.includes(k))) return false;
       if (b.keywords !== undefined && !b.keywords.some((k) => e.name.includes(k))) return false;
@@ -126,36 +132,29 @@ export function startDayBars(bars: BarSpan[]): BarSpan[] {
   return bars.filter((b) => !b.clippedLeft).map((b) => ({ ...b, to: b.from, startFrac: 0, endFrac: 1, clippedRight: false, openEnded: false }));
 }
 
-/** `名前（種別）`/`名前（ガチャ名）` の名前だけ(行名の括弧の前)。 */
-const nameOnly = (label: string): string => label.replace(/（[^（）]*）$/, '');
-
 /**
- * 撮影モードのキャラクターの行を詰める(行数対策。通常のカレンダーは変えない)。
- * - 新限定: 同じガチャ・同じ期間のキャラを1行にまとめる(`shot_names` に名前と属性色。期間が違えば別の行のまま)。ラベルはガチャ名、名前は期間の線の上に書く(ui.ts)。
- * - 進化: 種別(獣神化・獣神化改・真獣神化)ごとに1行にまとめる(バーは1日分なので、同じ日の名前は日付の枠に縦に並ぶ。ui.ts)。
- * rows は ganttSections の行(新限定→進化の順、各々登場順)。出力も 新限定→進化。キャラクターでない行はそのまま。
+ * 撮影モードの進化の行を詰める(行数対策。通常のカレンダーは変えない)。
+ * 種別(獣神化・獣神化改・真獣神化)ごとに1行にまとめる(バーは1日分なので、同じ日の名前は日付の枠に縦に並ぶ。ui.ts)。
+ * まとめた行は、最初の進化の行があった位置に置く(キャラクター・ガチャの小見出し「進化」が先頭)。進化でない行はそのまま。
  */
-export function compactCharacterRows(rows: BarSpan[][]): BarSpan[][] {
-  const news = new Map<string, BarSpan[][]>();
+export function compactEvolutionRows(rows: BarSpan[][]): BarSpan[][] {
   const evo = new Map<string, BarSpan[]>();
-  const rest: BarSpan[][] = [];
+  const out: (BarSpan[] | null)[] = [];
+  let slot = -1;
   for (const bars of rows) {
     const e = (bars[0] as BarSpan).event;
-    if (e.character === undefined) rest.push(bars);
-    else if (e.character.kind === '新限定') {
-      const k = `${e.character.gacha ?? ''}|${e.start}|${e.end ?? ''}`;
-      news.set(k, [...(news.get(k) ?? []), bars]);
-    } else evo.set(e.character.kind, [...(evo.get(e.character.kind) ?? []), ...bars]);
+    if (e.character === undefined || e.character.kind === '新限定') {
+      out.push(bars);
+      continue;
+    }
+    if (slot < 0) {
+      slot = out.length;
+      out.push(null);
+    }
+    evo.set(e.character.kind, [...(evo.get(e.character.kind) ?? []), ...bars]);
   }
-  const merged = [...news.values()].map((group) => {
-    const first = (group[0] as BarSpan[])[0] as BarSpan;
-    const parts = group.map((g) => (g[0] as BarSpan).event).map((e) => ({ name: nameOnly(e.name), ...(e.color ? { color: e.color } : {}) }));
-    const gacha = first.event.character?.gacha;
-    // 1行1ガチャ(期間)。ラベルはガチャ名、期間の線の上に名前を属性色で書く(ui.ts)。ガチャ名が無ければ名前を並べる
-    return [{ ...first, event: { ...first.event, name: `${parts.map((x) => x.name).join('・')}${gacha ? `（${gacha}）` : ''}`, shot_names: parts, color: undefined } }];
-  });
   const evoRows = CHARACTER_KINDS.filter((k) => evo.has(k)).map((k) => (evo.get(k) as BarSpan[]).sort((a, b) => a.from - b.from || (a.event.character?.at ?? '').localeCompare(b.event.character?.at ?? '')));
-  return [...rest, ...merged, ...evoRows];
+  return slot < 0 ? (out as BarSpan[][]) : [...(out.slice(0, slot) as BarSpan[][]), ...evoRows, ...(out.slice(slot + 1) as BarSpan[][])];
 }
 
 const FOUR_AM = 4 / 24;

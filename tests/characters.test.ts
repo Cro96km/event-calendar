@@ -3,7 +3,7 @@ import { applyGachaAlias, attributeColor, calendarDay, gachaAlias, characterLabe
 import { buildExport } from '../src/data/export';
 import type { ArticleRecord } from '../src/data/record';
 import { applySelection } from '../src/selection';
-import { characterGroup, gachaGroup, regularGachaIndex, sectionOfEvent, SECTIONS } from '../src/sections';
+import { gachaGroup, regularGachaIndex, sectionOfEvent, SECTIONS } from '../src/sections';
 import { ganttSections, periodText, unlockText, whenText } from '../src/week';
 
 // 公式の本文そのものではなく、構造(見出し→▼解禁日時→日時)だけを写した最小の入力
@@ -113,20 +113,22 @@ describe('キャラクターの出力と表示', () => {
     expect(e).toMatchObject({ id: '20260211_4#c0', name: characterLabel({ name: '桜', kind: '獣神化・改' }), category: CHARACTER_CATEGORY, start: '2026-02-17T12:00:00+09:00' });
   });
 
-  it('選択(表示/非表示の判断)の対象外で常に表示。キャラクターのセクションに入り、クエストより上に並ぶ', () => {
+  it('選択(表示/非表示の判断)の対象外で常に表示。キャラクター・ガチャのセクション(id gacha)に入り、クエスト・キャンペーンの下に並ぶ', () => {
     const events = applySelection(buildExport([rec], 'x').months.flatMap((m) => m.events), { generated_at: 'x', selected: [], total: 0 });
     expect(events).toHaveLength(1);
-    expect(sectionOfEvent(events[0]!)?.id).toBe('character');
-    expect(SECTIONS[0]?.id).toBe('character');
+    expect(sectionOfEvent(events[0]!)?.id).toBe('gacha');
+    expect(SECTIONS.map((s) => s.id)).toEqual(['quest', 'campaign', 'gacha']);
+    expect(SECTIONS[2]?.label).toBe('キャラクター・ガチャ');
     const days = ['2026-02-16', '2026-02-17', '2026-02-18'];
     const g = ganttSections(events, days);
-    expect(g.map((x) => x.section.id)).toEqual(['character']);
+    expect(g.map((x) => x.section.id)).toEqual(['gacha']);
     expect(g[0]?.rows).toHaveLength(1);
   });
 
-  it('名前に「ガチャ」を含んでもガチャのセクションに入らない', () => {
+  it('名前に「ガチャ」を含む進化も、小見出し「進化」に入る(ガチャの小見出しと取り違えない)', () => {
     const ev = buildExport([record({ characters: [{ name: 'ガチャ丸', kind: '獣神化', start: '2026-02-17T12:00:00+09:00', end: '2026-02-18T04:00:00+09:00' }] })], 'x').months[0]!.events[0]!;
-    expect(sectionOfEvent(ev)?.id).toBe('character');
+    expect(sectionOfEvent(ev)?.id).toBe('gacha');
+    expect(gachaGroup(ev)).toBe('進化');
   });
 
   it('1キャラ1行: 同じ週の別のキャラは別の行になる', () => {
@@ -216,11 +218,11 @@ describe('キャラクターの小見出し・並び・詳細', () => {
   const events = buildExport([rec], 'x').months.flatMap((m) => m.events);
   const days = ['2026-03-01', '2026-03-02', '2026-03-03', '2026-03-04'];
 
-  it('新限定→進化の小見出し。それぞれ登場順(同じ日は解禁の時刻順)', () => {
+  it('小見出し「進化」が先頭(登場順。同じ日は解禁の時刻順)。ガチャに畳めない新限定は、期間限定ガチャの小見出しの行として残る', () => {
     const g = ganttSections(events, days)[0]!;
     const names = g.rows.map((r) => r[0]!.event.name);
-    expect(names).toEqual(['ガチャ組（超・獣神祭）', '同日の昼（獣神化・改）', '同日の夜（獣神化・改）', '後（獣神化・改）']);
-    expect(g.rows.map((r) => characterGroup(r[0]!.event))).toEqual(['新限定', '進化', '進化', '進化']);
+    expect(names).toEqual(['同日の昼（獣神化・改）', '同日の夜（獣神化・改）', '後（獣神化・改）', 'ガチャ組（超・獣神祭）']);
+    expect(g.rows.map((r) => gachaGroup(r[0]!.event))).toEqual(['進化', '進化', '進化', '期間限定ガチャ']);
   });
 
   it('進化のバーは解禁日の1日分(列の左端から右端まで)', () => {

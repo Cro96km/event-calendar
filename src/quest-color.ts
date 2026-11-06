@@ -5,6 +5,7 @@ import type { DetailBlock } from './details';
 
 const PALETTE = cfg.palette as Record<string, string>;
 const KINKI = cfg.kinki as Record<string, string>;
+const QUESTS = (cfg as { quests?: Record<string, string> }).quests ?? {};
 
 const hex = (key: string | undefined): string | undefined => (key !== undefined && Object.hasOwn(PALETTE, key) ? PALETTE[key] : undefined);
 
@@ -17,6 +18,9 @@ export const norm = (s: string): string => s.replace(/＆/g, '&').replace(/[・�
  */
 export function questNameColor(name: string): string | undefined {
   const n = norm(name.trim());
+  // 名前が固定のクエスト(特Lの園の 獄炎の神殿 など。設定の quests)
+  const fixed = Object.keys(QUESTS).find((w) => n.includes(norm(w)));
+  if (fixed !== undefined) return hex(KINKI[QUESTS[fixed] as string]);
   const k = /^(.)獄/.exec(n)?.[1];
   if (k !== undefined && Object.hasOwn(KINKI, k)) return hex(KINKI[k]);
   const h = hakai.quests.find((x) => n.includes(norm(x.name)));
