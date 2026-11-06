@@ -7,6 +7,7 @@ import { type BarSpan, addDays, isOnCalendarDay, campaignGroup, questGroup, main
 import { EVENT_QUEST_SUFFIX, MAINTENANCE_CATEGORY, gachaGroup, sectionOf } from './sections';
 import { barEdgeColors, foldNewLimited } from './newlimited';
 import { attributeColor, type Attribute } from './characters';
+import { dayAttrColors, dayEdgeSegments, edgeGradient } from './day-edge';
 import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
@@ -690,7 +691,12 @@ export function render(root: HTMLElement, state: AppState): void {
         }
         // 縁の色: 新限定・ピックアップ・キャラクター(進化)は属性色。2人なら左右半分ずつ。色が無い・3人以上は既定の縁
         const edge = barEdgeColors(ev);
-        if (edge.length === 1) {
+        // 日ごとに対象の属性が決まっているバー(書庫・特Lの園など)は、縁を日ごとの属性色に区切る
+        const segs = dayEdgeSegments(bar, days, dayAttrColors(ev));
+        if (segs) {
+          b.classList.add('edge-days');
+          b.style.setProperty('--edge-grad', edgeGradient(segs));
+        } else if (edge.length === 1) {
           b.classList.add('edge-attr');
           b.style.setProperty('--pc', edge[0] as string);
         } else if (edge.length === 2) {

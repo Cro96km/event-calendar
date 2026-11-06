@@ -45,6 +45,8 @@ button { font: inherit; color: inherit; }
 .g-section, .g-group, .g-row { --sat: 16%; --c-head: hsl(var(--hue) var(--sat) calc(55% + var(--lit, 0%))); --c-hd-bg: hsl(var(--hue) var(--sat) 96%); --c-hd-fg: hsl(var(--hue) var(--sat) 26%); --c-bar: hsl(var(--hue) var(--sat) 86%); --c-bar-alt: hsl(var(--hue) var(--sat) 80%); --c-bar-edge: hsl(var(--hue) var(--sat) calc(46% + var(--lit, 0%))); --c-arrow: hsl(var(--hue) var(--sat) 28%); --c-text: hsl(var(--hue) var(--sat) 30%); --c-dot: hsl(var(--hue) var(--sat) calc(55% + var(--lit, 0%))); }
 :root[data-theme="dark"] .g-section, :root[data-theme="dark"] .g-group, :root[data-theme="dark"] .g-row { --c-hd-bg: hsl(var(--hue) var(--sat) 21%); --c-hd-fg: hsl(var(--hue) var(--sat) 84%); --c-bar: hsl(var(--hue) var(--sat) 27%); --c-bar-alt: hsl(var(--hue) var(--sat) 33%); --c-bar-edge: hsl(var(--hue) var(--sat) calc(62% + var(--lit, 0%))); --c-arrow: hsl(var(--hue) var(--sat) 86%); --c-text: hsl(var(--hue) var(--sat) 80%); }
 .g-section { cursor: pointer; padding: .2rem .5rem .2rem calc(.5rem - 4px); font-size: .8rem; font-weight: 700; color: var(--c-hd-fg); background: var(--c-hd-bg); border-top: 1px solid var(--border); border-left: 4px solid var(--c-head); }
+:root { --ep: 85%; --ek: #000; } /* 属性色の縁の濃さ(ライト: 属性色85%+黒) */
+:root[data-theme="dark"] { --ep: 60%; --ek: #fff; } /* ダーク: 属性色60%+白 */
 .bar-ev { grid-row: 1; align-self: center; height: 1.7rem; margin: .5rem 2px; --edge: var(--c-bar-edge); border: 3px solid var(--edge); border-radius: .4rem; position: relative; background: var(--c-bar); color: var(--c-hd-fg); padding: 0; overflow: hidden; cursor: pointer; }
 .bar-ev:hover { filter: brightness(.96); outline: 2px solid var(--edge); } /* 輪郭は、そのバーの縁と同じ色 */
 .bar-ev.clip-l { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: 0; }
@@ -157,6 +159,8 @@ body:has(.shot) { padding: 0; background: #fff; }
 :root[data-theme="dark"] .bar-ev.edge-attr { --edge: color-mix(in srgb, var(--pc) 60%, #fff); }
 .bar-ev.edge-split { --edge: color-mix(in srgb, var(--e1) 50%, var(--e2)); --e1: color-mix(in srgb, var(--pc1) 85%, #000); --e2: color-mix(in srgb, var(--pc2) 85%, #000); border-color: transparent; background: linear-gradient(var(--c-bar), var(--c-bar)) padding-box, linear-gradient(90deg, var(--e1) 50%, var(--e2) 50%) border-box; }
 :root[data-theme="dark"] .bar-ev.edge-split { --e1: color-mix(in srgb, var(--pc1) 60%, #fff); --e2: color-mix(in srgb, var(--pc2) 60%, #fff); }
+.bar-ev.edge-days { border-color: transparent; background: linear-gradient(var(--c-bar), var(--c-bar)) padding-box, var(--edge-grad) border-box; }
+.bar-ev.edge-days.open { background: repeating-linear-gradient(90deg, var(--c-bar) 0 6px, var(--c-bar-alt) 6px 12px) padding-box, var(--edge-grad) border-box; }
 .bar-ev.edge-split.open { background: repeating-linear-gradient(90deg, var(--c-bar) 0 6px, var(--c-bar-alt) 6px 12px) padding-box, linear-gradient(90deg, var(--e1) 50%, var(--e2) 50%) border-box; }
 /* 進化: 種別ごとの1行。解禁日の枠にキャラ名を縦に並べる(属性色) */
 .g-chips { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .05rem; padding: .15rem .1rem; height: 100%; }
