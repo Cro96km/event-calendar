@@ -28,6 +28,8 @@ export interface ExportEvent {
   pickup?: PickupInfo;
   /** 超究極・絶級のボス名の公式の色(行ラベルの文字用) */
   color?: string;
+  /** 超究極クエスト「クエスト名」の形のとき、本文から取ったボスのキャラ名(行ラベル)。src/period.ts */
+  boss?: string;
   /** 期間の開始/終了を表示しない(仮置きの期間の常設クエスト用。config/schedule/manual.json の hide_start / hide_end) */
   hide_start?: true;
   hide_end?: true;
@@ -105,6 +107,7 @@ export function buildExport(records: ArticleRecord[], generatedAt: string, colle
         ...(e.slots ? { slots: e.slots } : {}),
         ...(e.pickup ? { pickup: e.pickup } : {}),
         ...(e.color ? { color: e.color } : {}),
+        ...(e.boss ? { boss: e.boss } : {}),
       };
       categories.add(r.category);
       push(ev, start, last);
