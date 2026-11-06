@@ -45,8 +45,8 @@ button { font: inherit; color: inherit; }
 .g-section, .g-group, .g-row { --sat: 16%; --c-head: hsl(var(--hue) var(--sat) calc(55% + var(--lit, 0%))); --c-hd-bg: hsl(var(--hue) var(--sat) 96%); --c-hd-fg: hsl(var(--hue) var(--sat) 26%); --c-bar: hsl(var(--hue) var(--sat) 86%); --c-bar-alt: hsl(var(--hue) var(--sat) 80%); --c-bar-edge: hsl(var(--hue) var(--sat) calc(46% + var(--lit, 0%))); --c-arrow: hsl(var(--hue) var(--sat) 28%); --c-text: hsl(var(--hue) var(--sat) 30%); --c-dot: hsl(var(--hue) var(--sat) calc(55% + var(--lit, 0%))); }
 :root[data-theme="dark"] .g-section, :root[data-theme="dark"] .g-group, :root[data-theme="dark"] .g-row { --c-hd-bg: hsl(var(--hue) var(--sat) 21%); --c-hd-fg: hsl(var(--hue) var(--sat) 84%); --c-bar: hsl(var(--hue) var(--sat) 27%); --c-bar-alt: hsl(var(--hue) var(--sat) 33%); --c-bar-edge: hsl(var(--hue) var(--sat) calc(62% + var(--lit, 0%))); --c-arrow: hsl(var(--hue) var(--sat) 86%); --c-text: hsl(var(--hue) var(--sat) 80%); }
 .g-section { cursor: pointer; padding: .2rem .5rem .2rem calc(.5rem - 4px); font-size: .8rem; font-weight: 700; color: var(--c-hd-fg); background: var(--c-hd-bg); border-top: 1px solid var(--border); border-left: 4px solid var(--c-head); }
-.bar-ev { grid-row: 1; align-self: center; height: 1.7rem; margin: .5rem 2px; border: 2px solid var(--c-bar-edge); border-radius: .4rem; position: relative; background: var(--c-bar); color: var(--c-hd-fg); padding: 0; overflow: hidden; cursor: pointer; }
-.bar-ev:hover { filter: brightness(.96); outline: 2px solid var(--accent); }
+.bar-ev { grid-row: 1; align-self: center; height: 1.7rem; margin: .5rem 2px; --edge: var(--c-bar-edge); border: 3px solid var(--edge); border-radius: .4rem; position: relative; background: var(--c-bar); color: var(--c-hd-fg); padding: 0; overflow: hidden; cursor: pointer; }
+.bar-ev:hover { filter: brightness(.96); outline: 2px solid var(--edge); } /* 輪郭は、そのバーの縁と同じ色 */
 .bar-ev.clip-l { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: 0; }
 .bar-ev.clip-r { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: 0; }
 .bar-ev.clip-l::before, .bar-ev.clip-r::after { content: ''; position: absolute; top: 50%; transform: translateY(-50%); width: 0; height: 0; border: .25rem solid transparent; }
@@ -153,9 +153,9 @@ body:has(.shot) { padding: 0; background: #fff; }
 :root[data-theme="dark"] .bar-names .g-name.colored { color: color-mix(in srgb, var(--pc) 32%, var(--text)); }
 .bar-new { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: .62rem; font-weight: 800; -webkit-text-stroke: .3px currentColor; line-height: 1; letter-spacing: .03em; white-space: nowrap; overflow: hidden; color: var(--c-hd-fg); pointer-events: none; }
 /* 縁(輪郭)の属性色: 新限定・ピックアップ・進化。面は青灰のまま。ライトは元の色を15%暗く、ダークは明るく。2人は左右半分ずつ(左=最初の名前) */
-.bar-ev.edge-attr { border-color: color-mix(in srgb, var(--pc) 85%, #000); }
-:root[data-theme="dark"] .bar-ev.edge-attr { border-color: color-mix(in srgb, var(--pc) 60%, #fff); }
-.bar-ev.edge-split { --e1: color-mix(in srgb, var(--pc1) 85%, #000); --e2: color-mix(in srgb, var(--pc2) 85%, #000); border-color: transparent; background: linear-gradient(var(--c-bar), var(--c-bar)) padding-box, linear-gradient(90deg, var(--e1) 50%, var(--e2) 50%) border-box; }
+.bar-ev.edge-attr { --edge: color-mix(in srgb, var(--pc) 85%, #000); }
+:root[data-theme="dark"] .bar-ev.edge-attr { --edge: color-mix(in srgb, var(--pc) 60%, #fff); }
+.bar-ev.edge-split { --edge: color-mix(in srgb, var(--e1) 50%, var(--e2)); --e1: color-mix(in srgb, var(--pc1) 85%, #000); --e2: color-mix(in srgb, var(--pc2) 85%, #000); border-color: transparent; background: linear-gradient(var(--c-bar), var(--c-bar)) padding-box, linear-gradient(90deg, var(--e1) 50%, var(--e2) 50%) border-box; }
 :root[data-theme="dark"] .bar-ev.edge-split { --e1: color-mix(in srgb, var(--pc1) 60%, #fff); --e2: color-mix(in srgb, var(--pc2) 60%, #fff); }
 .bar-ev.edge-split.open { background: repeating-linear-gradient(90deg, var(--c-bar) 0 6px, var(--c-bar-alt) 6px 12px) padding-box, linear-gradient(90deg, var(--e1) 50%, var(--e2) 50%) border-box; }
 /* 進化: 種別ごとの1行。解禁日の枠にキャラ名を縦に並べる(属性色) */

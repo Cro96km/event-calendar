@@ -10,6 +10,8 @@ export interface GroupDef {
   /** どの項目が入るか: "words"=自分の words / "name"=自分の name / {includes} / {pattern}。無ければ名称では入らない */
   match?: 'words' | 'name' | { includes?: string[]; pattern?: string };
   words?: string[];
+  /** 行の名前に含む語 → 属性(火・水・木・光・闇)。ラベルとバーの縁をその属性色にする(定例ガチャ) */
+  attrs?: Record<string, string>;
   sort?: 'fixed' | 'name' | 'start' | 'builtin';
   then?: 'name' | 'start';
   /** 項目名にこの語を含めばこの小見出し(キャンペーン) */

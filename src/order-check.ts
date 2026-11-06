@@ -39,6 +39,10 @@ export function orderProblems(cfg: OrderConfig = order as unknown as OrderConfig
       if (g.sort !== undefined && !SORTS.includes(g.sort)) p.push(`${w}: sort は ${SORTS.join(' / ')}`);
       if (g.then !== undefined && g.then !== 'name' && g.then !== 'start') p.push(`${w}: then は name か start`);
       if (g.words?.some((x) => x.trim() === '')) p.push(`${w}: words に空の語があります`);
+      for (const [word, attr] of Object.entries(g.attrs ?? {})) {
+        if (!(g.words ?? []).includes(word)) p.push(`${w}: attrs の「${word}」は words にありません`);
+        if (!['火', '水', '木', '光', '闇'].includes(attr)) p.push(`${w}: attrs「${word}」の属性は 火・水・木・光・闇 のどれか(${attr})`);
+      }
       if (g.sort === 'fixed' && (g.words ?? []).length === 0) p.push(`${w}: sort が fixed のときは words が必要です`);
       if (g.match === 'words' && (g.words ?? []).length === 0) p.push(`${w}: match が "words" のときは words が必要です`);
       if (g.match !== undefined && g.match !== 'words' && g.match !== 'name') {

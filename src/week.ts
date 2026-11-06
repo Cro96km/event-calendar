@@ -3,6 +3,7 @@ import { gameDayOf, isOnGameDay } from './gameday';
 import { groupDefs, GACHA_EVENT, GACHA_GROUPS, GACHA_REGULAR_GROUP, QUEST_DEFAULT, QUEST_EVENT, QUEST_GROUPS, QUEST_RAID, QUEST_SUPER, gachaEra, gachaGroup, regularGachaDerived, matchGroup, regularGachaIndex, CAMPAIGN_ALIASES, CAMPAIGN_GROUPS, ROW_RULES, MAINTENANCE_CATEGORY, EVENT_QUEST_SUFFIX, SECTIONS, sectionOf, sectionOfEvent, type Section } from './sections';
 import type { ExportEvent } from './data/export';
 import { foldNewLimited } from './newlimited';
+import { withRegularGachaColors } from './gacha-color';
 import { labelLines, shortLabel, superUltimateLabel, superUltimateParts } from './label';
 import { labelOverride } from './label-override';
 import { MONTHLY } from './monthly';
@@ -418,7 +419,7 @@ export interface GanttSection {
 export function ganttSections(events: ExportEvent[], days: string[]): GanttSection[] {
   const map = new Map<string, GanttSection>();
   // 新限定キャラは、同じ記事・期間のガチャのバーに畳む(new_names。畳めなかったキャラは行のまま)
-  for (const e of mergeSameLabel(foldNewLimited(events))) {
+  for (const e of mergeSameLabel(withRegularGachaColors(foldNewLimited(events)))) {
     const section = sectionOfEvent(e);
     const bar = barSpan(e, days);
     if (!section || !bar) continue;

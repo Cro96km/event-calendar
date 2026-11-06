@@ -13,13 +13,14 @@ const HEX = /^#[0-9a-f]{6}$/i;
  * - 新限定の名前を持つガチャ: 1〜2人で全員に色があるときだけ(3人以上・色が不明なら既定)
  * - コラボのピックアップ: 名前の色(pickup.color)
  * - キャラクターの項目(進化・畳めなかった新限定): 属性色(color)
+ * - 定例ガチャ(RED STARS など): 属性色(edge_color。src/gacha-color.ts)
  */
-export function barEdgeColors(e: Pick<ExportEvent, 'new_names' | 'pickup' | 'character' | 'color'>): string[] {
+export function barEdgeColors(e: Pick<ExportEvent, 'new_names' | 'pickup' | 'character' | 'color' | 'edge_color'>): string[] {
   if (e.new_names?.length) {
     const cs = e.new_names.map((n) => n.color);
     return cs.length <= 2 && cs.every((c): c is string => c !== undefined && HEX.test(c)) ? cs : [];
   }
-  const c = e.pickup ? e.pickup.color : e.character ? e.color : undefined;
+  const c = e.pickup ? e.pickup.color : e.character ? e.color : e.edge_color;
   return c !== undefined && HEX.test(c) ? [c] : [];
 }
 

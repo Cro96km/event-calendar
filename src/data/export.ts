@@ -46,6 +46,8 @@ export interface ExportEvent {
   character?: { kind: CharacterKind; at?: string; gacha?: string };
   /** 表示時にだけ付く(書き出しには含まれない。src/newlimited.ts foldNewLimited): このガチャの実装と同時の新限定キャラの名前・属性色・属性。バーの中に出す */
   new_names?: NewName[];
+  /** バーの縁に使う色(表示時に付く。書き出しには含まれない。src/gacha-color.ts: 定例ガチャの属性色) */
+  edge_color?: string;
   /** 手動の修正が入っている(config/schedule/overrides.json)。fields=直した項目、notes=詳細に出す注記、hide_blocks=詳細で出さないブロック */
   fix?: { fields: string[]; notes?: string[]; hide_blocks?: string[] };
 }
