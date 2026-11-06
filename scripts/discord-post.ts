@@ -6,9 +6,9 @@ import { buildPayload, isWebhookUrl, messageContent, retryDelayMs, selectLatest 
 import { showHelpIfRequested } from './_help';
 
 showHelpIfRequested(`npm run discord:post [-- --dir DIR] [--only KIND] [--silent] [--dry-run]
-  目的: 週表示の画像(概要・キャラクター・クエスト・キャンペーン・ガチャ)を、Discord の Webhook へ1枚ずつ(見出しの文字つきで)新しく投稿する。
+  目的: 週表示の画像(概要・クエスト・キャンペーン・キャラクター・ガチャ)を、Discord の Webhook へ1枚ずつ(見出しの文字つきで)新しく投稿する。
   使う場面: 毎週の転送(.github/workflows/discord.yml)と、画像の送信内容の確認(--dry-run)。
-  オプション: --dir DIR(画像の置き場。既定 out/discord。複数の期間があれば最新の期間だけ送る)、--only KIND(summary/character/quest/campaign/gacha のどれか1枚だけ)、--silent(通知を鳴らさない)、--dry-run(送らず、送る内容だけ表示。Webhook の URL は不要)
+  オプション: --dir DIR(画像の置き場。既定 out/discord。複数の期間があれば最新の期間だけ送る)、--only KIND(summary/quest/campaign/gacha のどれか1枚だけ)、--silent(通知を鳴らさない)、--dry-run(送らず、送る内容だけ表示。Webhook の URL は不要)
   入力: 環境変数 DISCORD_WEBHOOK_URL(Webhook の URL。値は表示しない)。先に npm run discord:images で画像を作る。
   出力: 送った(送る)メッセージの見出し・ファイル名・サイズ。送信は直列で、1秒あけ、429 は待って最大3回やり直す。途中で失敗したら、そこで止めて失敗(送れたものは再送しない。--only で残りだけ送れる)。
   副作用: Discord へ投稿する(取り消しは Discord 側で削除)。リポジトリは変えない。`);

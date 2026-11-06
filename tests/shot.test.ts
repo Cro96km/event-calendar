@@ -2,8 +2,9 @@
 import { describe, expect, it } from 'vitest';
 import config from '../config/display/discord.json';
 import type { ExportEvent, IndexFile } from '../src/data/export';
-import { characterGroup, gachaGroup, groupDefs } from '../src/sections';
-import { SUMMARY, SHOT_4AM_FRAC, compactCharacterRows, startDayBars, shotEndFrac, shotStartFrac, summaryBlocks, isDay, parseShot, shotConfigProblems, type SummaryConfig } from '../src/shot';
+import { gachaGroup, groupDefs } from '../src/sections';
+import { foldNewLimited } from '../src/newlimited';
+import { SUMMARY, SHOT_4AM_FRAC, compactEvolutionRows, startDayBars, shotEndFrac, shotStartFrac, summaryBlocks, isDay, parseShot, shotConfigProblems, type SummaryConfig } from '../src/shot';
 import { initialState, render } from '../src/ui';
 import { campaignGroup, ganttSections, questGroup, weekDays } from '../src/week';
 
@@ -19,7 +20,7 @@ const EVENTS = [
   ev('m#0', 'maintenance', 'メンテナンス', '2026-11-06T00:00:00+09:00', '2026-11-06T05:00:00+09:00'),
 ];
 const cfg = (...blocks: SummaryConfig['blocks']): SummaryConfig => ({ blocks });
-const grp = (sectionId: string, e: ExportEvent): string | null => (sectionId === 'character' ? characterGroup(e) : sectionId === 'quest' ? questGroup(e) : sectionId === 'gacha' ? gachaGroup(e) : campaignGroup(e));
+const grp = (sectionId: string, e: ExportEvent): string | null => (sectionId === 'quest' ? questGroup(e) : sectionId === 'gacha' ? gachaGroup(e) : campaignGroup(e));
 
 describe('撮影モードのURLパラメータ', () => {
   it('shot と date を読む。shot が無い・不正なら通常表示(null)、date が不正なら無視', () => {
@@ -37,15 +38,16 @@ describe('撮影モードのURLパラメータ', () => {
 });
 
 describe('概要の設定(discord.json の summary.blocks)', () => {
-  it('現在の設定に誤りは無い。並びは モンストの日→特Lの園→イベントクエスト→期間限定ガチャ→絶級・期間限定・超究極(開催日のみ)→新限定→進化→定例クエスト', () => {
+  it('現在の設定に誤りは無い。並びは モンストの日→特Lの園→イベントクエスト→期間限定ガチャ→絶級・期間限定・超究極(開催日のみ)→新限定(ガチャのバーの名前)→進化→定例クエスト', () => {
     expect(shotConfigProblems(undefined, undefined, (s) => groupDefs(s).map((g) => g.name))).toEqual([]);
     expect(SUMMARY.blocks.map((b) => `${b.section}:${(b.groups ?? b.keywords ?? []).join('+')}`)).toEqual([
-      'campaign:モンストの日', 'campaign:特Lの園', 'quest:イベントクエスト', 'gacha:期間限定ガチャ', 'quest:絶級クエスト+期間限定クエスト+超究極クエスト', 'character:新限定', 'character:進化', 'quest:定例クエスト',
+      'campaign:モンストの日', 'campaign:特Lの園', 'quest:イベントクエスト', 'gacha:期間限定ガチャ', 'quest:絶級クエスト+期間限定クエスト+超究極クエスト', 'gacha:', 'gacha:進化', 'quest:定例クエスト',
     ]);
     expect(config.summary.blocks[4]?.start_day_only).toBe(true);
+    expect(config.summary.blocks[5]?.with_new_limited).toBe(true);
   });
   it('誤りを見つける', () => {
-    const ids = ['character', 'quest', 'campaign', 'gacha'];
+    const ids = ['quest', 'campaign', 'gacha'];
     const names = (s: string) => groupDefs(s).map((g) => g.name);
     expect(shotConfigProblems(cfg(), ids, names)).toHaveLength(1);
     expect(shotConfigProblems(cfg({ section: 'nope' }), ids, names).join()).toContain('nope');
@@ -54,6 +56,7 @@ describe('概要の設定(discord.json の summary.blocks)', () => {
     expect(shotConfigProblems(cfg({ section: 'campaign', keywords: [] }), ids, names).join()).toContain('1つ以上');
     expect(shotConfigProblems(cfg({ section: 'quest', max_rows: 0 }), ids, names).join()).toContain('1以上');
     expect(shotConfigProblems(cfg({ section: 'quest', start_day_only: 'yes' as never }), ids, names).join()).toContain('true / false');
+    expect(shotConfigProblems(cfg({ section: 'gacha', with_new_limited: 'yes' as never }), ids, names).join()).toContain('with_new_limited');
   });
 });
 
@@ -82,7 +85,7 @@ describe('概要のブロックの動作', () => {
 });
 
 describe('撮影モードの描画', () => {
-  const draw = (shot: 'summary' | 'character' | 'quest' | 'campaign' | 'gacha') => {
+  const draw = (shot: 'summary' | 'quest' | 'campaign' | 'gacha') => {
     const root = document.createElement('div');
     const state = initialState('2026-11-05', EVENTS, INDEX);
     state.shot = shot;
@@ -108,7 +111,7 @@ describe('撮影モードの描画', () => {
   });
 });
 
-describe('キャラクターの画像と、概要の既定の絞り込み', () => {
+describe('キャラクター・ガチャの画像と、概要の既定の絞り込み', () => {
   const chara = ev('k#c0', 'character', '桜（獣神化・改）', '2026-11-06T00:00:00+09:00', '2026-11-07T00:00:00+09:00', { character: { kind: '獣神化・改', at: '2026-11-06T12:00:00+09:00' } });
   const all = [
     ...EVENTS,
@@ -117,16 +120,17 @@ describe('キャラクターの画像と、概要の既定の絞り込み', () =
     ev('e#0', 'campaign', '特Lの園が出現!'),
     ev('e#1', 'campaign', 'スコア報酬5倍'),
   ];
-  const draw2 = (shot: 'summary' | 'character') => {
+  const draw2 = (shot: 'summary' | 'gacha') => {
     const root = document.createElement('div');
     const state = initialState('2026-11-05', all, INDEX);
     state.shot = shot;
     render(root, state);
     return root;
   };
-  it('キャラクターの単独画像は、キャラクターのセクションだけ(日付ヘッダ・メンテの帯あり)', () => {
-    const root = draw2('character');
-    expect([...root.querySelectorAll<HTMLElement>('.g-section')].map((x) => x.dataset.section)).toEqual(['character']);
+  it('キャラクター・ガチャの単独画像は、そのセクションだけ。小見出し「進化」が先頭(日付ヘッダ・メンテの帯あり)', () => {
+    const root = draw2('gacha');
+    expect([...root.querySelectorAll<HTMLElement>('.g-section')].map((x) => `${x.dataset.section}:${x.textContent}`)).toEqual(['gacha:キャラクター・ガチャ']);
+    expect([...root.querySelectorAll('.g-group')].map((x) => x.textContent)).toEqual(['進化', 'イベントガチャ']);
     expect(root.querySelectorAll('.g-date')).toHaveLength(7);
     expect(root.querySelectorAll('.g-maint')).toHaveLength(1);
   });
@@ -208,67 +212,182 @@ describe('撮影モードのバーの端', () => {
   });
 });
 
-describe('撮影モードの行数対策(キャラクター)', () => {
+describe('キャラクター・ガチャ: 新限定のバーへの畳み込みと、進化の行', () => {
   const chara = (id: string, name: string, kind: '新限定' | '獣神化・改' | '真獣神化', start: string, end: string, extra: Partial<ExportEvent> = {}, character: Record<string, string> = {}): ExportEvent =>
     ev(id, 'character', name, start, end, { character: { kind, ...character }, ...extra });
   const D = (d: number) => `2026-11-${String(d).padStart(2, '0')}T00:00:00+09:00`;
+  const S = '2026-11-07T12:00:00+09:00';
+  const E = '2026-11-10T11:59:00+09:00';
+  const host = ev('n#0', 'collab', 'ガチャ「彩・獣神祭」', S, E);
   const evs = [
-    chara('n#c0', 'カーミラ（彩・獣神祭）', '新限定', '2026-11-07T12:00:00+09:00', '2026-11-10T11:59:00+09:00', { color: '#eb0043' }, { gacha: '彩・獣神祭' }),
-    chara('n#c1', 'ツクモ（彩・獣神祭）', '新限定', '2026-11-07T12:00:00+09:00', '2026-11-10T11:59:00+09:00', { color: '#007d32' }, { gacha: '彩・獣神祭' }),
-    chara('o#c0', 'ほか（グリーンファンタジー）', '新限定', '2026-11-08T12:00:00+09:00', '2026-11-10T11:59:00+09:00', {}, { gacha: 'グリーンファンタジー' }),
+    host,
+    chara('n#c0', 'カーミラ（彩・獣神祭）', '新限定', S, E, { color: '#eb0043' }, { gacha: '彩・獣神祭' }),
+    chara('n#c1', 'ツクモ（彩・獣神祭）', '新限定', S, E, { color: '#007d32' }, { gacha: '彩・獣神祭' }),
+    chara('o#c0', 'ほか（グリーンファンタジー）', '新限定', '2026-11-08T12:00:00+09:00', E, {}, { gacha: 'グリーンファンタジー' }), // 同じ記事のガチャが無い → 行のまま
     chara('e#c0', 'A（獣神化・改）', '獣神化・改', D(9), D(10), { color: '#eb0043' }, { at: '2026-11-09T12:00:00+09:00' }),
     chara('e#c1', 'B（獣神化・改）', '獣神化・改', D(9), D(10), {}, { at: '2026-11-09T22:00:00+09:00' }),
     chara('e#c2', 'C（真獣神化）', '真獣神化', D(10), D(11), {}, { at: '2026-11-10T12:00:00+09:00' }),
   ];
-  const rows = () => ganttSections(evs, weekDays('2026-11-05')).find((s) => s.section.id === 'character')!.rows;
+  const rows = () => ganttSections(evs, weekDays('2026-11-05')).find((s) => s.section.id === 'gacha')!.rows;
 
-  it('同じガチャ・同じ期間の新限定は1行(名前と属性色を持つ)。期間が違えば別の行。進化は種別ごとに1行', () => {
-    const r = compactCharacterRows(rows());
+  it('同じ記事・同じ開始・同じ終了のガチャに、新限定の名前・属性色・属性を畳む。畳んだキャラの行は無くなる', () => {
+    const f = foldNewLimited(evs);
+    expect(f.map((e) => e.id)).toEqual(['n#0', 'o#c0', 'e#c0', 'e#c1', 'e#c2']);
+    expect(f[0]!.new_names).toEqual([{ name: 'カーミラ', color: '#eb0043', attr: '火' }, { name: 'ツクモ', color: '#007d32', attr: '木' }]);
+    expect(f[1]!.new_names).toBeUndefined();
+  });
+  it('期間が違う・記事が違うときは畳まない(キャラの行を失わない)', () => {
+    const other = [host, chara('n#c0', 'X（彩・獣神祭）', '新限定', S, '2026-11-11T11:59:00+09:00', {}, { gacha: '彩・獣神祭' }), chara('z#c0', 'Y（彩・獣神祭）', '新限定', S, E)];
+    expect(foldNewLimited(other).map((e) => e.id)).toEqual(['n#0', 'n#c0', 'z#c0']);
+    expect(foldNewLimited(other)[0]!.new_names).toBeUndefined();
+  });
+  it('小見出しの順は 進化 → イベントガチャ → 期間限定ガチャ(畳めなかった新限定)', () => {
+    const r = rows();
+    expect(r.map((x) => gachaGroup(x[0]!.event))).toEqual(['進化', '進化', '進化', 'イベントガチャ', '期間限定ガチャ']);
+    expect(r[3]![0]!.event.new_names?.map((n) => n.name)).toEqual(['カーミラ', 'ツクモ']);
+  });
+  it('進化は種別ごとに1行にまとめ(同じ日は解禁の時刻順)、最初の進化の行の位置に置く。ほかの行はそのまま', () => {
+    const r = compactEvolutionRows(rows());
     expect(r).toHaveLength(4);
-    const merged = r[0]![0]!.event;
-    expect(merged.shot_names).toEqual([{ name: 'カーミラ', color: '#eb0043' }, { name: 'ツクモ', color: '#007d32' }]);
-    expect(merged.name).toBe('カーミラ・ツクモ（彩・獣神祭）');
-    expect(r[1]![0]!.event.shot_names).toEqual([{ name: 'ほか' }]); // 1体でも同じ形(ラベルはガチャ名、名前は線の上)
-    const kai = r[2]!;
-    expect(kai.map((b) => b.event.name)).toEqual(['A（獣神化・改）', 'B（獣神化・改）']); // 同じ日は解禁の時刻順
-    expect(r[3]!.map((b) => b.event.name)).toEqual(['C（真獣神化）']);
-  });
-
-  it('キャラクターでない行はそのまま通す', () => {
+    expect(r[0]!.map((b) => b.event.name)).toEqual(['A（獣神化・改）', 'B（獣神化・改）']);
+    expect(r[1]!.map((b) => b.event.name)).toEqual(['C（真獣神化）']);
+    expect(r[2]![0]!.event.name).toBe('ガチャ「彩・獣神祭」');
     const q = ganttSections([ev('q#0', 'event', '覇者の塔')], weekDays('2026-11-05')).find((s) => s.section.id === 'quest')!.rows;
-    expect(compactCharacterRows(q)).toEqual(q);
+    expect(compactEvolutionRows(q)).toEqual(q);
   });
 
-  const draw = (shot: 'character' | 'summary') => {
+  const draw = (shot?: 'gacha' | 'summary') => {
     const root = document.createElement('div');
     const state = initialState('2026-11-05', evs, INDEX);
-    state.shot = shot;
+    if (shot) state.shot = shot;
     render(root, state);
     return root;
   };
-  it('撮影モード: 新限定はラベルがガチャ名で、名前(属性色)の下に平たい線で期間を表す。進化は日付の枠に名前を縦に並べる(バーなし・種別ラベルに色なし)', () => {
-    const root = draw('character');
-    const labels = [...root.querySelectorAll('.g-row:not(.g-dates) > .g-label')].map((x) => x.textContent);
-    expect(labels).toEqual(['彩・獣神祭', 'グリーンファンタジー', '獣神化・改', '真獣神化']);
-    const spans = [...root.querySelectorAll<HTMLElement>('.g-span')];
-    expect(spans).toHaveLength(2);
-    expect(spans[0]!.querySelector('.g-span-names')?.textContent).toBe('カーミラツクモ');
-    expect(spans[0]!.querySelector('.g-span-line')).not.toBeNull();
-    expect(spans[0]!.style.gridColumn.replace(/\s/g, '')).toBe('4/8'); // 11/7 12:00〜11/10 11:59 → 11/7〜11/10 の4列(11/5 起点。ラベルの列が1なので grid は 4/8)
-    expect(root.querySelectorAll('.g-span .g-name.colored')).toHaveLength(2);
-    expect(root.querySelectorAll('.g-chips')).toHaveLength(14); // 2行 × 7日
-    const chips = [...root.querySelectorAll('.g-chip')].map((x) => x.textContent);
-    expect(chips).toEqual(['A', 'B', 'C']);
-    expect(root.querySelectorAll('.g-chip.colored')).toHaveLength(1);
-    const kind = root.querySelector('.g-row:not(.g-dates) > .g-label.colored');
-    expect(kind).toBeNull();
-    // キャラクターの行にバーは出ない(新限定は線、進化は名前)
-    expect(root.querySelectorAll('.bar-ev')).toHaveLength(0);
+  it('通常表示: ガチャのバーの中に新限定の名前(属性色)が出る。ツールチップにも出る。進化と畳めなかった新限定は1キャラ1行', () => {
+    const root = draw();
+    const bar = [...root.querySelectorAll<HTMLElement>('.bar-ev')].find((b) => b.dataset.eventId === 'n#0')!;
+    expect(bar.querySelector('.bar-names')?.textContent).toBe('NEW！カーミラ・ツクモ');
+    expect(bar.querySelectorAll('.g-name.colored')).toHaveLength(2); // 2人以上: 名前だけが属性色(「NEW！」と「・」は既定の色)
+    expect(bar.querySelector('.bar-new-label')?.textContent).toBe('NEW！');
+    expect(bar.querySelector('.bar-new-label.colored')).toBeNull();
+    expect(bar.title).toContain('新限定: カーミラ(火)・ツクモ(木)');
+    expect(bar.classList.contains('has-names')).toBe(true);
+    expect(root.querySelectorAll('.bar-names')).toHaveLength(1);
+    expect(root.querySelectorAll('.g-row:not(.g-dates) > .g-label')).toHaveLength(6); // A・B・C(進化)+ガチャ+ほか+クエストのイベントガチャの写し
+    expect([...root.querySelectorAll('.g-group')].map((x) => x.textContent)).toEqual(['イベントクエスト', '進化', 'イベントガチャ', '期間限定ガチャ']);
+    expect(root.querySelector('.g-section[data-section="gacha"]')?.textContent).toBe('キャラクター・ガチャ');
   });
-  it('通常表示(撮影モードでない)は1キャラ1行のまま', () => {
+  it('月表示: バーには短く「NEW」だけ(名前は書かない)。名前はツールチップと詳細パネル', () => {
     const root = document.createElement('div');
-    render(root, initialState('2026-11-05', evs, INDEX));
-    expect(root.querySelectorAll('.g-row:not(.g-dates) > .g-label')).toHaveLength(6);
-    expect(root.querySelectorAll('.g-chips')).toHaveLength(0);
+    const state = initialState('2026-11-05', evs, INDEX);
+    state.view = 'month';
+    render(root, state);
+    const bar = [...root.querySelectorAll<HTMLElement>('.bar-ev')].find((b) => b.dataset.eventId === 'n#0')!;
+    expect(bar.querySelector('.bar-new')?.textContent).toBe('NEW');
+    expect(bar.querySelector('.bar-names')).toBeNull();
+    expect(bar.textContent).toBe('NEW');
+    expect(bar.title).toContain('カーミラ(火)');
+    state.selection = { day: '2026-11-08', eventId: 'n#0' };
+    render(root, state);
+    expect(root.querySelector('[data-testid="detail"]')?.textContent).toContain('新限定キャラクター: カーミラ(火)、ツクモ(木)');
+  });
+  it('詳細パネル: ガチャの項目に新限定キャラクター(名前と属性)が出る。キャラ自身の項目は別に出ない', () => {
+    const root = document.createElement('div');
+    const state = initialState('2026-11-05', evs, INDEX);
+    state.selection = { day: '2026-11-08', eventId: 'n#0' };
+    render(root, state);
+    const detail = root.querySelector('[data-testid="detail"]')!;
+    expect(detail.textContent).toContain('新限定キャラクター: カーミラ(火)、ツクモ(木)');
+    // 名前(属性)は属性色
+    const spans = [...detail.querySelectorAll<HTMLElement>('.detail-note .qname')];
+    expect(spans.map((x) => [x.textContent, x.style.getPropertyValue('--pc')])).toEqual([['カーミラ(火)', '#eb0043'], ['ツクモ(木)', '#007d32']]);
+    state.selection = { day: '2026-11-08' };
+    render(root, state);
+    const items = [...root.querySelectorAll('[data-testid="detail"] .detail-item h3')].map((x) => x.textContent);
+    expect(items.some((t) => t?.includes('カーミラ'))).toBe(false);
+    expect(items.some((t) => t?.includes('彩・獣神祭'))).toBe(true);
+  });
+  it('撮影モード(キャラクター・ガチャ): 進化は種別ごと1行で日付の枠に名前を縦に並べる(バーなし・種別ラベルに色なし)。新限定はガチャのバーの中', () => {
+    const root = draw('gacha');
+    const labels = [...root.querySelectorAll('.g-row:not(.g-dates) > .g-label')].map((x) => x.textContent);
+    expect(labels[0]).toBe('獣神化・改');
+    expect(labels[1]).toBe('真獣神化');
+    expect(labels[2]).toContain('彩・獣神祭');
+    expect(root.querySelectorAll('.g-chips')).toHaveLength(14); // 2行 × 7日
+    expect([...root.querySelectorAll('.g-chip')].map((x) => x.textContent)).toEqual(['A', 'B', 'C']);
+    expect(root.querySelectorAll('.g-chip.colored')).toHaveLength(1);
+    expect(root.querySelector('.g-row:not(.g-dates) > .g-label.colored')).toBeNull();
+    expect(root.querySelectorAll('.bar-ev')).toHaveLength(2); // 彩・獣神祭 と ほか(進化はバーなし)
+    expect(root.querySelector('.bar-names')?.textContent).toBe('NEW！カーミラ・ツクモ');
+  });
+  it('概要: 新限定(with_new_limited)のブロックは、名前を持つガチャの行だけ。ほかのブロックには出さない', () => {
+    const secs = ganttSections(evs, weekDays('2026-11-05'));
+    const out = summaryBlocks(secs, grp, { blocks: [{ section: 'gacha', groups: ['イベントガチャ'] }, { section: 'gacha', with_new_limited: true }, { section: 'gacha', groups: ['進化'] }] });
+    // イベントガチャのブロックは、新限定の名前を持つ行を出さない(行が無いのでブロックごと出ない)。新限定のブロックだけに出る。進化は種別ごと1行
+    expect(out.map((e) => e.rows.flatMap((r) => r.map((b) => b.event.name)))).toEqual([['ガチャ「彩・獣神祭」'], ['A（獣神化・改）', 'B（獣神化・改）', 'C（真獣神化）']]);
+    expect(out.map((e) => e.headings)).toEqual([false, true]);
+  });
+});
+
+describe('バーの縁の属性色(新限定・ピックアップ・進化)', () => {
+  const S = '2026-11-07T12:00:00+09:00';
+  const E = '2026-11-10T11:59:00+09:00';
+  const chara = (id: string, name: string, color?: string): ExportEvent => ev(id, 'character', name, S, E, { character: { kind: '新限定' }, ...(color ? { color } : {}) });
+  const bars = (events: ExportEvent[], month = false): Record<string, HTMLElement> => {
+    const root = document.createElement('div');
+    const state = initialState('2026-11-05', events, INDEX);
+    if (month) state.view = 'month';
+    render(root, state);
+    return Object.fromEntries([...root.querySelectorAll<HTMLElement>('.bar-ev')].map((b) => [b.dataset.eventId as string, b]));
+  };
+  const host = ev('n#0', 'collab', 'ガチャ「彩・獣神祭」', S, E);
+
+  it('新限定が1人: 縁がその属性色(edge-attr・--pc)。面は変えない', () => {
+    const b = bars([host, chara('n#c0', 'A（彩・獣神祭）', '#eb0043')])['n#0']!;
+    expect(b.classList.contains('edge-attr')).toBe(true);
+    expect(b.style.getPropertyValue('--pc')).toBe('#eb0043');
+    expect(b.classList.contains('edge-split')).toBe(false);
+  });
+  it('新限定が2人: 縁を左右半分ずつ(edge-split。左=最初の名前の色)', () => {
+    const b = bars([host, chara('n#c0', 'A（彩・獣神祭）', '#eb0043'), chara('n#c1', 'B（彩・獣神祭）', '#007d32')])['n#0']!;
+    expect(b.classList.contains('edge-split')).toBe(true);
+    expect(b.style.getPropertyValue('--pc1')).toBe('#eb0043');
+    expect(b.style.getPropertyValue('--pc2')).toBe('#007d32');
+    expect(b.classList.contains('edge-attr')).toBe(false);
+  });
+  it('新限定が3人以上・色が分からない人がいる: 既定の縁のまま(分割しない)', () => {
+    const three = bars([host, chara('n#c0', 'A（彩・獣神祭）', '#eb0043'), chara('n#c1', 'B（彩・獣神祭）', '#007d32'), chara('n#c2', 'C（彩・獣神祭）', '#3154ef')])['n#0']!;
+    expect([three.classList.contains('edge-attr'), three.classList.contains('edge-split')]).toEqual([false, false]);
+    const unknown = bars([host, chara('n#c0', 'A（彩・獣神祭）', '#eb0043'), chara('n#c1', 'B（彩・獣神祭）')])['n#0']!;
+    expect([unknown.classList.contains('edge-attr'), unknown.classList.contains('edge-split')]).toEqual([false, false]);
+    const none = bars([host, chara('n#c0', 'A（彩・獣神祭）')])['n#0']!;
+    expect(none.classList.contains('edge-attr')).toBe(false);
+  });
+  it('ピックアップのバー: 名前の色(pickup.color)が縁。色が無ければ既定', () => {
+    const p1 = ev('p#1', 'collab', 'ガチャ「作品｜ユル」', S, E, { pickup: { name: 'ユル', order: 0, color: '#3154ef', mainId: 'p#0' } });
+    const p2 = ev('p#2', 'collab', 'ガチャ「作品｜ミナ」', S, E, { pickup: { name: 'ミナ', order: 1, mainId: 'p#0' } });
+    const b = bars([ev('p#0', 'collab', 'ガチャ「作品」', S, E), p1, p2]);
+    expect(b['p#1']!.classList.contains('edge-attr')).toBe(true);
+    expect(b['p#1']!.style.getPropertyValue('--pc')).toBe('#3154ef');
+    expect(b['p#2']!.classList.contains('edge-attr')).toBe(false);
+  });
+  it('進化のバー(キャラクターの項目): 属性色が縁。色が無ければ既定', () => {
+    const e1 = ev('e#c0', 'character', 'A（獣神化・改）', '2026-11-09T00:00:00+09:00', '2026-11-10T00:00:00+09:00', { character: { kind: '獣神化・改', at: '2026-11-09T12:00:00+09:00' }, color: '#a237c3' });
+    const e2 = ev('e#c1', 'character', 'B（獣神化・改）', '2026-11-09T00:00:00+09:00', '2026-11-10T00:00:00+09:00', { character: { kind: '獣神化・改', at: '2026-11-09T13:00:00+09:00' } });
+    const b = bars([e1, e2]);
+    expect(b['e#c0']!.classList.contains('edge-attr')).toBe(true);
+    expect(b['e#c0']!.style.getPropertyValue('--pc')).toBe('#a237c3');
+    expect(b['e#c1']!.classList.contains('edge-attr')).toBe(false);
+  });
+  it('バー内の文字: 週表示は「NEW！名前」(2人は「・」区切り。1人なら「NEW！」も属性色)、月表示は「NEW」だけ(1人なら属性色。中央揃えはCSS)', () => {
+    const one = [host, chara('n#c0', 'マクスウェル（彩・獣神祭）', '#a237c3')];
+    expect(bars(one)['n#0']!.querySelector('.bar-names')?.textContent).toBe('NEW！マクスウェル');
+    expect(bars(one)['n#0']!.querySelector('.bar-new-label.colored')).not.toBeNull(); // 1人: 「NEW！」も属性色
+    expect((bars(one, true)['n#0']!.querySelector('.bar-new') as HTMLElement).classList.contains('colored')).toBe(true);
+    const two = [host, chara('n#c0', 'A（彩・獣神祭）', '#eb0043'), chara('n#c1', 'B（彩・獣神祭）', '#007d32')];
+    expect(bars(two)['n#0']!.querySelector('.bar-names')?.textContent).toBe('NEW！A・B');
+    const m = bars(two, true)['n#0']!;
+    expect(m.textContent).toBe('NEW');
+    expect(m.querySelector('.bar-names')).toBeNull();
   });
 });

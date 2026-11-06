@@ -92,7 +92,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 | フォルダ | 役割 | ファイル(いつ直すか) |
 |---|---|---|
 | `config/judge/` | 表示・非表示の判断 | `rules.json`(自動判定のルール。上から最初の一致)、`decisions.json`(判断の記憶。`npm run candidates` が要判断ファイルから取り込む生成物なので、通常は手で編集しない)。`calendar/YYYY/MM.md`(台帳。収集した項目を判定〈表示/非表示/要判断〉・理由・期間・内容・項目IDつきで月別に出力。自動生成・git管理・読む用。§16)。ローカルの生成物 `needs-review.md`(要判断の一覧・編集する)はgit管理外 |
-| `config/display/` | 表記・並び・色・表示範囲 | `window.json`(カレンダーの表示範囲。過去・未来それぞれの月数。公開データ・移動の限界・判断の表・`npm run prune` が使う)、`label-overrides.json`(長いラベルを短くする)、`order.json`(**セクション・小見出し(名前・個数・並び・振り分け)・行の並び方の唯一の設定**。spec §4.3.8。記入例は `order.md`)、`quest-colors.json`(禁忌の獄の属性色と色の定義)、`recurring.json`(定例のラベル)、`discord.json`(Discord 用の画像の「概要」の絞り込み。§18) |
+| `config/display/` | 表記・並び・色・表示範囲 | `bar-style.json`(日ごとに属性が決まるバーの見せ方。`default`・`sections` で `lines`/`stripes`/`underline`/`edge`/`off`。spec §4.7)、`window.json`(カレンダーの表示範囲。過去・未来それぞれの月数。公開データ・移動の限界・判断の表・`npm run prune` が使う)、`label-overrides.json`(長いラベルを短くする)、`order.json`(**セクション・小見出し(名前・個数・並び・振り分け)・行の並び方の唯一の設定**。spec §4.3.8。記入例は `order.md`)、`quest-colors.json`(禁忌の獄の属性色と色の定義)、`recurring.json`(定例のラベル)、`discord.json`(Discord 用の画像の「概要」の絞り込み。§18) |
 | `config/schedule/` | ニュースに載らない日程・事実 | `manual.json`(手動の調整。公式に無い項目の追加・項目の非表示。§14)、`overrides.json`(項目IDごとの修正。期間・名前・セクション・詳細の内容。§17)、`hakai.json`(星墓のクエスト名→色と、固定の階層。§8)、`monthly-days.json`(毎月決まった日に出る項目)、`normal-quest-attributes.json`(ノーマルクエストの曜日別の対象属性) |
 
 過去記事を全体から判断し直す仕組み(`npm run review-year`・`config/review/`)は廃止した。更新ごとの差分で判断する(運用の再設計。。
@@ -153,7 +153,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 | `apply.yml` | 要対応Issue(タイトルが「要対応」)に `/apply` とコメント(所有者・メンバー・共同作業者のみ。Issueの作者も更新ワークフローのbotか所有者のものだけ) | Issue本文のチェックを `npm run judge` で判断の記憶に取り込み、検証して PR→自動マージ→`deploy.yml` 起動→Issue を閉じる。検証が通らなければ『要確認』で待機 |
 | `manual.yml` | 手動実行のみ(Actions → manual → Run workflow) | 入力(操作・項目名・期間など)で `npm run manual` を実行 → 検証(lint・テスト・ビルド・`npm run check`) → `config/schedule/manual.json` を更新する PR → 健全なら自動マージして `deploy.yml` を起動。検証が通らなければ『要確認』で待機。手順は §14 |
 | `prune.yml` | 手動実行のみ(Actions → prune → Run workflow) | 既定は確認だけ(`npm run prune`。対象の件数と月別の内訳を実行結果の概要に出す)。`apply=true` のときだけ、削除 → 表示用データの作り直し → 検証 → `data: prune old articles` の PR → 健全なら自動マージして `deploy.yml` を起動。手順は §15 |
-| `discord.yml` | `update.yml` の定例が健全に終わったあと(自動)、手動実行 | リポジトリのデータから週表示の画像5枚を作り、Discord の Webhook へ新しく投稿(§18)。Secret `DISCORD_WEBHOOK_URL` が無ければ投稿しない。`dry_run` で内容だけ確認 |
+| `discord.yml` | `update.yml` の定例が健全に終わったあと(自動)、手動実行 | リポジトリのデータから週表示の画像4枚を作り、Discord の Webhook へ新しく投稿(§18)。Secret `DISCORD_WEBHOOK_URL` が無ければ投稿しない。`dry_run` で内容だけ確認 |
 | `ci.yml` | PR、main への push | lint・テスト・ビルド(人が作る PR 用) |
 
 **手動実行の入力(update.yml)**: `discord`(true なら健全に終わったあと Discord へ転送。既定 false)、`collect`(false にすると収集せず、設定の変更だけを反映して判定とレポートを作り直す)、`pages`(既定2)、`since`(初回・過去分用。公式サイトへの負荷が大きい)。
@@ -223,12 +223,12 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 ## 18. Discord 用の画像 `npm run discord:images`
 週表示(基準日から7日)のカレンダーを PNG にする。**この節のコマンドはローカルで画像を作るだけ**(Discord への送信は下の「Discord への送信」)。
 1. `npm run update`(または `npm run collect`)→ `npm run build:public` で `dist/` と `dist/data` を作る。
-2. `npm run discord:images` → `out/discord/` に5枚。**ファイル名は画像に写る期間**: `2026-11-06_2026-11-12_summary.png`(概要)・`…_character.png`・`…_quest.png`・`…_campaign.png`・`…_gacha.png`。`-- --date YYYY-MM-DD` で基準日を固定、`-- --only quest` で1枚だけ。`out/` は git に含めない。
+2. `npm run discord:images` → `out/discord/` に4枚。**ファイル名は画像に写る期間**: `2026-11-06_2026-11-12_summary.png`(概要)・`…_quest.png`・`…_campaign.png`・`…_gacha.png`(キャラクター・ガチャ)。`-- --date YYYY-MM-DD` で基準日を固定、`-- --only quest` で1枚だけ。`out/` は git に含めない。
 - 初回は `npx playwright install chromium`。日本語フォント(Linux は `fonts-noto-cjk` など)が必要。ブラウザのタイムゾーンは Asia/Tokyo、ライト固定。
-- 画像は行数が増えないよう、撮影モードだけ行を詰める(行の高さ・長いラベルの文字の大きさ。進化は種別ごと1行で解禁日の枠に名前を縦に並べ、同じガチャ・期間の新限定は1行にまとめ、ラベルをガチャ名に、名前を属性色で(線の上で中央揃え)書いてその下に平たい線(太さ4px)で期間を表す。docs/spec.md §4.12)。通常のカレンダーは変わらない。
-- メンテナンスの帯は5枚とも出る。画像にはフッター(注記)を入れない。公式の画像・ロゴは使わない。公式サイト・公開サイトにはアクセスしない(`dist/` をローカルで配信して撮る)。
-- 画面でも `?shot=summary|character|quest|campaign|gacha`(と `&date=YYYY-MM-DD`)を付けると撮影モードで見られる(`npm run dev` / `npm run preview`)。
-- **概要の並びと中身は `config/display/discord.json` の `summary.blocks` だけを直す**(コード変更は要らない)。概要はセクションの大見出しを出さず、blocks を上から順に並べる。1ブロック: `section`(セクションid)・`groups`(出す小見出し。複数ならこの順)・`keywords`(この語を含む行だけ)・`hide_keywords`・`start_day_only`(開催日だけ。その週に始まるものを開始日の列1日分に描き、それ以前に始まったものは出さない)・`headings`(小見出しを出すか)・`max_rows`。**現在の並び**: ①モンストの日 ②特Lの園 ③イベントクエスト ④期間限定ガチャ ⑤絶級・期間限定・超究極クエスト(開催日だけ) ⑥新限定 ⑦進化 ⑧定例クエスト(常設クエスト・その他は出さない)。小見出しは groups を書いたブロックに出る(モンストの日・特Lの園には出ない)。行が無いブロックは出さない。キャラクター・クエスト・キャンペーン・ガチャの各画像は絞らない(大見出しあり)。
+- 画像は行数が増えないよう、撮影モードだけ行を詰める(行の高さ・長いラベルの文字の大きさ。進化は種別ごと1行で解禁日の枠に名前を縦に並べる。新限定はガチャのバーの中に名前を属性色で折り返して書く〈名前が多いとバー・行が伸びる〉。docs/spec.md §4.12)。通常のカレンダーは変わらない。
+- メンテナンスの帯は4枚とも出る。画像にはフッター(注記)を入れない。公式の画像・ロゴは使わない。公式サイト・公開サイトにはアクセスしない(`dist/` をローカルで配信して撮る)。
+- 画面でも `?shot=summary|quest|campaign|gacha`(と `&date=YYYY-MM-DD`)を付けると撮影モードで見られる(`npm run dev` / `npm run preview`)。
+- **概要の並びと中身は `config/display/discord.json` の `summary.blocks` だけを直す**(コード変更は要らない)。概要はセクションの大見出しを出さず、blocks を上から順に並べる。1ブロック: `section`(セクションid)・`groups`(出す小見出し。複数ならこの順)・`keywords`(この語を含む行だけ)・`hide_keywords`・`start_day_only`(開催日だけ。その週に始まるものを開始日の列1日分に描き、それ以前に始まったものは出さない)・`headings`(小見出しを出すか)・`with_new_limited`(true=新限定キャラの名前をバーの中に持つガチャの行だけ。ほかのブロックにはその行を出さない)・`max_rows`。**現在の並び**: ①モンストの日 ②特Lの園 ③イベントクエスト ④期間限定ガチャ ⑤絶級・期間限定・超究極クエスト(開催日だけ) ⑥新限定(名前を持つガチャ) ⑦進化 ⑧定例クエスト(常設クエスト・その他は出さない)。小見出しは groups を書いたブロックに出る(モンストの日・特Lの園・新限定には出ない)。行が無いブロックは出さない。クエスト・キャンペーン・キャラクター・ガチャの各画像は絞らない(大見出しあり)。
 
 ### Discord への送信(`npm run discord:post` / `.github/workflows/discord.yml`)
 - **方式**: Webhook で、画像1枚ずつを**毎回新しく投稿**する(5メッセージ。見出し `**概要** 11/6〜11/12` + 画像。過去の投稿は書き換えない=履歴が残る)。メンション・`@` は解釈させない。通知を鳴らさないのは `--silent`(Actions では `silent` 入力)。
@@ -239,9 +239,9 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 - **失敗したとき**: 送信は直列(1秒あけ)。429 は待って最大3回やり直す。途中で失敗したら止まり、送れた分は再送しない(`only` で残りだけ送る)。
 - 経緯・決定事項は `docs/discord-handoff.md`。
 
-## 19. キャラクターのセクション(新限定・獣神化・獣神化改・真獣神化)
-通常のカレンダーの**キャラクター**セクション(クエストの上。1キャラ=1行。仕様は docs/spec.md §4.13)。
-- **自動**: 収集(`npm run update`)が、記事の本文から「名前・種別・日時」だけを `data/articles/` の `characters` に書く。進化は解禁日の暦日1日(詳細には解禁の日時)、新限定はガチャの開催期間のバー。小見出しは 新限定→進化、各々登場順。文字は属性色。表示/非表示の判断(`config/judge/`)の対象外で、常に表示する。
+## 19. キャラクター・ガチャのセクション(新限定・獣神化・獣神化改・真獣神化)
+通常のカレンダーの**キャラクター・ガチャ**セクション(クエスト・キャンペーンの下。小見出し「進化」が先頭で、1キャラ=1行。新限定はガチャのバーに畳む。仕様は docs/spec.md §4.13)。
+- **自動**: 収集(`npm run update`)が、記事の本文から「名前・種別・日時」だけを `data/articles/` の `characters` に書く。進化は解禁日の暦日1日(詳細には解禁の日時)で、小見出し「進化」の行になる。新限定は、同じ記事・期間のガチャのバーに畳み、**週表示はバーの中に `NEW：名前・名前`(名前は属性色。折り返し。バー・行が伸びる)、月表示は中央に `NEW` だけ**。新限定(1人=その色、2人=左右半分ずつ。3人以上・色不明は既定)・ピックアップ・進化のバーは、**縁だけが属性色**になる(色が無ければ既定の縁)。名前・属性は詳細パネルにも出る。結び付くガチャが無ければ、期間限定ガチャの行として残る。文字は属性色。表示/非表示の判断(`config/judge/`)の対象外で、常に表示する。
 - **直す・外す**: 行の項目IDは `<記事ID>#c<連番>`(台帳 `config/judge/calendar/` に出る)。外すのは `npm run manual -- hide --id 20260211_4#c0`、期間・名前の修正は `npm run override`(§17)。収集の結果(`data/articles/`)は手で直さない。
 - **足りない行**: 日時が本文から取れなかった記事や取りこぼしは、行にならない(推測した日付を載せない)。手動で足す仕組みはまだない(`manual.json` の add は event / campaign のみ)。必要になったら、抽出の対応を `src/characters.ts` に足す。
 - **既存の記事に反映する**: 抽出は収集時に走る。すでに収集済みの記事に反映するには、対象の記事の生HTMLを `data/raw/articles/<記事ID>.html` に取得して(礼節は §4。間隔2秒以上・直列・429で即中断)、`npm run rebuild` を実行する。

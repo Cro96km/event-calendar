@@ -6,6 +6,13 @@ import type { DetailBlock } from '../details';
 import { eventUrl, type PickupInfo, type Slot } from '../period';
 import type { ArticleRecord } from './record';
 
+/** ガチャのバーに畳んだ新限定キャラ(表示時のみ)。color=属性色、attr=属性。 */
+export interface NewName {
+  name: string;
+  color?: string;
+  attr?: string;
+}
+
 export interface ExportEvent {
   id: string;
   article_id: string;
@@ -39,8 +46,10 @@ export interface ExportEvent {
   section?: string;
   /** キャラクターの項目(新限定・進化の解禁。§4.13)。at=進化の解禁の日時(バーは解禁日の暦日1日分。詳細には開催期間でなくこれを出す)、gacha=新限定の実装ガチャ名 */
   character?: { kind: CharacterKind; at?: string; gacha?: string };
-  /** 撮影モード専用(書き出しには含まれない。src/shot.ts compactCharacterRows): 同じ期間・同じガチャの新限定キャラを1行にまとめたときの、各キャラの名前と属性色 */
-  shot_names?: { name: string; color?: string }[];
+  /** 表示時にだけ付く(書き出しには含まれない。src/newlimited.ts foldNewLimited): このガチャの実装と同時の新限定キャラの名前・属性色・属性。バーの中に出す */
+  new_names?: NewName[];
+  /** バーの縁に使う色(表示時に付く。書き出しには含まれない。src/gacha-color.ts: 定例ガチャの属性色) */
+  edge_color?: string;
   /** 手動の修正が入っている(config/schedule/overrides.json)。fields=直した項目、notes=詳細に出す注記、hide_blocks=詳細で出さないブロック */
   fix?: { fields: string[]; notes?: string[]; hide_blocks?: string[] };
 }

@@ -12,6 +12,7 @@
 | `role` | コードが特別扱いする役割。名前を変えても役割は残る。クエストは `event`(イベントガチャの写し)・`raid`(降臨)・`super`(超究極)、ガチャは `event`・`regular`(定例)。各1つ必須 |
 | `match` | どの項目が入るか。`"words"`=自分の `words` を項目名に含む / `"name"`=自分の `name` を項目名に含む / `{"includes": [語, …]}` / `{"pattern": "正規表現"}`。書かなければ名称では入らない |
 | `words` | `sort` が `fixed` のときの並びの語。`match` が `"words"` なら、入る項目の判定も兼ねる |
+| `attrs` | 行の名前に含む語 → 属性(火・水・木・光・闇)。ラベルとバーの縁をその属性色にする(定例ガチャ。キーは `words` にある語) |
 | `sort` | 行の並び方。`fixed`=`words` の順(項目名に含む語を上から。一致しない行は `"*"` の位置、書かなければ末尾)/ `name`=表示名の五十音順 / `start`=開始順(既定)/ `builtin`=コード固定(`role` が `event` と `super` のもの) |
 | `then` | `fixed` で同じ順位の行の並び。`name`(既定)か `start` |
 | `aliases` | 項目名にこの語を含めばこの小見出しに入れる(キャンペーン用。例 `CM視聴` → ミッション) |
@@ -68,15 +69,14 @@
 ```json
 {
   "sections": [
-    { "id": "character", "label": "キャラクター", "hue": 268, "categories": ["character"] },
-    { "id": "quest", "label": "クエスト", "hue": 224, "categories": ["event"] },
+    { "id": "quest", "label": "クエスト", "hue": 215, "categories": ["event"] },
     { "id": "special", "label": "特別企画", "hue": 40, "categories": [] },
-    { "id": "campaign", "label": "キャンペーン", "hue": 174, "lit": -6, "categories": ["campaign", "web-shop"] },
-    { "id": "gacha", "label": "ガチャ", "hue": 346, "categories": ["collab"] }
+    { "id": "campaign", "label": "キャンペーン", "hue": 215, "categories": ["campaign", "web-shop"] },
+    { "id": "gacha", "label": "キャラクター・ガチャ", "hue": 215, "categories": ["collab", "character"] }
   ]
 }
 ```
 
-- 上から順に表示します。上の例では、キャラクターが一番上で、「特別企画」がクエストとキャンペーンの間に入ります。
-- `id` は英小文字・数字・ハイフン、`hue` は色相(0〜359)、`lit` は明るさの補正(−15〜15。省略は0。白文字が読みにくい色相を暗くしたいときだけ)です。`character`・`quest`・`campaign`・`gacha` は必須です(振り分けの判定がコードにあります)。`character` は新限定・獣神化・獣神化改・真獣神化の行で、`categories` は `["character"]` のままにします(docs/spec.md §4.13)。
+- 上から順に表示します。上の例では、「特別企画」がクエストとキャンペーンの間に入ります。
+- `id` は英小文字・数字・ハイフン、`hue` は色相(0〜359)、`sat` は彩度(0〜100。省略は16)、`lit` は縁・線の明るさの補正(−15〜15。省略は0)です。`quest`・`campaign`・`gacha` は必須です(振り分けの判定がコードにあります)。`gacha` はキャラクター・ガチャで、進化の行(小見出し `role: evolution`)を載せるため、`categories` に `"character"` を含めたままにします(docs/spec.md §4.13)。
 - 足したセクションは小見出しを持ちません。項目は `config/schedule/overrides.json` の `section`(`"section": "special"`)で入れます。`categories` は空にします。

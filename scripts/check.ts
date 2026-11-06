@@ -6,6 +6,7 @@ import { checkHakai } from '../src/hakai-check';
 import { judgeHealth } from '../src/health';
 import { MANUAL, manualProblems } from '../src/manual';
 import { orderProblems } from '../src/order-check';
+import { barStyleProblems } from '../src/bar-style';
 import { shotConfigProblems } from '../src/shot';
 import { SECTIONS, groupDefs } from '../src/sections';
 import { OVERRIDES, overrideProblems, type OfficialValue } from '../src/overrides';
@@ -71,6 +72,7 @@ for (const u of ov.unknown) warns.push(`overrides.json に、存在しない項�
 for (const x of ov.stale) warns.push(`overrides.json: 公式の値が修正時から変わりました。修正を見直してください: ${x}`);
 for (const x of ov.redundant) warns.push(`overrides.json: 修正が今の公式の値と同じです(不要。unset で外せます): ${x}`);
 for (const p of orderProblems()) fails.push(`表示順の設定の誤り: ${p}`);
+for (const p of barStyleProblems(undefined, SECTIONS.map((x) => x.id))) fails.push(`バーの見せ方の設定の誤り: ${p}`);
 for (const p of shotConfigProblems(undefined, SECTIONS.map((x) => x.id), (sec) => groupDefs(sec).map((g) => g.name))) fails.push(`Discord 画像の設定の誤り: ${p}`);
 
 const summaryFile = arg('--summary');
