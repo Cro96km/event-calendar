@@ -28,6 +28,7 @@
     "override": "tsx scripts/override.ts",
     "prune": "tsx scripts/prune.ts",
     "discord:images": "tsx scripts/discord-images.ts",
+    "discord:post": "tsx scripts/discord-post.ts",
     "help": "tsx scripts/help.ts"
   },
   "devDependencies": {

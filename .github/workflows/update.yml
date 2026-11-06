@@ -19,6 +19,10 @@ on:
         description: 'この公開日(YYYY-MM-DD)より古くなるまで巡回(任意。初回・過去分用。負荷が大きい)'
         type: string
         default: ''
+      discord:
+        description: '更新が健全に終わったら Discord へ画像を転送する(定例の実行は常に転送)'
+        type: boolean
+        default: false
   schedule:
     - cron: '0 15 * * 4'
 
@@ -79,6 +83,9 @@ jobs:
           set -euo pipefail
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          healthy=false
+          if [ "$CI_RESULT" = "0" ] && [ "$CHECK_RESULT" = "0" ]; then healthy=true; fi
+          echo "healthy=$healthy" >> "$GITHUB_OUTPUT"
           if [ -z "$(git status --porcelain data config)" ]; then
             echo "変更なし: PR を作らない"
             echo "changed=false" >> "$GITHUB_OUTPUT"
@@ -93,8 +100,6 @@ jobs:
           git push origin "$branch"
           gh label create "自動マージ" --color 0e8a16 --description "健全性チェックを通り自動でマージした更新" 2>/dev/null || true
           gh label create "要確認" --color d93f0b --description "健全性チェックを通らず、人の確認が必要な更新" 2>/dev/null || true
-          healthy=false
-          if [ "$CI_RESULT" = "0" ] && [ "$CHECK_RESULT" = "0" ]; then healthy=true; fi
           {
             cat update-report.md
             echo
@@ -116,6 +121,12 @@ jobs:
           else
             gh pr edit "$url" --add-label "要確認"
           fi
+
+      # 毎週の転送: 健全(自動マージ済み、または変更なし)なら Discord へ画像を送る。要確認の週は送らない(main が古いため)。
+      # 画像はリポジトリのデータからその場で作るので、deploy の完了は待たない。手動実行は discord=true のときだけ。
+      - name: Trigger Discord post
+        if: steps.pr.outputs.healthy == 'true' && (github.event_name == 'schedule' || github.event.inputs.discord == 'true')
+        run: gh workflow run discord.yml --ref "${{ github.event.repository.default_branch }}"
 
       # 要対応(要判断・新クエスト・長いラベル・期間が取れない記事)があれば Issue を作る。要判断はチェックボックス(/apply で取り込み)。
       - name: Open action-needed issue
