@@ -297,6 +297,9 @@ describe('キャラクター・ガチャ: 新限定のバーへの畳み込み�
     render(root, state);
     const detail = root.querySelector('[data-testid="detail"]')!;
     expect(detail.textContent).toContain('新限定キャラクター: カーミラ(火)、ツクモ(木)');
+    // 名前(属性)は属性色
+    const spans = [...detail.querySelectorAll<HTMLElement>('.detail-note .qname')];
+    expect(spans.map((x) => [x.textContent, x.style.getPropertyValue('--pc')])).toEqual([['カーミラ(火)', '#eb0043'], ['ツクモ(木)', '#007d32']]);
     state.selection = { day: '2026-11-08' };
     render(root, state);
     const items = [...root.querySelectorAll('[data-testid="detail"] .detail-item h3')].map((x) => x.textContent);

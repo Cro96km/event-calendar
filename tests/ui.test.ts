@@ -425,6 +425,9 @@ describe('詳細パネルの改善', () => {
     const rows = [...(q('detail')?.querySelectorAll('.detail-table tbody tr') ?? [])].map((r) => [...r.querySelectorAll('td')].map((c) => c.textContent));
     expect(rows).toEqual([['10/27', '火', '火属性'], ['10/28', '水', '水属性'], ['10/29', '木', '木属性']]);
     expect([...(q('detail')?.querySelectorAll('.detail-table th') ?? [])].map((c) => c.textContent)).toEqual(['日付', '曜日', '対象属性']);
+    // 対象属性の字は属性色(火=赤・水=青・木=緑)
+    const colored = [...(q('detail')?.querySelectorAll('.detail-table td .qname') ?? [])].map((x) => [x.textContent, (x as HTMLElement).style.getPropertyValue('--pc')]);
+    expect(colored).toEqual([['火', '#eb0043'], ['水', '#3154ef'], ['木', '#007d32']]);
   });
   it('event.details(対象ステージ等)を見出し付きで表示する。同ラベルの統合で項目が和集合になる', () => {
     const a = ev('k#0', 'event', '2026-10-27T12:00:00+09:00', '2026-10-29T11:59:00+09:00', {

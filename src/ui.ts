@@ -6,6 +6,7 @@ import { clampToWindow, windowRange } from './window';
 import { type BarSpan, addDays, isOnCalendarDay, campaignGroup, questGroup, maintenanceBars, maintenanceOnDay, addMonthsToDay, dayLabel, monthWindow, eventsForDay, formatJst, ganttSections, mergeSameLabel, rowLabel, periodText, unlockText, whenText, slotRows, weekDays, weekdayOf } from './week';
 import { EVENT_QUEST_SUFFIX, MAINTENANCE_CATEGORY, gachaGroup, sectionOf } from './sections';
 import { barEdgeColors, foldNewLimited } from './newlimited';
+import { attributeColor, type Attribute } from './characters';
 import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
@@ -122,7 +123,17 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
     // 進化の解禁は開催期間でなく解禁の日時(12:00・22:00など)を出す
     if (unlockText(event) !== '') item.append(el('p', undefined, `解禁日時: ${unlockText(event)}`));
     else if (periodText(event) !== '') item.append(el('p', undefined, `${event.category === MAINTENANCE_CATEGORY ? '実施日程' : '開催期間'}: ${periodText(event)}`));
-    if (event.new_names?.length) item.append(el('p', 'detail-note', `新限定キャラクター: ${event.new_names.map((n) => (n.attr ? `${n.name}(${n.attr})` : n.name)).join('、')}`));
+    if (event.new_names?.length) {
+      // 名前(属性)を属性色で書く
+      const note = el('p', 'detail-note', '新限定キャラクター: ');
+      event.new_names.forEach((n, i) => {
+        if (i > 0) note.append('、');
+        const nm = el('span', undefined, n.attr ? `${n.name}(${n.attr})` : n.name);
+        if (n.color && paint(nm, n.color)) nm.classList.add('qname');
+        note.append(nm);
+      });
+      item.append(note);
+    }
     // 報酬受取期限は表示しない(別記事の内容を取り込み大半が誤りのため)
     if (event.slots?.length) {
       const box = el('div', 'detail-block');
@@ -177,6 +188,13 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
               return;
             }
             const td = el('td', undefined, c);
+            // 対象キャラクターの表: 名前(1列目)と属性(3列目)を属性色で
+            if (t.head[0] === 'キャラクター' && (i === 0 || i === 2)) {
+              const ac = attrColorInText(r[2] ?? '');
+              if (ac && paint(td, ac)) td.classList.add('qname');
+            }
+            // キャンペーンの対象属性の表: 火・水・木・光・闇の字をそれぞれ属性色で
+            if (t.head[2] === '対象属性' && i === 2) colorAttrs(td, c);
             // 階層クエストの名前(2列目)に属性色(config/display/quest-colors.json)
             if (qnames && i === 1) {
               const qc = questNameColor(c);
@@ -289,6 +307,26 @@ function paintSection(node: HTMLElement, section: { hue: number; sat?: number; l
   node.style.setProperty('--hue', String(section.hue));
   if (section.sat !== undefined) node.style.setProperty('--sat', `${section.sat}%`);
   node.style.setProperty('--lit', `${section.lit ?? 0}%`);
+}
+
+/** 文字列の最初の属性(火・水・木・光・闇)の色。無ければ undefined。 */
+function attrColorInText(text: string): string | undefined {
+  const a = (['火', '水', '木', '光', '闇'] as const).find((x) => text.includes(x));
+  return attributeColor(a);
+}
+
+/** セルの文字の中の属性の字(火・水・木・光・闇)を、それぞれ属性色にする。 */
+function colorAttrs(node: HTMLElement, text: string): void {
+  node.textContent = '';
+  for (const part of text.split(/([火水木光闇])/)) {
+    if (part === '') continue;
+    const color = part.length === 1 ? attributeColor(part as Attribute) : undefined;
+    if (color) {
+      const sp = el('span', undefined, part);
+      if (paint(sp, color)) sp.classList.add('qname');
+      node.append(sp);
+    } else node.append(part);
+  }
 }
 
 /** 公式の色を要素に渡す(`--pc`。CSSの `.colored` が文字・点・バーに使う)。`#rrggbb` 以外は無視する。 */
