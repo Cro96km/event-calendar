@@ -269,14 +269,14 @@ function stripLabel(r: RowLabel, words: readonly string[]): RowLabel {
   return alt === '' ? r : { ...r, l1: alt, l2: null };
 }
 
-function rowLabelRaw(sectionId: string, e: { name: string; pickup?: { name: string }; id?: string; group?: string }): RowLabel {
+function rowLabelRaw(sectionId: string, e: { name: string; pickup?: { name: string }; id?: string; group?: string; boss?: string }): RowLabel {
   // クエスト・キャンペーンの長いラベルの上書き(config/display/label-overrides.json)。1行(折り返さない)。ガチャには適用しない
   if (sectionId !== 'gacha') {
     const o = labelOverride(e.name);
     if (o) return { l1: o.l1, l2: o.l2, wrap: false };
   }
   const lines = labelLines(e.name);
-  const chara = sectionId === 'quest' && questGroup(e) === QUEST_SUPER ? superUltimateLabel(e.name) : null;
+  const chara = sectionId === 'quest' && questGroup(e) === QUEST_SUPER ? superUltimateLabel(e.name, e.boss) : null;
   if (chara) return { l1: chara, l2: null, wrap: true };
   // コラボガチャのピックアップ: 通常ガチャの行の直下に、ピックアップ名だけを出す(インデントと点はCSS。作品名は上の行・ツールチップ)
   if (sectionId === 'gacha' && e.pickup) return { l1: e.pickup.name, l2: null, wrap: true };
@@ -315,8 +315,10 @@ function questCmp(a: ExportEvent, b: ExportEvent): number {
   if (ga !== gb) return QUEST_GROUPS.indexOf(ga) - QUEST_GROUPS.indexOf(gb);
   if (ga === QUEST_EVENT) return Number(a.category === 'collab') - Number(b.category === 'collab');
   if (ga === QUEST_SUPER) {
-    const pa = superUltimateParts(a.name) ?? { chara: '', kind: '' };
-    const pb = superUltimateParts(b.name) ?? { chara: '', kind: '' };
+    const pa = { ...(superUltimateParts(a.name) ?? { chara: '', kind: '' }) };
+    const pb = { ...(superUltimateParts(b.name) ?? { chara: '', kind: '' }) };
+    if (a.boss) pa.chara = a.boss;
+    if (b.boss) pb.chara = b.boss;
     // 補足なしが先。補足ありは補足の名前順、同じ補足内はキャラ名順
     return Number(pa.kind !== '') - Number(pb.kind !== '') || byName(pa.kind, pb.kind) || byName(pa.chara, pb.chara);
   }

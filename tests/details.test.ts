@@ -7,6 +7,14 @@ describe('extractBlocks', () => {
     const lines = ['導入文', '▼出現期間', '2026年10月21日（水）12:00～11月8日（日）11:59', '# 「禁忌の獄〜深淵〜」出現', '▼本開催の「禁忌の獄～深淵〜」対象ステージ', '・火獄の無量大数', '・水獄の阿頼耶', '◎詳細はこちら'];
     expect(extractBlocks(lines)).toEqual([{ label: '本開催の「禁忌の獄～深淵〜」対象ステージ', heading: '「禁忌の獄〜深淵〜」出現', lines: ['火獄の無量大数', '水獄の阿頼耶'] }]);
   });
+  it('古い記事の日付 `12月9日（火）  闇属性クエスト` を `12/9(火) 闇属性クエスト` にして抽出する(表の見出し行「日付 属性」は飛ばす)', () => {
+    const lines = ['# 「追憶の書庫」でスコア報酬に「5倍」', '▼対象クエスト', '日付  属性', '12月9日（火）  闇属性クエスト', '12月10日（水）  木属性クエスト', '1月1日（木）  光明の神殿 特Lの園', '注意書きの文章です。'];
+    expect(extractBlocks(lines)).toEqual([{ label: '対象クエスト', heading: '「追憶の書庫」でスコア報酬に「5倍」', lines: ['12/9(火) 闇属性クエスト', '12/10(水) 木属性クエスト', '1/1(木) 光明の神殿 特Lの園'] }]);
+  });
+  it('見出しの後ろの注記 `▼対象クエスト（追記：4/24）` も対象。ラベルに注記は含めない', () => {
+    const lines = ['# 見出し', '▼対象クエスト（追記：4/24）', '4月24日（金）  火属性クエスト', '4月25日（土）  水属性クエスト'];
+    expect(extractBlocks(lines)).toEqual([{ label: '対象クエスト', heading: '見出し', lines: ['4/24(金) 火属性クエスト', '4/25(土) 水属性クエスト'] }]);
+  });
   it('N階層：クエスト の行を抽出し、◎の行で終わる', () => {
     const lines = ['▼本開催の1階層～5階層までのクエスト', '1階層：パライソの星墓', '2階層：黄泉の星墓', '◎詳細はこちら', '3階層：無関係'];
     const [b] = extractBlocks(lines);
@@ -536,9 +544,30 @@ describe('超究極・絶級のボス名の公式色(行ラベル)', () => {
     expect(other.events[0]?.color).toBeUndefined();
   });
 
+  it('超究極クエスト「クエスト名」: 題名の「」はクエスト名。本文の `クエスト名（★5 キャラ名）` からキャラ名(boss)と、その色を取る', () => {
+    const lines = ['# 超究極クエスト「サンプルの儀式」が登場！', '▼出現期間', '2026年10月30日（金）12:00～11月30日（月）11:59', '▼対象クエスト', '・サンプルの儀式（★5 ボスサンプル）', '・別のクエスト（★5 別のキャラ）'];
+    const r = parseArticle({ id: 'B_5', title: '超究極クエスト「サンプルの儀式」が登場！', published: '2026-10-20', lines, bossColors: [['火属性 ★5', '#eb0043'], ['ボスサンプル', '#eb0043'], ['別のキャラ', '#3154ef']] });
+    const e = r.events.find((x) => x.name.includes('サンプルの儀式'));
+    expect(e?.boss).toBe('ボスサンプル');
+    expect(e?.color).toBe('#eb0043');
+    // キャラ名が本文に無ければ従来どおり(boss なし・「」の中をキャラ名とみなす)
+    const plain = parseArticle({ id: 'B_6', title: '超究極クエスト「単独」が登場！', published: '2026-10-20', lines: ['# 超究極クエスト「単独」が登場！', '▼出現期間', '2026年10月30日（金）12:00～11月30日（月）11:59'], bossColors: [['単独', '#007d32']] });
+    expect(plain.events[0]?.boss).toBeUndefined();
+    expect(plain.events[0]?.color).toBe('#007d32');
+  });
+
+  it('boss: 行ラベルはキャラ名(補足つきなら キャラ名（補足）)。並びもキャラ名で比べる', async () => {
+    const { superUltimateLabel } = await import('../src/label');
+    expect(superUltimateLabel('超究極クエスト「サンプルの儀式」が登場!', 'ボスサンプル')).toBe('ボスサンプル');
+    expect(superUltimateLabel('超究極クエスト「サンプルの儀式」が登場!')).toBe('サンプルの儀式');
+    expect(superUltimateLabel('超究極・兵クエスト「サンプルの儀式」が登場!', 'ボスサンプル')).toBe('ボスサンプル（兵）');
+  });
+
   it('buildExport が color を通す', async () => {
     const { buildExport } = await import('../src/data/export');
-    const rec = { id: 'x', url: 'u', title: 't', category: 'event', categories: ['event'], published: '2026-10-21', fetched_at: '', lastmod: null, content_hash: '', parse_status: 'ok' as const, reward_until: null, events: [{ id: 'x#0', name: '超究極クエスト（サンプル）', label: 'l', start: '2026-10-21T00:00:00+09:00', end: '2026-10-22T00:00:00+09:00', raw: '', color: '#3154ef' }] };
-    expect(buildExport([rec], '2026-10-21T00:00:00+09:00').months[0]?.events[0]?.color).toBe('#3154ef');
+    const rec = { id: 'x', url: 'u', title: 't', category: 'event', categories: ['event'], published: '2026-10-21', fetched_at: '', lastmod: null, content_hash: '', parse_status: 'ok' as const, reward_until: null, events: [{ id: 'x#0', name: '超究極クエスト（サンプル）', label: 'l', start: '2026-10-21T00:00:00+09:00', end: '2026-10-22T00:00:00+09:00', raw: '', color: '#3154ef', boss: 'サンプル' }] };
+    const out = buildExport([rec], '2026-10-21T00:00:00+09:00').months[0]?.events[0];
+    expect(out?.color).toBe('#3154ef');
+    expect(out?.boss).toBe('サンプル');
   });
 });

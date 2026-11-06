@@ -45,9 +45,11 @@ export function superUltimateParts(name: string): { chara: string; kind: string 
 }
 
 /** 表示名 `キャラ名（補足）`(補足が無ければ括弧ごと省く)。 */
-export function superUltimateLabel(name: string): string | null {
+export function superUltimateLabel(name: string, boss?: string): string | null {
   const p = superUltimateParts(name);
-  return p === null ? null : p.kind ? `${p.chara}（${p.kind}）` : p.chara;
+  if (p === null) return null;
+  const chara = boss !== undefined && boss !== '' ? boss : p.chara; // boss=本文から取ったキャラ名(題名が「クエスト名」のとき。src/period.ts)
+  return p.kind ? `${chara}（${p.kind}）` : chara;
 }
 
 /** 2行目(説明)の最大文字数。 */

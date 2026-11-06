@@ -43,6 +43,8 @@ export interface PeriodEvent {
   pickup?: PickupInfo;
   /** 超究極・絶級のボス名の公式の色 `#rrggbb`(行ラベルの文字に使う。バーは既定)。無ければ省略 */
   color?: string;
+  /** 超究極が `超究極クエスト「クエスト名」` の形で、題名にキャラ名が無いとき、本文の `クエスト名（★5 キャラ名）` から取ったボスのキャラ名。行ラベルに使う。無ければ省略 */
+  boss?: string;
 }
 
 /** 記事URL + 項目のアンカー(あれば) */
@@ -368,10 +370,18 @@ function addPickups(input: ArticleInput, events: PeriodEvent[], warnings: string
  * 絶級は `轟絶/黎絶/滅絶` の後の名前。記事の属性色の色付きテキストのうち、ボス名を含む最初のものの色。無ければ付けない。
  */
 function addBossColors(input: ArticleInput, events: PeriodEvent[]): void {
+  // 超究極 `超究極クエスト「クエスト名」`: 「」の中はクエスト名で、キャラ名は本文の `クエスト名（★5 キャラ名）` にある(題名の「」をキャラ名と取り違えない)
+  for (const e of events) {
+    const quest = /^超究極クエスト「([^」]+)」/.exec(e.name.replace(/^【[^】]*】\s*/, ''))?.[1];
+    if (!quest || e.label === RAID_LABEL) continue;
+    const re = new RegExp(`${quest.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[（(]\\s*★\\s*\\d+\\s*([^）)]+?)\\s*[）)]`);
+    const hit = input.lines.map((l) => re.exec(l)?.[1]).find((x): x is string => x !== undefined && x !== '');
+    if (hit) e.boss = hit;
+  }
   const spans = input.bossColors ?? [];
   if (spans.length === 0) return;
   for (const e of events) {
-    const boss = e.label === RAID_LABEL ? e.name.replace(/^(?:轟絶|黎絶|滅絶)\s*/, '').replace(/降臨$/, '').trim() : superUltimateParts(e.name)?.chara;
+    const boss = e.label === RAID_LABEL ? e.name.replace(/^(?:轟絶|黎絶|滅絶)\s*/, '').replace(/降臨$/, '').trim() : (e.boss ?? superUltimateParts(e.name)?.chara);
     if (!boss) continue;
     const hit = spans.find(([text]) => text.includes(boss));
     if (hit) e.color = hit[1];
