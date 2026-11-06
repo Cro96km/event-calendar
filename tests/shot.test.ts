@@ -268,11 +268,26 @@ describe('キャラクター・ガチャ: 新限定のバーへの畳み込み�
     const bar = [...root.querySelectorAll<HTMLElement>('.bar-ev')].find((b) => b.dataset.eventId === 'n#0')!;
     expect(bar.querySelector('.bar-names')?.textContent).toBe('カーミラツクモ');
     expect(bar.querySelectorAll('.g-name.colored')).toHaveLength(2);
-    expect(bar.title).toContain('新限定: カーミラ・ツクモ');
+    expect(bar.title).toContain('新限定: カーミラ(火)・ツクモ(木)');
+    expect(bar.classList.contains('has-names')).toBe(true);
     expect(root.querySelectorAll('.bar-names')).toHaveLength(1);
     expect(root.querySelectorAll('.g-row:not(.g-dates) > .g-label')).toHaveLength(6); // A・B・C(進化)+ガチャ+ほか+クエストのイベントガチャの写し
     expect([...root.querySelectorAll('.g-group')].map((x) => x.textContent)).toEqual(['イベントクエスト', '進化', 'イベントガチャ', '期間限定ガチャ']);
     expect(root.querySelector('.g-section[data-section="gacha"]')?.textContent).toBe('キャラクター・ガチャ');
+  });
+  it('月表示: バーには短く「NEW」だけ(名前は書かない)。名前はツールチップと詳細パネル', () => {
+    const root = document.createElement('div');
+    const state = initialState('2026-11-05', evs, INDEX);
+    state.view = 'month';
+    render(root, state);
+    const bar = [...root.querySelectorAll<HTMLElement>('.bar-ev')].find((b) => b.dataset.eventId === 'n#0')!;
+    expect(bar.querySelector('.bar-new')?.textContent).toBe('NEW');
+    expect(bar.querySelector('.bar-names')).toBeNull();
+    expect(bar.textContent).toBe('NEW');
+    expect(bar.title).toContain('カーミラ(火)');
+    state.selection = { day: '2026-11-08', eventId: 'n#0' };
+    render(root, state);
+    expect(root.querySelector('[data-testid="detail"]')?.textContent).toContain('新限定キャラクター: カーミラ(火)、ツクモ(木)');
   });
   it('詳細パネル: ガチャの項目に新限定キャラクター(名前と属性)が出る。キャラ自身の項目は別に出ない', () => {
     const root = document.createElement('div');

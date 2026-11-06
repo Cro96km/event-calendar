@@ -621,16 +621,20 @@ export function render(root: HTMLElement, state: AppState): void {
         if (bar.clippedLeft) b.classList.add('clip-l');
         if (bar.clippedRight) b.classList.add('clip-r');
         if (bar.openEnded) b.classList.add('open');
-        // 新限定キャラの名前(属性色)をバーの中に。幅が足りなければ右が切れる(省略記号は使わない)。全員の名前はツールチップ・詳細に出す
-        const newText = ev.new_names?.length ? `新限定: ${ev.new_names.map((n) => n.name).join('・')}` : '';
+        // 新限定キャラ: 週表示(撮影モード含む)はバーの中に名前(属性色)を折り返して書き、バーの高さは中身に合わせて伸びる。月表示は短く「NEW」だけ(名前はツールチップ・詳細パネル)
+        const newText = ev.new_names?.length ? `新限定: ${ev.new_names.map((n) => (n.attr ? `${n.name}(${n.attr})` : n.name)).join('・')}` : '';
         if (ev.new_names?.length) {
-          const names = el('span', 'bar-names');
-          for (const n of ev.new_names) {
-            const nm = el('span', 'g-name', n.name);
-            if (n.color) paint(nm, n.color);
-            names.append(nm);
+          b.classList.add('has-names');
+          if (state.view === 'month') b.append(el('span', 'bar-new', 'NEW'));
+          else {
+            const names = el('span', 'bar-names');
+            for (const n of ev.new_names) {
+              const nm = el('span', 'g-name', n.name);
+              if (n.color) paint(nm, n.color);
+              names.append(nm);
+            }
+            b.append(names);
           }
-          b.append(names);
         }
         b.title = [ev.name, newText, whenText(ev)].filter(Boolean).join('\n');
         b.setAttribute('aria-label', [ev.pickup ? ev.name : shortLabel(ev.name), newText, whenText(ev)].filter(Boolean).join(' '));
