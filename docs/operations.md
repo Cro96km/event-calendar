@@ -237,6 +237,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 - **Webhook の URL は Secret `DISCORD_WEBHOOK_URL`**(Settings → Secrets and variables → Actions。登録はリポジトリ所有者が行う)。未登録なら警告を出して**何も投稿せずに成功で終わる**(dry-run は Secret 不要)。URL はログに出さない(形が違えば値を伏せて失敗)。URL が漏れたら Discord 側でウェブフックを削除して作り直す。
 - **ローカルで試す**: `npm run update && npm run build:public && npm run discord:images` のあと `npm run discord:post -- --dry-run`。実際に送るなら、リポジトリの外のファイルに URL を置き(例 `~/.config/monst/discord-test-webhook`。`chmod 600`)、`DISCORD_WEBHOOK_URL="$(cat ~/.config/monst/discord-test-webhook)" npm run discord:post`(テスト用チャンネルで)。`out/discord/` に複数の期間の画像があれば、最新の期間だけ送る。
 - **失敗したとき**: 送信は直列(1秒あけ)。429 は待って最大3回やり直す。途中で失敗したら止まり、送れた分は再送しない(`only` で残りだけ送る)。
+- 経緯・決定事項は `docs/discord-handoff.md`。
 
 ## 19. キャラクターのセクション(新限定・獣神化・獣神化改・真獣神化)
 通常のカレンダーの**キャラクター**セクション(クエストの上。1キャラ=1行。仕様は docs/spec.md §4.13)。
