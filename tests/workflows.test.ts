@@ -8,7 +8,7 @@ const text = (f: string): string => readFileSync(new URL(f, DIR), 'utf8');
 
 describe('GitHub Actions ワークフローの不変条件', () => {
   it('ワークフローが存在する(update / deploy / apply / manual / prune / ci)', () => {
-    expect(files).toEqual(expect.arrayContaining(['update.yml', 'deploy.yml', 'apply.yml', 'manual.yml', 'prune.yml', 'ci.yml']));
+    expect(files).toEqual(expect.arrayContaining(['update.yml', 'deploy.yml', 'apply.yml', 'manual.yml', 'prune.yml', 'ci.yml', 'discord.yml']));
   });
 
   it.each(files)('%s: 使うアクションはすべてコミットSHAで固定(サプライチェーン対策)', (f) => {
@@ -77,6 +77,29 @@ describe('GitHub Actions ワークフローの不変条件', () => {
   it('update.yml / apply.yml: GITHUB_TOKEN のマージは push を起こさないので、deploy.yml を明示的に起動する', () => {
     expect(text('update.yml')).toContain('gh workflow run deploy.yml');
     expect(text('apply.yml')).toContain('gh workflow run deploy.yml');
+  });
+
+  it('update.yml: 健全な定例(または discord=true の手動)のときだけ discord.yml を起動する。要確認の週は送らない', () => {
+    const t = text('update.yml');
+    expect(t).toContain('gh workflow run discord.yml');
+    expect(t).toContain("steps.pr.outputs.healthy == 'true'");
+    expect(t).toContain("github.event_name == 'schedule'");
+  });
+
+  it('discord.yml: 手動実行だけ(自動の起動は update.yml から)。入力は env 経由、Secret は env だけ、URL は出さない。dry_run は既定 false で、Secret 未登録なら投稿せず終わる', () => {
+    const t = text('discord.yml');
+    expect(t).toMatch(/on:\n\s+workflow_dispatch:/);
+    expect(t).not.toMatch(/^\s+(push|pull_request|schedule|issue_comment|issues):/m);
+    expect(t).toMatch(/dry_run:[\s\S]*?default: false/);
+    expect(t).toContain('npm run discord:post --');
+    expect(t).toContain('TZ=Asia/Tokyo date +%F');
+    expect(t).toContain('DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}');
+    expect(t).not.toMatch(/echo[^\n]*\$\{?DISCORD_WEBHOOK_URL/);
+    const runs = t.split(/\n(?=\s*-?\s*(?:name|run|id|uses|env|if|with):)/).filter((blk) => /^\s*-?\s*run:/.test(blk));
+    for (const blk of runs) {
+      expect(blk).not.toMatch(/\$\{\{\s*github\.event\.inputs\./);
+      expect(blk).not.toMatch(/\$\{\{\s*secrets\./);
+    }
   });
 
   it('deploy.yml: main の push(データ・設定・コード)と手動実行。収集せず(--no-collect)ビルドして Pages へ', () => {
