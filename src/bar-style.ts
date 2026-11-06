@@ -1,7 +1,7 @@
 // 日ごとに属性が決まるバーの見せ方の設定(config/display/bar-style.json)。docs/spec.md §4.7
 import cfg from '../config/display/bar-style.json';
 
-export const DAY_STYLES = ['lines', 'stripes', 'underline', 'edge', 'off'] as const;
+export const DAY_STYLES = ['lines', 'stripes', 'underline', 'off'] as const;
 export type DayStyle = (typeof DAY_STYLES)[number];
 
 interface BarStyleConfig {

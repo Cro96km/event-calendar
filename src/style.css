@@ -160,7 +160,7 @@ body:has(.shot) { padding: 0; background: #fff; }
 .bar-ev.edge-split { --edge: color-mix(in srgb, var(--e1) 50%, var(--e2)); --e1: color-mix(in srgb, var(--pc1) 85%, #000); --e2: color-mix(in srgb, var(--pc2) 85%, #000); border-color: transparent; background: linear-gradient(var(--c-bar), var(--c-bar)) padding-box, linear-gradient(90deg, var(--e1) 50%, var(--e2) 50%) border-box; }
 :root[data-theme="dark"] .bar-ev.edge-split { --e1: color-mix(in srgb, var(--pc1) 60%, #fff); --e2: color-mix(in srgb, var(--pc2) 60%, #fff); }
 .bar-ev .day-line, .bar-ev .day-stripe, .bar-ev .day-under { position: absolute; pointer-events: none; }
-.bar-ev .day-line { top: 0; bottom: 0; width: 2px; background: var(--dc); }
+.bar-ev .day-line { top: 0; bottom: 0; width: 3px; background: var(--dc); } /* 縁と同じ太さ */
 .bar-ev .day-line.left { transform: translateX(-100%); } /* 境目の左に左の日の色、右に右の日の色 */
 .bar-ev .day-stripe { top: 0; bottom: 0; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--dc) 70%, transparent) 0 2px, transparent 2px 8px); }
 .bar-ev .day-under { bottom: 0; height: 5px; background: var(--dc); }
@@ -174,3 +174,16 @@ body:has(.shot) { padding: 0; background: #fff; }
 /* 端の矢印を線に寄せる(4:00 の位置をずらす幅を小さくできる) */
 .shot .bar-ev.clip-l::before { left: .15rem; }
 .shot .bar-ev.clip-r::after { right: .15rem; }
+/* 日ごとに分けたバー(罫線で区切られた日=セルごとにバー+縁。連続する日の境目は角を丸めない) */
+.bar-days { display: grid; grid-row: 1; align-self: center; }
+.bar-days > .bar-ev { align-self: center; margin-left: 0; margin-right: 0; }
+.bar-days > .bar-ev:first-child:not(.clip-l) { margin-left: 2px; }
+.bar-days > .bar-ev:last-child:not(.clip-r) { margin-right: 2px; }
+.bar-ev.cont-l { border-top-left-radius: 0; border-bottom-left-radius: 0; }
+.bar-ev.cont-r { border-top-right-radius: 0; border-bottom-right-radius: 0; }
+.bar-days:hover > .bar-ev { filter: brightness(.96); outline: 2px solid var(--edge); }
+.bar-days.underline > .bar-ev.cont-l { border-left-width: 0; } /* underline: 境目の縁は1本 */
+/* 進化のバーの `12:00に解禁`(週表示のみ。属性色) */
+.bar-unlock { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: .74rem; font-weight: 800; -webkit-text-stroke: .35px currentColor; line-height: 1; white-space: nowrap; overflow: hidden; pointer-events: none; color: var(--c-hd-fg); }
+.bar-unlock.colored { color: color-mix(in srgb, var(--pc) 75%, #000); }
+:root[data-theme="dark"] .bar-unlock.colored { color: color-mix(in srgb, var(--pc) 32%, var(--text)); }

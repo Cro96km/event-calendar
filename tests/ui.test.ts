@@ -438,17 +438,32 @@ describe('詳細パネルの改善', () => {
     click(bar('t#0'));
     const cells = [...(q('detail')?.querySelectorAll('.detail-table td.qname') ?? [])].map((x) => [x.textContent, (x as HTMLElement).style.getPropertyValue('--pc')]);
     expect(cells).toEqual([['獄炎の神殿 特Lの園', '#eb0043'], ['秘泉の神殿 特Lの園', '#3154ef'], ['樹縛の神殿 特Lの園', '#007d32'], ['光明の神殿 特Lの園', '#a16800'], ['常闇の神殿 特Lの園', '#a237c3']]);
-    // 縁の色分け+色が変わるところに縦線2本(左右の色)。4つの境目 × 2本
-    const barEl = q('detail') ? (root.querySelector('.bar-ev[data-event-id="t#0"]') as HTMLElement) : null;
-    expect(barEl?.classList.contains('edge-days')).toBe(true);
-    expect(barEl?.querySelectorAll('.day-line.left')).toHaveLength(4);
-    expect(barEl?.querySelectorAll('.day-line.right')).toHaveLength(4);
-    expect((barEl?.querySelector('.day-line.left') as HTMLElement).style.getPropertyValue('--dc')).toContain('#eb0043');
-    expect((barEl?.querySelector('.day-line.right') as HTMLElement).style.getPropertyValue('--dc')).toContain('#3154ef');
+    // 罫線で区切られた日(セル)ごとにバー(縁あり)。連続する日の境目は角を丸めず、縁は日ごとの属性色
+    const wrap = root.querySelector('.bar-days') as HTMLElement;
+    const pieces = [...wrap.querySelectorAll<HTMLElement>('.bar-ev.day-piece')];
+    expect(pieces).toHaveLength(5);
+    expect(pieces.map((x) => x.style.getPropertyValue('--pc'))).toEqual(['#eb0043', '#3154ef', '#007d32', '#a16800', '#a237c3']);
+    expect(pieces.map((x) => [x.classList.contains('cont-l'), x.classList.contains('cont-r')])).toEqual([[false, true], [true, true], [true, true], [true, true], [true, false]]);
+    expect(pieces.every((x) => x.dataset.eventId === 't#0')).toBe(true);
     const multi = ev('t#1', 'campaign', '2026-10-27T00:00:00+09:00', '2026-10-27T23:59:00+09:00', { name: NQ, details: [{ label: '対象クエスト', lines: ['10/27(火) 火・水属性クエスト'] }] });
     render(root, initialState('2026-10-27', [multi], INDEX));
     click(bar('t#1'));
     expect([...(q('detail')?.querySelectorAll('.detail-table td span.qname') ?? [])].map((x) => x.textContent)).toEqual(['火', '水']);
+  });
+  it('進化のバー: 週表示だけ、バーの中に `12:00に解禁`(属性色)。月表示には出さない', () => {
+    const e = ev('e#c0', 'character', '2026-11-10T00:00:00+09:00', '2026-11-11T00:00:00+09:00', {
+      name: '蒲公英（真獣神化）',
+      character: { kind: '真獣神化', at: '2026-11-10T12:00:00+09:00' },
+      color: '#007d32',
+    });
+    const state = initialState('2026-11-09', [e], INDEX);
+    render(root, state);
+    const t = root.querySelector('.bar-ev[data-event-id="e#c0"] .bar-unlock') as HTMLElement;
+    expect(t.textContent).toBe('12:00に解禁');
+    expect(t.style.getPropertyValue('--pc')).toBe('#007d32');
+    state.view = 'month';
+    render(root, state);
+    expect(root.querySelector('.bar-unlock')).toBeNull();
   });
   it('event.details(対象ステージ等)を見出し付きで表示する。同ラベルの統合で項目が和集合になる', () => {
     const a = ev('k#0', 'event', '2026-10-27T12:00:00+09:00', '2026-10-29T11:59:00+09:00', {
