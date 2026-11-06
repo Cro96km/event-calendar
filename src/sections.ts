@@ -122,7 +122,9 @@ export interface Section {
   label: string;
   /** バー/見出しの色相(hsl) */
   hue: number;
-  /** 明るさの補正(%。−15〜15。省略は0) */
+  /** 彩度(%。0〜100。省略は CSS の既定=16) */
+  sat?: number;
+  /** 濃い色(縁・線)の明るさの補正(%。−15〜15。省略は0) */
   lit?: number;
   /** このセクションに入る公式ニュースのカテゴリ */
   categories: readonly string[];
