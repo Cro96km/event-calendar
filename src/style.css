@@ -33,9 +33,10 @@ button { font: inherit; color: inherit; }
 :root[data-theme="dark"] .g-maint:hover, :root[data-theme="dark"] .g-maint.on { background: repeating-linear-gradient(135deg, #8a3a32 0 6px, #6b2a24 6px 12px); }
 .g-dates { border-top: 0; }
 .g-date { display: flex; flex-direction: column; align-items: center; border: 0; border-left: 1px solid var(--border); background: transparent; padding: .25rem 0; cursor: pointer; line-height: 1.2; }
-/* 年月(左端)・月(1日の列)・日・曜日は、同じフォントサイズ・太さにそろえる */
+/* 年月(左端)・月(1日の列)・日・曜日は、同じフォントサイズ・太さにそろえる。数字は日本語の字より小さく見えるので、日の数字だけ少し大きくする */
 .g-dates > .g-label, .g-date .dnum, .g-date .dmon, .g-date .dwd { font-size: .8rem; font-weight: 700; }
 .g-date .dmon { color: var(--muted); }
+.g-date .dnum { font-size: .92rem; }
 .g-date.sat { color: #2f6fe0; }
 .g-date.sun { color: #e0393e; }
 :root[data-theme="dark"] .g-date.sat { color: #7aa2ff; }
