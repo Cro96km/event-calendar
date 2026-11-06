@@ -68,15 +68,14 @@
 ```json
 {
   "sections": [
-    { "id": "character", "label": "キャラクター", "hue": 215, "categories": ["character"] },
     { "id": "quest", "label": "クエスト", "hue": 215, "categories": ["event"] },
     { "id": "special", "label": "特別企画", "hue": 40, "categories": [] },
     { "id": "campaign", "label": "キャンペーン", "hue": 215, "categories": ["campaign", "web-shop"] },
-    { "id": "gacha", "label": "ガチャ", "hue": 215, "categories": ["collab"] }
+    { "id": "gacha", "label": "キャラクター・ガチャ", "hue": 215, "categories": ["collab", "character"] }
   ]
 }
 ```
 
-- 上から順に表示します。上の例では、キャラクターが一番上で、「特別企画」がクエストとキャンペーンの間に入ります。
-- `id` は英小文字・数字・ハイフン、`hue` は色相(0〜359)、`sat` は彩度(0〜100。省略は16)、`lit` は縁・線の明るさの補正(−15〜15。省略は0)です。`character`・`quest`・`campaign`・`gacha` は必須です(振り分けの判定がコードにあります)。`character` は新限定・獣神化・獣神化改・真獣神化の行で、`categories` は `["character"]` のままにします(docs/spec.md §4.13)。
+- 上から順に表示します。上の例では、「特別企画」がクエストとキャンペーンの間に入ります。
+- `id` は英小文字・数字・ハイフン、`hue` は色相(0〜359)、`sat` は彩度(0〜100。省略は16)、`lit` は縁・線の明るさの補正(−15〜15。省略は0)です。`quest`・`campaign`・`gacha` は必須です(振り分けの判定がコードにあります)。`gacha` はキャラクター・ガチャで、進化の行(小見出し `role: evolution`)を載せるため、`categories` に `"character"` を含めたままにします(docs/spec.md §4.13)。
 - 足したセクションは小見出しを持ちません。項目は `config/schedule/overrides.json` の `section`(`"section": "special"`)で入れます。`categories` は空にします。
