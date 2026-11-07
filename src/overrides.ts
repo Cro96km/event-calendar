@@ -3,6 +3,7 @@ import config from '../config/schedule/overrides.json';
 import type { DetailBlock } from './details';
 import type { ExportEvent } from './data/export';
 import { SECTIONS, CAMPAIGN_GROUPS, QUEST_GROUPS } from './sections';
+import { COLOR_SPEC_HELP, resolveColorSpec, validColorSpec } from './color-spec';
 
 export interface OverrideSet {
   name?: string;
@@ -10,6 +11,10 @@ export interface OverrideSet {
   end?: string;
   group?: string;
   section?: string;
+  /** ラベルの文字の色(palette の色名・`#rrggbb`・`none`=色なし)。バーの縁も同じ色(edge_color で別にできる) */
+  color?: string;
+  /** バーの縁の色(同じ書式。省略時は color と同じ) */
+  edge_color?: string;
   notes?: string[];
   hide_blocks?: string[];
   add_blocks?: { label: string; lines: string[] }[];
@@ -54,6 +59,13 @@ export interface OfficialValue {
   end: string | null;
 }
 
+/** set の color / edge_color を、項目の color / edge_color にする(edge_color 省略時は縁も color と同じ)。 */
+function colorFields(s: OverrideSet): Pick<ExportEvent, 'color' | 'edge_color'> {
+  const c = s.color === undefined ? undefined : resolveColorSpec(s.color);
+  const edge = s.edge_color === undefined ? c : resolveColorSpec(s.edge_color);
+  return { ...(c !== undefined ? { color: c } : {}), ...(edge !== undefined ? { edge_color: edge } : {}) };
+}
+
 /** 修正を適用する(選択のあと・手動の調整〈manual〉の前)。id が一致する項目だけを変え、元の配列は変えない。 */
 export function applyOverrides(events: ExportEvent[], cfg: OverridesConfig = OVERRIDES): ExportEvent[] {
   if (cfg.items.length === 0) return events;
@@ -74,6 +86,7 @@ export function applyOverrides(events: ExportEvent[], cfg: OverridesConfig = OVE
       ...(s.end !== undefined ? { end: iso(s.end) } : {}),
       ...(s.group !== undefined ? { group: s.group } : {}),
       ...(s.section !== undefined ? { section: s.section } : {}),
+      ...colorFields(s),
       ...(slots && !periodChanged ? { slots } : {}),
       ...(details.length > 0 ? { details } : {}),
       fix: { fields, ...(s.notes?.length ? { notes: s.notes } : {}), ...(s.hide_blocks?.length ? { hide_blocks: s.hide_blocks } : {}) },
@@ -114,6 +127,7 @@ export function overrideProblems(cfg: OverridesConfig, official?: ReadonlyMap<st
     if (s.end !== undefined && !validTime(s.end)) problems.push(`${w}: end は実在する "YYYY-MM-DD HH:MM": ${s.end}`);
     if (s.section !== undefined && !sectionIds.includes(s.section)) problems.push(`${w}: section は ${sectionIds.join(' / ')} のいずれか`);
     if (s.group !== undefined && ![...QUEST_GROUPS, ...CAMPAIGN_GROUPS].includes(s.group)) problems.push(`${w}: group「${s.group}」は ${[...QUEST_GROUPS, ...CAMPAIGN_GROUPS].join(' / ')} のいずれか`);
+    for (const k of ['color', 'edge_color'] as const) if (s[k] !== undefined && !validColorSpec(s[k])) problems.push(`${w}: ${k} は ${COLOR_SPEC_HELP} のいずれか: ${s[k]}`);
     for (const a of s.add_blocks ?? []) if (a.label.trim() === '' || a.lines.length === 0) problems.push(`${w}: add_blocks は label と lines(1行以上)が必要です`);
     const off = official?.get(it.id);
     if (official && !off) unknown.push(it.id);

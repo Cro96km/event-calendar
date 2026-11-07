@@ -52,14 +52,16 @@
       "category": "event",
       "start": "2026-11-08 12:00",
       "end": "2026-11-09 11:59",
-      "group": "絶級クエスト"
+      "group": "絶級クエスト",
+      "color": "yellow"
     },
     {
       "name": "滅絶 フィロソフィア",
       "category": "event",
       "start": "2026-11-14 12:00",
       "end": "2026-11-15 11:59",
-      "group": "絶級クエスト"
+      "group": "絶級クエスト",
+      "color": "yellow"
     }
   ],
   "hide": [
