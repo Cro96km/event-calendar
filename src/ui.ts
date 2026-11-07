@@ -771,6 +771,12 @@ export function render(root: HTMLElement, state: AppState): void {
           if (ev.color) paint(t, ev.color);
           b.append(t);
         }
+        // 概要の「開催日だけ」で縮めたバー: 開始時刻を `12:00開始` とバーの中に書く
+        if (bar.startLabel !== undefined && state.view === 'week') {
+          const t = el('span', 'bar-unlock', bar.startLabel);
+          if (ev.color) paint(t, ev.color);
+          b.append(t);
+        }
         // 縁の色: 新限定・ピックアップ・キャラクター(進化)は属性色。2人なら左右半分ずつ。色が無い・3人以上は既定の縁
         const edge = barEdgeColors(ev);
         if (edge.length === 1) {

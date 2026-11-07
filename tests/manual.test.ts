@@ -19,6 +19,18 @@ const ev = (id: string, article: string, category = 'event'): ExportEvent => ({
 const base: ManualConfig = { add: [], hide: [] };
 const flash = { name: '閃きの遊技場', category: 'event' as const, start: '2024-01-01 00:00', end: '2026-12-31 23:59', group: '定例クエスト' };
 
+describe('手動の調整: 公式記事の url', () => {
+  const news = 'https://www.monster-strike.com/news/20261029_5.html';
+  it('url は ExportEvent の url になる(省略は空)', () => {
+    expect(manualEvents([{ ...flash, url: news }])[0]?.url).toBe(news);
+  });
+  it('公式ニュース以外の URL は誤り', () => {
+    expect(manualProblems({ add: [{ ...flash, url: news }], hide: [] }).problems).toEqual([]);
+    expect(manualProblems({ add: [{ ...flash, url: 'https://example.com/news/1.html' }], hide: [] }).problems.join()).toContain('url');
+    expect(manualProblems({ add: [{ ...flash, url: 'http://www.monster-strike.com/news/1.html' }], hide: [] }).problems.join()).toContain('url');
+  });
+});
+
 describe('手動の調整: add', () => {
   it('公式由来の項目と同じ形(ExportEvent)になり、時刻はJST', () => {
     const [e] = manualEvents([flash]);

@@ -143,6 +143,8 @@ export interface BarSpan {
   startFrac: number;
   /** 終了列(to)内の終了位置 0〜1。右が切れている/終了未定なら 1 */
   endFrac: number;
+  /** 概要の「開催日だけ」で長い期間を開始日の列に縮めたときの、バーの中に書く開始時刻(例 `12:00開始`)。通常は無い */
+  startLabel?: string;
 }
 
 /** 暦日(JST 0:00〜24:00)の開始ms。バーの位置は列=暦日として時刻の割合で決める(12:00=列の半分)。 */
@@ -199,7 +201,7 @@ function mergeSlots(a: Slot[] | undefined, b: Slot[] | undefined): Slot[] | unde
  * 代表は開始が最も早いイベント(id・名前・URL)。冪等。
  */
 /** 同じ行にまとめるキー。通常は短縮ラベル。ピックアップは短縮(24字で切れる)で別ピックアップと衝突しないよう全名。 */
-export const rowKey = (e: ExportEvent): string => (e.pickup ? e.name : shortLabel(e.name));
+export const rowKey = (e: ExportEvent): string => (e.pickup ? e.name : shortLabel(e.name).replace(/降臨$/, ''));
 
 export function mergeSameLabel(events: ExportEvent[]): ExportEvent[] {
   const groups = new Map<string, ExportEvent[]>();
