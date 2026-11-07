@@ -1,6 +1,5 @@
 // 撮影モード(Discord 用の画像。URL パラメータ ?shot=…&date=…)。純関数(DOMなし)。docs/spec.md §4.12
 import config from '../config/display/discord.json';
-import { CHARACTER_KINDS } from './characters';
 import { SECTIONS, type Section } from './sections';
 import type { BarSpan } from './week';
 
@@ -42,8 +41,6 @@ export interface SummaryBlock {
   hide_keywords?: string[];
   /** 開催日だけ出す(その週に始まるものを開始日の列1日分に描く。それ以前に始まったものは出さない) */
   start_day_only?: boolean;
-  /** 小見出しを出すか(既定: groups を指定したブロックは出す・語だけのブロックは出さない) */
-  headings?: boolean;
   /** true=新限定キャラの名前をバーの中に持つガチャの行だけ出す(キャラクター・ガチャの新限定)。このセクションの、ほかのブロックには出さない */
   with_new_limited?: boolean;
   /** 最大行数(上から数える) */
@@ -75,7 +72,6 @@ export function shotConfigProblems(cfg: SummaryConfig = SUMMARY, sectionIds: rea
       for (const g of b.groups) if (known.length > 0 && !known.includes(g)) p.push(`${w}.groups: 「${g}」は order.json の ${b.section} の小見出しにありません(${known.join(' / ')})`);
     }
     if (b.start_day_only !== undefined && typeof b.start_day_only !== 'boolean') p.push(`${w}.start_day_only は true / false`);
-    if (b.headings !== undefined && typeof b.headings !== 'boolean') p.push(`${w}.headings は true / false`);
     if (b.with_new_limited !== undefined && typeof b.with_new_limited !== 'boolean') p.push(`${w}.with_new_limited は true / false`);
     if (b.max_rows !== undefined && !(Number.isInteger(b.max_rows) && b.max_rows >= 1)) p.push(`${w}.max_rows: 1以上の整数`);
   });
@@ -86,27 +82,20 @@ export function shotConfigProblems(cfg: SummaryConfig = SUMMARY, sectionIds: rea
 export interface SummaryEntry {
   section: Section;
   rows: BarSpan[][];
-  /** 小見出しを出すか */
-  headings: boolean;
 }
 
 /**
  * 概要の行を、設定の blocks の順に並べる。sections=ganttSections の結果(セクションごとの行)。groupOf=行の小見出し(無ければ null)。
- * 進化の行は先に詰める(compactEvolutionRows)。ブロックごとの判定順: 小見出し → 語で外す → only の語 → 開催日だけ → 行数。行が無いブロックは出さない。
+ * ブロックごとの判定順: 小見出し → 語で外す → only の語 → 開催日だけ → 行数。行が無いブロックは出さない。
  */
 export function summaryBlocks(sections: { section: Section; rows: BarSpan[][] }[], groupOf: (sectionId: string, e: BarSpan['event']) => string | null, cfg: SummaryConfig = SUMMARY): SummaryEntry[] {
   const out: SummaryEntry[] = [];
-  const compacted = new Map<string, BarSpan[][]>();
-  const rowsOf = (sec: { section: Section; rows: BarSpan[][] }): BarSpan[][] => {
-    if (!compacted.has(sec.section.id)) compacted.set(sec.section.id, compactEvolutionRows(sec.rows));
-    return compacted.get(sec.section.id) as BarSpan[][];
-  };
   // with_new_limited のブロックがあるセクションでは、新限定の名前を持つ行はそのブロックだけに出す(ほかのブロックと重ねない)
   const newBlockSections = new Set(cfg.blocks.filter((b) => b.with_new_limited === true).map((b) => b.section));
   for (const b of cfg.blocks) {
     const sec = sections.find((x) => x.section.id === b.section);
     if (!sec) continue;
-    let rows = rowsOf(sec).filter((bars) => {
+    let rows = sec.rows.filter((bars) => {
       const e = (bars[0] as BarSpan).event;
       const hasNew = (e.new_names?.length ?? 0) > 0;
       if (b.with_new_limited === true ? !hasNew : hasNew && newBlockSections.has(b.section)) return false;
@@ -122,7 +111,7 @@ export function summaryBlocks(sections: { section: Section; rows: BarSpan[][] }[
     }
     if (b.start_day_only) rows = rows.map((bars) => startDayBars(bars)).filter((bars) => bars.length > 0);
     if (b.max_rows !== undefined) rows = rows.slice(0, b.max_rows);
-    if (rows.length > 0) out.push({ section: sec.section, rows, headings: b.headings ?? b.groups !== undefined });
+    if (rows.length > 0) out.push({ section: sec.section, rows });
   }
   return out;
 }
@@ -130,45 +119,4 @@ export function summaryBlocks(sections: { section: Section; rows: BarSpan[][] }[
 /** 開催日だけの表示: その表示期間に始まるバーを、開始日の列1日分(罫線から罫線まで。開始時刻は問わない)にする。表示期間より前に始まったものは出さない。 */
 export function startDayBars(bars: BarSpan[]): BarSpan[] {
   return bars.filter((b) => !b.clippedLeft).map((b) => ({ ...b, to: b.from, startFrac: 0, endFrac: 1, clippedRight: false, openEnded: false }));
-}
-
-/**
- * 撮影モードの進化の行を詰める(行数対策。通常のカレンダーは変えない)。
- * 種別(獣神化・獣神化改・真獣神化)ごとに1行にまとめる(バーは1日分なので、同じ日の名前は日付の枠に縦に並ぶ。ui.ts)。
- * まとめた行は、最初の進化の行があった位置に置く(キャラクター・ガチャの小見出し「進化」が先頭)。進化でない行はそのまま。
- */
-export function compactEvolutionRows(rows: BarSpan[][]): BarSpan[][] {
-  const evo = new Map<string, BarSpan[]>();
-  const out: (BarSpan[] | null)[] = [];
-  let slot = -1;
-  for (const bars of rows) {
-    const e = (bars[0] as BarSpan).event;
-    if (e.character === undefined || e.character.kind === '新限定') {
-      out.push(bars);
-      continue;
-    }
-    if (slot < 0) {
-      slot = out.length;
-      out.push(null);
-    }
-    evo.set(e.character.kind, [...(evo.get(e.character.kind) ?? []), ...bars]);
-  }
-  const evoRows = CHARACTER_KINDS.filter((k) => evo.has(k)).map((k) => (evo.get(k) as BarSpan[]).sort((a, b) => a.from - b.from || (a.event.character?.at ?? '').localeCompare(b.event.character?.at ?? '')));
-  return slot < 0 ? (out as BarSpan[][]) : [...(out.slice(0, slot) as BarSpan[][]), ...evoRows, ...(out.slice(slot + 1) as BarSpan[][])];
-}
-
-const FOUR_AM = 4 / 24;
-const TOL = 2 / 1440;
-/** 撮影モードでの 4:00(ゲーム日の境目)の位置(列内の割合)。本来は 1/6 だが、端の矢印が入るよう少し右へずらす。開始・終了とも同じ位置にする。 */
-export const SHOT_4AM_FRAC = 0.2;
-const near4am = (frac: number): boolean => Math.abs(frac - FOUR_AM) <= TOL;
-/** 撮影モードの右端(列内の割合)。4:00(03:59含む)終わりは 4:00 の位置へ、23:59 終わりは 24:00 と同じ(罫線に接する)。 */
-export function shotEndFrac(endFrac: number): number {
-  if (endFrac >= 1 - TOL) return 1;
-  return near4am(endFrac) ? SHOT_4AM_FRAC : endFrac;
-}
-/** 撮影モードの左端(列内の割合)。4:00 開始も終了と同じ 4:00 の位置へ、0:00(0:01含む)開始は罫線に接する。 */
-export function shotStartFrac(startFrac: number): number {
-  if (startFrac <= TOL) return 0;
-  return near4am(startFrac) ? SHOT_4AM_FRAC : startFrac;
 }

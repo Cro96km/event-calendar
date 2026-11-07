@@ -25,6 +25,8 @@ const date = arg('--date');
 const only = arg('--only');
 if (date !== undefined && !isDay(date)) throw new Error(`--date は YYYY-MM-DD(実在の日付): ${date}`);
 if (only !== undefined && !(SHOT_KINDS as readonly string[]).includes(only)) throw new Error(`--only は ${SHOT_KINDS.join(' / ')}: ${only}`);
+/** 画像の横幅(CSS px。src/style.css の .shot と同じ) */
+const SHOT_WIDTH = 760;
 const kinds: readonly ShotKind[] = only ? [only as ShotKind] : SHOT_KINDS;
 
 await stat(join(dist, 'data', 'index.json')).catch(() => {
@@ -65,6 +67,9 @@ try {
     const first = days[0];
     const last = days[days.length - 1];
     if (!first || !last) throw new Error('日付ヘッダから期間を読めませんでした');
+    // 画像の横幅は全種類・全週で固定(CSS 760px)。中身がはみ出して広がったら止める
+    const box = await page.locator('[data-testid="shot"]').boundingBox();
+    if (!box || Math.round(box.width) !== SHOT_WIDTH) throw new Error(`${kind}: 画像の横幅が ${SHOT_WIDTH}px ではありません(${box?.width}px)。中身がはみ出しています`);
     const file = join(outDir, `${first}_${last}_${kind}.png`);
     await page.locator('[data-testid="shot"]').screenshot({ path: file });
     console.log(`${file} (${((await stat(file)).size / 1024).toFixed(0)} KB)`);
