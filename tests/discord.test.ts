@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPayload, isWebhookUrl, messageContent, parseShotFile, parseWebhookUrls, retryDelayMs, selectLatest } from '../src/discord';
+import { CALENDAR_URL, buildPayload, isWebhookUrl, messageContent, parseShotFile, parseWebhookUrls, retryDelayMs, selectLatest } from '../src/discord';
 
 const week1 = ['2026-11-06_2026-11-12_gacha.png', '2026-11-06_2026-11-12_summary.png', '2026-11-06_2026-11-12_quest.png'];
 const old = ['2026-10-30_2026-11-05_summary.png', '2026-10-30_2026-11-05_character.png'];
@@ -18,19 +18,21 @@ describe('Discord 送信の純関数', () => {
     expect(selectLatest(['x.txt'])).toEqual([]);
   });
 
-  it('本文は期間だけ「YYYY/MM/DD ~ YYYY/MM/DD」(0埋め・種類名なし)', () => {
-    expect(messageContent(selectLatest(['2026-11-06_2026-11-12_summary.png', '2026-11-06_2026-11-12_quest.png']))).toBe('2026/11/06 ~ 2026/11/12');
-    expect(messageContent(selectLatest(['2026-12-31_2027-01-06_campaign.png']))).toBe('2026/12/31 ~ 2027/01/06');
+  it('本文は「YYYY/MM/DD ~ YYYY/MM/DD ｜ [カレンダー全体はこちら](URL)」(0埋め・種類名なし)', () => {
+    expect(messageContent(selectLatest(['2026-11-06_2026-11-12_summary.png', '2026-11-06_2026-11-12_quest.png']))).toBe(`2026/11/06 ~ 2026/11/12 ｜ [カレンダー全体はこちら](${CALENDAR_URL})`);
+    expect(messageContent(selectLatest(['2026-12-31_2027-01-06_campaign.png']))).toBe(`2026/12/31 ~ 2027/01/06 ｜ [カレンダー全体はこちら](${CALENDAR_URL})`);
+    expect(CALENDAR_URL).toBe('https://cro96km.github.io/event-calendar/');
   });
 
-  it('payload は全画像を1通に添付・メンション無効。silent のときだけ flags=4096', () => {
+  it('payload は全画像を1通に添付・メンション無効・リンクのプレビューなし(flags=4)。silent のときは 4|4096', () => {
     const fs = selectLatest(week1);
     expect(buildPayload(fs, false)).toEqual({
-      content: '2026/11/06 ~ 2026/11/12',
+      content: `2026/11/06 ~ 2026/11/12 ｜ [カレンダー全体はこちら](${CALENDAR_URL})`,
+      flags: 4,
       allowed_mentions: { parse: [] },
       attachments: fs.map((f, id) => ({ id, filename: f.file })),
     });
-    expect(buildPayload(fs, true).flags).toBe(4096);
+    expect(buildPayload(fs, true).flags).toBe(4 | 4096);
   });
 
   it('Webhook の URL の形を確かめる(別のホスト・http・パス違いは不可)', () => {
