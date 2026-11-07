@@ -51,6 +51,8 @@ export interface SummaryBlock {
 
 /** 概要の設定。セクションの大見出し(キャラクター・クエストなど)は出さず、blocks を上から順に並べる。 */
 export interface SummaryConfig {
+  /** 概要の画像の先頭に出す見出し(ほかの画像のセクション名に当たる) */
+  label: string;
   blocks: SummaryBlock[];
 }
 export const SUMMARY: SummaryConfig = config.summary as SummaryConfig;
@@ -58,6 +60,7 @@ export const SUMMARY: SummaryConfig = config.summary as SummaryConfig;
 /** 設定の誤り。sectionIds / groupNames は order.json 由来(テストで差し替えられる)。 */
 export function shotConfigProblems(cfg: SummaryConfig = SUMMARY, sectionIds: readonly string[] = SECTIONS.map((s) => s.id), groupNames: (section: string) => readonly string[] = () => []): string[] {
   const p: string[] = [];
+  if (typeof cfg.label !== 'string' || cfg.label.trim() === '') p.push('summary.label は空でない文字列');
   const isStrs = (v: unknown): v is string[] => Array.isArray(v) && v.every((x) => typeof x === 'string');
   if (!Array.isArray(cfg.blocks) || cfg.blocks.length === 0) return ['summary.blocks は1つ以上のブロックの配列'];
   cfg.blocks.forEach((b, i) => {
@@ -90,7 +93,7 @@ export interface SummaryEntry {
  * 概要の行を、設定の blocks の順に並べる。sections=ganttSections の結果(セクションごとの行)。groupOf=行の小見出し(無ければ null)。
  * ブロックごとの判定順: 小見出し → 語で外す → only の語 → 開催日だけ → 行数。行が無いブロックは出さない。
  */
-export function summaryBlocks(sections: { section: Section; rows: BarSpan[][] }[], groupOf: (sectionId: string, e: BarSpan['event']) => string | null, cfg: SummaryConfig = SUMMARY): SummaryEntry[] {
+export function summaryBlocks(sections: { section: Section; rows: BarSpan[][] }[], groupOf: (sectionId: string, e: BarSpan['event']) => string | null, cfg: Pick<SummaryConfig, 'blocks'> = SUMMARY): SummaryEntry[] {
   const out: SummaryEntry[] = [];
   // with_new_limited のブロックがあるセクションでは、新限定の名前を持つ行はそのブロックだけに出す(ほかのブロックと重ねない)
   const newBlockSections = new Set(cfg.blocks.filter((b) => b.with_new_limited === true).map((b) => b.section));
