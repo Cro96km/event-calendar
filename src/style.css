@@ -8,7 +8,7 @@
 * { box-sizing: border-box; }
 /* 詳細パネル表示で縦スクロールバーが出入りして画面が横ずれするのを防ぐ(spec §4.3.3) */
 html { overflow-y: scroll; scrollbar-gutter: stable; }
-body { font-family: system-ui, "Hiragino Sans", "Noto Sans JP", sans-serif; margin: 0; padding: 16px; background: var(--bg); color: var(--text); line-height: 1.5; }
+body { font-family: "Noto Sans JP Variable", "Noto Sans JP", system-ui, "Hiragino Sans", sans-serif; margin: 0; padding: 16px; background: var(--bg); color: var(--text); line-height: 1.5; }
 button { font: inherit; color: inherit; }
 .bar { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin-bottom: .75rem; }
 .bar h1 { font-size: 1.25rem; margin: 0 1rem 0 0; }

@@ -1,3 +1,4 @@
+import '@fontsource-variable/noto-sans-jp/wght.css'; // 画面も Discord の画像も同じ字形にするため、フォントを同梱する(docs/spec.md §4.3)
 import type { ExportEvent, IndexFile, MonthFile } from './data/export';
 import { initialState, render, type AppState } from './ui';
 import { todayJstDay } from './gameday';
