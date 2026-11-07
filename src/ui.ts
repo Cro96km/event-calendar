@@ -3,13 +3,19 @@ import type { ExportEvent, IndexFile } from './data/export';
 import { appTitle } from './app';
 import { monthlyEvents, type MonthlyDef } from './monthly';
 import { clampToWindow, windowRange } from './window';
-import { type BarSpan, addDays, isOnCalendarDay, campaignGroup, questGroup, maintenanceBars, maintenanceOnDay, addMonthsToDay, dayLabel, monthWindow, eventsForDay, formatJst, ganttSections, mergeSameLabel, rowLabel, periodText, slotRows, weekDays, weekdayOf } from './week';
+import { type BarSpan, addDays, isOnCalendarDay, campaignGroup, questGroup, maintenanceBars, maintenanceOnDay, addMonthsToDay, dayLabel, monthWindow, eventsForDay, formatJst, ganttSections, mergeSameLabel, rowLabel, periodText, unlockText, whenText, slotRows, weekDays, weekdayOf } from './week';
 import { EVENT_QUEST_SUFFIX, MAINTENANCE_CATEGORY, gachaGroup, sectionOf } from './sections';
+import { barEdgeColors, foldNewLimited } from './newlimited';
+import { attributeColor, type Attribute } from './characters';
+import { dayAttrColors, dayEdgeSegments, edgeColorCss } from './day-edge';
+import { dayStyleOf, type DayStyle } from './bar-style';
 import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
 import { isQuestNameBlock, questNameColor, withFixedFloors } from './quest-color';
-import { SHOT_4AM_FRAC, filterSummaryRows, shotEndFrac, shotStartFrac, summaryHasSection, type ShotKind } from './shot';
+import { icon } from './icons';
+import { applyTheme, currentTheme, saveTheme } from './theme';
+import { summaryBlocks, type ShotKind } from './shot';
 
 interface Selection {
   day: string;
@@ -93,7 +99,8 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
   panel.dataset.testid = 'detail';
   const sel = state.selection;
   if (!sel) return panel;
-  const pool = [...state.events, ...monthlyEvents(addDays(sel.day, -1), addDays(sel.day, 1), state.monthly)];
+  // 新限定キャラは、同じ記事・期間のガチャの項目に畳む(ガチャの詳細に名前と属性を出す)
+  const pool = foldNewLimited([...state.events, ...monthlyEvents(addDays(sel.day, -1), addDays(sel.day, 1), state.monthly)]);
   // バーは暦日の列に描くので、バーを押したときは暦日で判定する(翌4:00終了などでも「イベントなし」にしない)
   // イベントクエスト行のバーは、ガチャ由来の写し(id末尾 ~event)。詳細は元のガチャイベントを、タイトルは行ラベル(「ガチャ」なし)で出す
   const baseId = sel.eventId?.endsWith(EVENT_QUEST_SUFFIX) ? sel.eventId.slice(0, -EVENT_QUEST_SUFFIX.length) : sel.eventId;
@@ -115,7 +122,20 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
   for (const event of [...maint, ...entries.map((x) => x.event)]) {
     const item = el('section', 'detail-item');
     item.append(el('h3', undefined, fullLabel(event.name)));
-    if (periodText(event) !== '') item.append(el('p', undefined, `${event.category === MAINTENANCE_CATEGORY ? '実施日程' : '開催期間'}: ${periodText(event)}`));
+    // 進化の解禁は開催期間でなく解禁の日時(12:00・22:00など)を出す
+    if (unlockText(event) !== '') item.append(el('p', undefined, `解禁日時: ${unlockText(event)}`));
+    else if (periodText(event) !== '') item.append(el('p', undefined, `${event.category === MAINTENANCE_CATEGORY ? '実施日程' : '開催期間'}: ${periodText(event)}`));
+    if (event.new_names?.length) {
+      // 名前(属性)を属性色で書く
+      const note = el('p', 'detail-note', '新限定キャラクター: ');
+      event.new_names.forEach((n, i) => {
+        if (i > 0) note.append('、');
+        const nm = el('span', undefined, n.attr ? `${n.name}(${n.attr})` : n.name);
+        if (n.color && paint(nm, n.color)) nm.classList.add('qname');
+        note.append(nm);
+      });
+      item.append(note);
+    }
     // 報酬受取期限は表示しない(別記事の内容を取り込み大半が誤りのため)
     if (event.slots?.length) {
       const box = el('div', 'detail-block');
@@ -170,6 +190,18 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
               return;
             }
             const td = el('td', undefined, c);
+            // 対象キャラクターの表: 名前(1列目)と属性(3列目)を属性色で
+            if (t.head[0] === 'キャラクター' && (i === 0 || i === 2)) {
+              const ac = attrColorInText(r[2] ?? '');
+              if (ac && paint(td, ac)) td.classList.add('qname');
+            }
+            // キャンペーンの対象属性の表: 火・水・木・光・闇の字をそれぞれ属性色で
+            if (t.head[2] === '対象属性' && i === 2) {
+              // 名前が固定のクエスト(特Lの園など)はその属性色でセルの文字すべて。属性が1つならセルの文字すべて、複数なら属性の字だけ
+              const qc = questNameColor(c);
+              if (qc && paint(td, qc)) td.classList.add('qname');
+              else colorAttrs(td, c);
+            }
             // 階層クエストの名前(2列目)に属性色(config/display/quest-colors.json)
             if (qnames && i === 1) {
               const qc = questNameColor(c);
@@ -277,6 +309,63 @@ function attachDrag(grid: HTMLElement, state: AppState, rerender: () => void): v
   );
 }
 
+/** 文字列の数字の連続を span.num にする(数字は日本語の字より小さく見えるので、日付ヘッダでは数字だけ少し大きくする。テキストは変わらない)。 */
+function numSpans(text: string): (string | HTMLElement)[] {
+  return text.split(/(\d+)/).filter((t) => t !== '').map((t) => (/^\d+$/.test(t) ? el('span', 'num', t) : t));
+}
+
+/** セクションの色(色相 --hue・彩度 --sat〈省略時は CSS の既定〉・明るさの補正 --lit。CSS の --c-head など)を要素に渡す。 */
+function paintSection(node: HTMLElement, section: { hue: number; sat?: number; lit?: number }): void {
+  node.style.setProperty('--hue', String(section.hue));
+  if (section.sat !== undefined) node.style.setProperty('--sat', `${section.sat}%`);
+  node.style.setProperty('--lit', `${section.lit ?? 0}%`);
+}
+
+/** 文字列の最初の属性(火・水・木・光・闇)の色。無ければ undefined。 */
+function attrColorInText(text: string): string | undefined {
+  const a = (['火', '水', '木', '光', '闇'] as const).find((x) => text.includes(x));
+  return attributeColor(a);
+}
+
+/** 日ごと(複数の属性がある日は色ごと)に分けたバー1つの見た目。color=その属性の色(null は既定の縁)。 */
+function paintDayPiece(piece: HTMLElement, color: string | null, style: DayStyle): void {
+  if (color === null) return;
+  const full = (cls: string): void => {
+    const node = el('span', cls);
+    node.style.left = '0';
+    node.style.width = '100%';
+    node.style.setProperty('--dc', edgeColorCss(color));
+    piece.append(node);
+  };
+  if (style === 'underline') {
+    full('day-under'); // 縁は単色。下辺だけ属性色の帯
+    return;
+  }
+  piece.classList.add('edge-attr');
+  piece.style.setProperty('--pc', color);
+  if (style === 'stripes') full('day-stripe');
+}
+
+/** セルの文字の色: 属性が1つならセルの文字すべてをその属性色に、複数なら属性の字(火・水・木・光・闇)をそれぞれの属性色にする。 */
+function colorAttrs(node: HTMLElement, text: string): void {
+  const attrs = new Set(text.match(/[火水木光闇]/g) ?? []);
+  if (attrs.size === 1) {
+    const only = attributeColor([...attrs][0] as Attribute);
+    if (only && paint(node, only)) node.classList.add('qname');
+    return;
+  }
+  node.textContent = '';
+  for (const part of text.split(/([火水木光闇])/)) {
+    if (part === '') continue;
+    const color = part.length === 1 ? attributeColor(part as Attribute) : undefined;
+    if (color) {
+      const sp = el('span', undefined, part);
+      if (paint(sp, color)) sp.classList.add('qname');
+      node.append(sp);
+    } else node.append(part);
+  }
+}
+
 /** 公式の色を要素に渡す(`--pc`。CSSの `.colored` が文字・点・バーに使う)。`#rrggbb` 以外は無視する。 */
 function paint(node: HTMLElement, color: string): boolean {
   if (!/^#[0-9a-f]{6}$/i.test(color)) return false;
@@ -341,7 +430,11 @@ export function render(root: HTMLElement, state: AppState): void {
       state.view = 'week';
     }
   };
-  nav.append(btn(state.view === 'week' ? '月表示' : '週表示', 'view-toggle', toggleView));
+  // 週⇄月の切替は、切替先のカレンダーの記号(押すとどうなるかは aria-label・title)
+  const viewBtn = btn('', 'view-toggle', toggleView, undefined, state.view === 'week' ? '月表示にする' : '週表示にする');
+  viewBtn.classList.add('icon-btn');
+  viewBtn.append(icon(state.view === 'week' ? 'calendar-month' : 'calendar-week'));
+  nav.append(viewBtn);
   const month = state.view === 'month';
   nav.append(
     btn('<', 'nav-prev', () => (month ? (state.monthStart = clampToWindow(addMonthsToDay(state.monthStart, -1), state.today)) : (state.weekStart = clampToWindow(addDays(state.weekStart, -7), state.today))), undefined, month ? '前の月' : '前の週'),
@@ -353,6 +446,7 @@ export function render(root: HTMLElement, state: AppState): void {
   );
   const atBase = month ? state.monthStart === state.today : state.weekStart === state.today;
   (nav.querySelector('[data-testid="nav-today"]') as HTMLButtonElement).disabled = atBase;
+  (nav.querySelector('[data-testid="nav-today"]') as HTMLButtonElement).classList.add('dot-btn'); // ● を少し小さく
   // 表示範囲(過去・未来それぞれ config/display/window.json の月数)を超えて移動できない
   const range = windowRange(state.today);
   const cur = month ? state.monthStart : state.weekStart;
@@ -390,6 +484,22 @@ export function render(root: HTMLElement, state: AppState): void {
       nav.append(m);
     }
   }
+  // 画面の色(ライト/ダーク)の切替(既定はライト。選んだ色は保存する)
+  const dark = currentTheme() === 'dark';
+  // 切替先の記号(ライト中は月=ダークにする、ダーク中は太陽=ライトにする)
+  const themeBtn = el('button', 'vbtn icon-btn theme-toggle');
+  themeBtn.append(icon(dark ? 'sun' : 'moon'));
+  themeBtn.dataset.testid = 'theme-toggle';
+  themeBtn.setAttribute('aria-label', dark ? 'ライト表示にする' : 'ダーク表示にする');
+  themeBtn.title = dark ? 'ライト表示にする' : 'ダーク表示にする';
+  themeBtn.onclick = () => {
+    const next = dark ? 'light' : 'dark';
+    applyTheme(next);
+    saveTheme(next);
+    rerender();
+    root.querySelector<HTMLElement>('[data-testid="theme-toggle"]')?.focus();
+  };
+  nav.append(themeBtn);
   header.append(nav);
 
   const days = state.view === 'week' ? weekDays(state.weekStart) : monthWindow(state.monthStart);
@@ -405,13 +515,19 @@ export function render(root: HTMLElement, state: AppState): void {
   const rowsBox = el('div', 'g-rows');
   grid.append(body);
   const dateRow = el('div', 'g-row g-dates');
-  dateRow.append(el('div', 'g-label', ((d: string) => `${d.slice(0, 4)}年${Number(d.slice(5, 7))}月`)(state.view === 'week' ? state.weekStart : state.monthStart)));
+  const ymLabel = el('div', 'g-label');
+  ymLabel.append(...numSpans(((d: string) => `${d.slice(0, 4)}年${Number(d.slice(5, 7))}月`)(state.view === 'week' ? state.weekStart : state.monthStart)));
+  dateRow.append(ymLabel);
   for (const day of days) {
     const wd = weekdayOf(day);
     const cls = ['day', 'g-date', wd === '土' ? 'sat' : wd === '日' ? 'sun' : '', day === state.today ? 'today' : ''].filter(Boolean).join(' ');
     const head = el('button', cls);
     head.dataset.day = day;
-    if (day.endsWith('-01') && day !== state.today) head.append(el('span', 'dmon', day.endsWith('-01-01') ? `${day.slice(0, 4)}年1月` : `${Number(day.slice(5, 7))}月`));
+    if (day.endsWith('-01') && day !== state.today) {
+      const mon = el('span', 'dmon');
+      mon.append(...numSpans(day.endsWith('-01-01') ? `${day.slice(0, 4)}年1月` : `${Number(day.slice(5, 7))}月`));
+      head.append(mon);
+    }
     head.append(el('span', 'dnum', String(Number(day.slice(8, 10)))), el('span', 'dwd', wd));
     head.title = dayLabel(day);
     head.onclick = () => {
@@ -423,52 +539,96 @@ export function render(root: HTMLElement, state: AppState): void {
   body.append(dateRow, rowsBox);
   const sections = ganttSections([...state.events, ...monthlyEvents(days[0] as string, days[days.length - 1] as string, state.monthly)], days);
   if (sections.length === 0) rowsBox.append(el('p', 'empty', state.view === 'week' ? '今日から7日間に表示するイベントはありません' : 'この月に表示するイベントはありません'));
-  for (const { section, rows: allRows } of sections) {
-    if (state.shot && state.shot !== 'summary' && state.shot !== section.id) continue;
-    if (state.shot === 'summary' && !summaryHasSection(section.id)) continue;
-    // 撮影モード: 概要だけ設定(config/display/discord.json)で絞る。畳みは無視する
-    const rows = state.shot === 'summary' ? filterSummaryRows(section.id, allRows, (e) => (section.id === 'quest' ? questGroup(e) : section.id === 'gacha' ? gachaGroup(e) : campaignGroup(e))) : allRows;
-    const folded = !state.shot && state.collapsed.has(section.id);
-    const h = el('div', 'g-section', folded ? `${section.label}(${rows.length})` : section.label);
-    h.dataset.section = section.id;
-    h.style.setProperty('--hue', String(section.hue));
-    h.setAttribute('role', 'button');
-    h.setAttribute('aria-expanded', String(!folded));
-    h.tabIndex = 0;
-    const toggle = () => {
-      if (folded) state.collapsed.delete(section.id);
-      else state.collapsed.add(section.id);
-      saveCollapsed(state.collapsed);
-      rerender();
-    };
-    h.onclick = toggle;
-    h.onkeydown = (ev) => {
-      if (ev.key === 'Enter' || ev.key === ' ') {
-        ev.preventDefault();
-        toggle();
-        // 再描画で見出しが作り直されるため、キーボード操作ではフォーカスを戻す
-        root.querySelector<HTMLElement>(`.g-section[data-section="${section.id}"]`)?.focus();
-      }
-    };
-    rowsBox.append(h);
+  // 描く単位: 概要(撮影)は設定の blocks の順(セクションの大見出しなし)、ほかはセクションごと(大見出しあり)
+  const sectionGroup = (sectionId: string, e: ExportEvent): string | null =>
+    sectionId === 'quest' ? questGroup(e) : sectionId === 'gacha' ? gachaGroup(e) : campaignGroup(e);
+  const entries: { section: (typeof sections)[number]['section']; rows: BarSpan[][]; header: boolean; headings: boolean }[] =
+    state.shot === 'summary'
+      ? summaryBlocks(sections, sectionGroup).map((b) => ({ ...b, header: false, headings: false })) // 概要は小見出しも出さない
+      : sections
+          .filter((x) => !state.shot || state.shot === x.section.id)
+          .map((x) => ({ section: x.section, rows: x.rows, header: true, headings: true }));
+  for (const { section, rows, header, headings } of entries) {
+    const folded = header && !state.shot && state.collapsed.has(section.id);
+    if (header) {
+      const h = el('div', 'g-section', folded ? `${section.label}(${rows.length})` : section.label);
+      h.dataset.section = section.id;
+      paintSection(h, section);
+      h.setAttribute('role', 'button');
+      h.setAttribute('aria-expanded', String(!folded));
+      h.tabIndex = 0;
+      const toggle = () => {
+        if (folded) state.collapsed.delete(section.id);
+        else state.collapsed.add(section.id);
+        saveCollapsed(state.collapsed);
+        rerender();
+      };
+      h.onclick = toggle;
+      h.onkeydown = (ev) => {
+        if (ev.key === 'Enter' || ev.key === ' ') {
+          ev.preventDefault();
+          toggle();
+          // 再描画で見出しが作り直されるため、キーボード操作ではフォーカスを戻す
+          root.querySelector<HTMLElement>(`.g-section[data-section="${section.id}"]`)?.focus();
+        }
+      };
+      rowsBox.append(h);
+    }
     if (folded) continue;
     const shown = new Set<string>(); // 出した小見出し(同じ見出しを重複して出さない)
+    // 小見出し(キャンペーン: 先頭固定の月次項目〈グループなし〉には見出しを付けず、グループの後ろのグループなしは「その他」。ほかは全行が小見出しに属する)
+    const groupOf = (event: ExportEvent, shownCount: number): string | null =>
+      !headings ? null : section.id === 'quest' ? questGroup(event) : section.id === 'gacha' ? gachaGroup(event) : (campaignGroup(event) ?? (shownCount > 0 ? 'other' : null));
+    const groupRows = new Map<string, number>();
+    {
+      const seen = new Set<string>();
+      for (const r of rows) {
+        const g = groupOf((r[0] as BarSpan).event, seen.size);
+        if (g !== null) {
+          seen.add(g);
+          groupRows.set(g, (groupRows.get(g) ?? 0) + 1);
+        }
+      }
+    }
     for (const rowBars of rows) {
       const first = rowBars[0] as BarSpan;
       const event = first.event;
-      if (section.id === 'campaign' || section.id === 'quest' || section.id === 'gacha') {
-        // キャンペーン: 先頭固定の月次項目(グループなし)には見出しを付けず、グループの後ろのグループなしは「その他」。クエスト・ガチャは全行が小見出しに属する
-        const g = section.id === 'quest' ? questGroup(event) : section.id === 'gacha' ? gachaGroup(event) : (campaignGroup(event) ?? (shown.size > 0 ? 'other' : null));
-        if (g !== null && !shown.has(g)) {
-          shown.add(g);
-          const sub = el('div', 'g-group', g === 'other' ? 'その他' : g);
-          sub.dataset.group = g;
-          sub.style.setProperty('--hue', String(section.hue));
-          rowsBox.append(sub);
+      const g = groupOf(event, shown.size);
+      // 小見出しもセクションと同じく畳める(畳んだ状態は同じ保存先。撮影モードでは畳まない)
+      const groupKey = `${section.id}/${g ?? ''}`;
+      const groupFolded = g !== null && !state.shot && state.collapsed.has(groupKey);
+      if (g !== null && !shown.has(g)) {
+        shown.add(g);
+        const title = g === 'other' ? 'その他' : g;
+        const sub = el('div', 'g-group', groupFolded ? `${title}(${groupRows.get(g) ?? 0})` : title);
+        sub.dataset.group = g;
+        sub.dataset.groupKey = groupKey;
+        paintSection(sub, section);
+        if (!state.shot) {
+          sub.setAttribute('role', 'button');
+          sub.setAttribute('aria-expanded', String(!groupFolded));
+          sub.tabIndex = 0;
+          const toggleGroup = () => {
+            if (groupFolded) state.collapsed.delete(groupKey);
+            else state.collapsed.add(groupKey);
+            saveCollapsed(state.collapsed);
+            rerender();
+          };
+          sub.onclick = toggleGroup;
+          sub.onkeydown = (ev) => {
+            if (ev.key === 'Enter' || ev.key === ' ') {
+              ev.preventDefault();
+              toggleGroup();
+              // 再描画で見出しが作り直されるため、キーボード操作ではフォーカスを戻す
+              Array.from(root.querySelectorAll<HTMLElement>('.g-group')).find((x) => x.dataset.groupKey === groupKey)?.focus();
+            }
+          };
         }
+        rowsBox.append(sub);
       }
+      if (groupFolded) continue;
       const row = el('div', 'g-row');
-      row.style.setProperty('--hue', String(section.hue));
+      paintSection(row, section);
       const label = el('div', 'g-label');
       const open = () => {
         state.selection = { day: days[first.from] as string, eventId: event.id };
@@ -503,27 +663,116 @@ export function render(root: HTMLElement, state: AppState): void {
       }
       for (const bar of rowBars) {
         const ev = bar.event;
-        const b = el('button', 'bar-ev');
-        b.dataset.eventId = ev.id;
-        b.style.gridColumn = `${bar.from + 2} / ${bar.to + 3}`;
         // 列内の開始/終了時刻(ゲーム日4:00基準)に応じて左右を詰める。マージン%は占有する列群の幅が基準
         const n = bar.to - bar.from + 1;
-        // 撮影モードだけ: 4:00 開始・終了のバーを同じ幅だけ伸ばし(矢印が入るように)、0:00 開始・24:00 終了は余白を付けず罫線に接する
-        const startFrac = state.shot ? shotStartFrac(bar.startFrac) : bar.startFrac;
-        if (!bar.clippedLeft && startFrac > 0) b.style.marginLeft = `calc(${((startFrac / n) * 100).toFixed(3)}%${state.shot && startFrac === SHOT_4AM_FRAC ? '' : ' + 2px'})`; // 4:00 の位置は開始・終了とも同じ線(余白なし)
-        else if (state.shot && !bar.clippedLeft) b.style.marginLeft = '0';
-        const endFrac = state.shot ? shotEndFrac(bar.endFrac) : bar.endFrac;
-        if (!bar.clippedRight && !bar.openEnded && endFrac < 1) b.style.marginRight = `calc(${(((1 - endFrac) / n) * 100).toFixed(3)}%${state.shot && endFrac === SHOT_4AM_FRAC ? '' : ' + 2px'})`;
-        else if (state.shot && !bar.clippedRight && !bar.openEnded) b.style.marginRight = '0';
+        /** 左端・右端の余白(cols=バーの占める列数)。null は既定(CSS)。 */
+        const leftMargin = (cols: number): string | null => (!bar.clippedLeft && bar.startFrac > 0 ? `calc(${((bar.startFrac / cols) * 100).toFixed(3)}% + 2px)` : null);
+        const rightMargin = (cols: number): string | null => (!bar.clippedRight && !bar.openEnded && bar.endFrac < 1 ? `calc(${(((1 - bar.endFrac) / cols) * 100).toFixed(3)}% + 2px)` : null);
+        const newText = ev.new_names?.length ? `新限定: ${ev.new_names.map((x) => (x.attr ? `${x.name}(${x.attr})` : x.name)).join('・')}` : '';
+        /** クリックで詳細・ツールチップ・読み上げ(バーでも、日ごとに分けた1つ1つでも同じ) */
+        const wire = (btn: HTMLButtonElement): void => {
+          btn.dataset.eventId = ev.id;
+          btn.title = [ev.name, newText, whenText(ev)].filter(Boolean).join('\n');
+          btn.setAttribute('aria-label', [ev.pickup ? ev.name : shortLabel(ev.name), newText, whenText(ev)].filter(Boolean).join(' '));
+          btn.onclick = () => {
+            state.selection = { day: days[bar.from] as string, eventId: ev.id };
+            rerender();
+          };
+        };
+        // 日ごとに対象の属性が決まっているバー(書庫・特Lの園・ノーマルクエストなど)は、罫線で区切られた日(セル)ごとにバー(縁あり)を作る。
+        // 連続する日の境目は角を丸めず、縁は日ごとの属性色(見せ方は config/display/bar-style.json)
+        const dayStyle = dayStyleOf(section.id);
+        const dayColors = dayStyle === 'off' || ev.new_names?.length ? null : dayAttrColors(ev);
+        if (dayColors && dayEdgeSegments(bar, days, dayColors) !== null) {
+          const wrap = el('div', `bar-days ${dayStyle}`);
+          wrap.style.gridColumn = `${bar.from + 2} / ${bar.to + 3}`;
+          wrap.style.gridTemplateColumns = `repeat(${n}, minmax(0, 1fr))`;
+          // 1日(セル)に属性が複数あれば、色ごとにバーを作る(その日のセルを等分)。全体の左端・右端以外は角を丸めず、余白なしでつなぐ
+          const perDay = Array.from({ length: n }, (_, i) => {
+            const cs = (dayColors.get(days[bar.from + i] as string) ?? []).slice();
+            return cs.length === 0 ? [null] : cs;
+          });
+          perDay.forEach((cs, i) => {
+            const cell = el('div', 'day-cell');
+            cell.style.gridColumn = String(i + 1);
+            cs.forEach((c, j) => {
+              const piece = el('button', 'bar-ev day-piece');
+              wire(piece);
+              const isFirst = i === 0 && j === 0;
+              const isLast = i === n - 1 && j === cs.length - 1;
+              if (isFirst) {
+                if (bar.clippedLeft) piece.classList.add('clip-l');
+                piece.style.marginLeft = leftMargin(1) ?? (bar.clippedLeft ? '0' : '2px');
+              } else {
+                piece.classList.add('cont-l');
+                piece.style.marginLeft = '0';
+              }
+              if (isLast) {
+                if (bar.clippedRight) piece.classList.add('clip-r');
+                if (bar.openEnded) piece.classList.add('open');
+                piece.style.marginRight = rightMargin(1) ?? (bar.clippedRight || bar.openEnded ? '0' : '2px');
+              } else {
+                piece.classList.add('cont-r');
+                piece.style.marginRight = '0';
+              }
+              paintDayPiece(piece, c, dayStyle);
+              cell.append(piece);
+            });
+            wrap.append(cell);
+          });
+          row.append(wrap);
+          continue;
+        }
+        const b = el('button', 'bar-ev');
+        b.style.gridColumn = `${bar.from + 2} / ${bar.to + 3}`;
+        const ml = leftMargin(n);
+        if (ml !== null) b.style.marginLeft = ml;
+        const mr = rightMargin(n);
+        if (mr !== null) b.style.marginRight = mr;
         if (bar.clippedLeft) b.classList.add('clip-l');
         if (bar.clippedRight) b.classList.add('clip-r');
         if (bar.openEnded) b.classList.add('open');
-        b.title = [ev.name, periodText(ev)].filter(Boolean).join('\n');
-        b.setAttribute('aria-label', [ev.pickup ? ev.name : shortLabel(ev.name), periodText(ev)].filter(Boolean).join(' '));
-        b.onclick = () => {
-          state.selection = { day: days[bar.from] as string, eventId: ev.id };
-          rerender();
-        };
+        // 新限定キャラ: 週表示(撮影モード含む)はバーの中に名前(属性色)を折り返して書き、バーの高さは中身に合わせて伸びる。月表示は短く「NEW」だけ(名前はツールチップ・詳細パネル)
+        if (ev.new_names?.length) {
+          b.classList.add('has-names');
+          // 1人だけなら「NEW！」も属性色、2人以上なら「NEW！」は既定の色(名前だけが属性色)
+          const solo = ev.new_names.length === 1 ? ev.new_names[0]?.color : undefined;
+          if (state.view === 'month') {
+            const nw = el('span', 'bar-new', 'NEW');
+            if (solo) paint(nw, solo);
+            b.append(nw);
+          } else {
+            // `NEW！名前`(2人は `NEW！A・B`)
+            const names = el('span', 'bar-names');
+            const label = el('span', 'bar-new-label', 'NEW！');
+            if (solo) paint(label, solo);
+            names.append(label);
+            ev.new_names.forEach((x, i) => {
+              if (i > 0) names.append(el('span', 'bar-sep', '・'));
+              const nm = el('span', 'g-name', x.name);
+              if (x.color) paint(nm, x.color);
+              names.append(nm);
+            });
+            b.append(names);
+          }
+        }
+        // 進化: 週表示(撮影モードを含む)だけ、バーの中に `12:00解禁`(属性色)
+        if (ev.character !== undefined && ev.character.kind !== '新限定' && ev.character.at !== undefined && state.view === 'week') {
+          const t = el('span', 'bar-unlock', `${ev.character.at.slice(11, 16)}解禁`);
+          if (ev.color) paint(t, ev.color);
+          b.append(t);
+        }
+        // 縁の色: 新限定・ピックアップ・キャラクター(進化)は属性色。2人なら左右半分ずつ。色が無い・3人以上は既定の縁
+        const edge = barEdgeColors(ev);
+        if (edge.length === 1) {
+          b.classList.add('edge-attr');
+          b.style.setProperty('--pc', edge[0] as string);
+        } else if (edge.length === 2) {
+          b.classList.add('edge-split');
+          b.style.setProperty('--pc1', edge[0] as string);
+          b.style.setProperty('--pc2', edge[1] as string);
+        }
+        wire(b);
         row.append(b);
       }
       rowsBox.append(row);
@@ -541,8 +790,8 @@ export function render(root: HTMLElement, state: AppState): void {
       const n = bar.to - bar.from + 1;
       if (!bar.clippedLeft && bar.startFrac > 0) b.style.marginLeft = `${((bar.startFrac / n) * 100).toFixed(3)}%`;
       if (!bar.clippedRight && bar.endFrac < 1) b.style.marginRight = `${(((1 - bar.endFrac) / n) * 100).toFixed(3)}%`;
-      b.title = [fullLabel(ev.name), periodText(ev)].filter(Boolean).join('\n');
-      b.setAttribute('aria-label', [fullLabel(ev.name), periodText(ev)].filter(Boolean).join(' '));
+      b.title = [fullLabel(ev.name), whenText(ev)].filter(Boolean).join('\n');
+      b.setAttribute('aria-label', [fullLabel(ev.name), whenText(ev)].filter(Boolean).join(' '));
       b.onclick = () => {
         state.selection = { day: days[bar.from] as string, eventId: ev.id };
         rerender();

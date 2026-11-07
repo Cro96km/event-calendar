@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { beforeEach, describe, expect, it, vi } from 'vitest';
 import type { ExportEvent, IndexFile } from '../src/data/export';
 import { dragShift, initialState, render, type AppState } from '../src/ui';
-import { periodText, addDays, addMonthsToDay, monthWindow, barSpan, campaignGroup, campaignRank, questGroup, eventsForDay, formatJst, ganttSections, mergeEvents, maintenanceBars, maintenanceOnDay, isOnCalendarDay, mergeSameLabel, monthDays, addMonths, slotRows, weekDays } from '../src/week';
+import { periodText, rowLabel, addDays, addMonthsToDay, monthWindow, barSpan, campaignGroup, campaignRank, questGroup, eventsForDay, formatJst, ganttSections, mergeEvents, maintenanceBars, maintenanceOnDay, isOnCalendarDay, mergeSameLabel, monthDays, addMonths, slotRows, weekDays } from '../src/week';
 import { gachaGroup, sectionOf, sectionOfEvent } from '../src/sections';
 import { applySelection } from '../src/selection';
 import { MONTHLY, monthlyDays, monthlyEvents } from '../src/monthly';
@@ -425,6 +425,57 @@ describe('詳細パネルの改善', () => {
     const rows = [...(q('detail')?.querySelectorAll('.detail-table tbody tr') ?? [])].map((r) => [...r.querySelectorAll('td')].map((c) => c.textContent));
     expect(rows).toEqual([['10/27', '火', '火属性'], ['10/28', '水', '水属性'], ['10/29', '木', '木属性']]);
     expect([...(q('detail')?.querySelectorAll('.detail-table th') ?? [])].map((c) => c.textContent)).toEqual(['日付', '曜日', '対象属性']);
+    // 対象属性のセルの文字すべてが属性色(火=赤・水=青・木=緑)
+    const colored = [...(q('detail')?.querySelectorAll('.detail-table td.qname') ?? [])].map((x) => [x.textContent, (x as HTMLElement).style.getPropertyValue('--pc')]);
+    expect(colored).toEqual([['火属性', '#eb0043'], ['水属性', '#3154ef'], ['木属性', '#007d32']]);
+  });
+  it('特Lの園: 対象クエスト(獄炎の神殿=火 など、名前に属性を結び付けた設定)のセルが、その属性色の文字になる。複数属性のセルは属性の字だけ色が付く', () => {
+    const e = ev('t#0', 'campaign', '2026-10-08T00:00:00+09:00', '2026-10-12T23:59:00+09:00', {
+      name: '「英雄の神殿」に期間限定で「特Lの園」が出現!',
+      details: [{ label: '対象クエスト', lines: ['10/8(木) 獄炎の神殿 特Lの園', '10/9(金) 秘泉の神殿 特Lの園', '10/10(土) 樹縛の神殿 特Lの園', '10/11(日) 光明の神殿 特Lの園', '10/12(月) 常闇の神殿 特Lの園'] }],
+    });
+    render(root, initialState('2026-10-08', [e], INDEX));
+    click(bar('t#0'));
+    const cells = [...(q('detail')?.querySelectorAll('.detail-table td.qname') ?? [])].map((x) => [x.textContent, (x as HTMLElement).style.getPropertyValue('--pc')]);
+    expect(cells).toEqual([['獄炎の神殿 特Lの園', '#eb0043'], ['秘泉の神殿 特Lの園', '#3154ef'], ['樹縛の神殿 特Lの園', '#007d32'], ['光明の神殿 特Lの園', '#a16800'], ['常闇の神殿 特Lの園', '#a237c3']]);
+    // 罫線で区切られた日(セル)ごとにバー(縁あり)。連続する日の境目は角を丸めず、縁は日ごとの属性色
+    const wrap = root.querySelector('.bar-days') as HTMLElement;
+    const pieces = [...wrap.querySelectorAll<HTMLElement>('.bar-ev.day-piece')];
+    expect(pieces).toHaveLength(5);
+    expect(pieces.map((x) => x.style.getPropertyValue('--pc'))).toEqual(['#eb0043', '#3154ef', '#007d32', '#a16800', '#a237c3']);
+    expect(pieces.map((x) => [x.classList.contains('cont-l'), x.classList.contains('cont-r')])).toEqual([[false, true], [true, true], [true, true], [true, true], [true, false]]);
+    expect(pieces.every((x) => x.dataset.eventId === 't#0')).toBe(true);
+    const multi = ev('t#1', 'campaign', '2026-10-27T00:00:00+09:00', '2026-10-27T23:59:00+09:00', { name: NQ, details: [{ label: '対象クエスト', lines: ['10/27(火) 火・水属性クエスト'] }] });
+    render(root, initialState('2026-10-27', [multi], INDEX));
+    click(bar('t#1'));
+    expect([...(q('detail')?.querySelectorAll('.detail-table td span.qname') ?? [])].map((x) => x.textContent)).toEqual(['火', '水']);
+  });
+  it('進化のバー: 週表示だけ、バーの中に `12:00解禁`(属性色)。月表示には出さない', () => {
+    const e = ev('e#c0', 'character', '2026-11-10T00:00:00+09:00', '2026-11-11T00:00:00+09:00', {
+      name: '蒲公英（真獣神化）',
+      character: { kind: '真獣神化', at: '2026-11-10T12:00:00+09:00' },
+      color: '#007d32',
+    });
+    const state = initialState('2026-11-09', [e], INDEX);
+    render(root, state);
+    const t = root.querySelector('.bar-ev[data-event-id="e#c0"] .bar-unlock') as HTMLElement;
+    expect(t.textContent).toBe('12:00解禁');
+    expect(t.style.getPropertyValue('--pc')).toBe('#007d32');
+    state.view = 'month';
+    render(root, state);
+    expect(root.querySelector('.bar-unlock')).toBeNull();
+  });
+  it('1日に属性が複数(ノーマルクエストの土曜: 火・水・木)なら、色ごとにバーを作る。境目は角を丸めず余白なし', () => {
+    const e = ev('s#0', 'campaign', '2026-10-24T00:00:00+09:00', '2026-10-25T23:59:00+09:00', { name: NQ });
+    render(root, initialState('2026-10-24', [e], INDEX));
+    const pieces = [...root.querySelectorAll<HTMLElement>('.bar-days .bar-ev')];
+    // 土=火・水・木、日=光・闇 → 5つ
+    expect(pieces.map((x) => x.style.getPropertyValue('--pc'))).toEqual(['#eb0043', '#3154ef', '#007d32', '#a16800', '#a237c3']);
+    expect(pieces.map((x) => x.classList.contains('cont-l'))).toEqual([false, true, true, true, true]);
+    expect(pieces.map((x) => x.classList.contains('cont-r'))).toEqual([true, true, true, true, false]);
+    expect(pieces.slice(1, 4).every((x) => x.style.marginLeft === '0px' && x.style.marginRight === '0px')).toBe(true);
+    // 日(セル)ごとの入れ物: 土に3つ、日に2つ
+    expect([...root.querySelectorAll('.bar-days .day-cell')].map((c) => c.querySelectorAll('.bar-ev').length)).toEqual([3, 2]);
   });
   it('event.details(対象ステージ等)を見出し付きで表示する。同ラベルの統合で項目が和集合になる', () => {
     const a = ev('k#0', 'event', '2026-10-27T12:00:00+09:00', '2026-10-29T11:59:00+09:00', {
@@ -1046,7 +1097,7 @@ describe('ガチャセクション', () => {
   const e = '2026-10-28T23:59:00+09:00';
   it('gachaGroup: 定例/イベント(コラボ含む)/期間限定。コラボの付随項目・ガチャ以外は null', () => {
     expect(gachaGroup({ category: 'event', name: 'ガチャ「超・獣神祭」開催!' })).toBe('定例ガチャ');
-    expect(gachaGroup({ category: 'event', name: 'ガチャ「モンコレDX 〜ビナー編〜」開催！' })).toBe('期間限定ガチャ');
+    expect(gachaGroup({ category: 'event', name: 'ガチャ「モンコレDX 〜ビナー編〜」開催！' })).toBe('定例ガチャ'); // 定例の語で始まる派生は定例ガチャ
     expect(gachaGroup({ category: 'collab', name: 'ガチャ「呪術廻戦」開催!' })).toBe('イベントガチャ');
     expect(gachaGroup({ category: 'event', name: 'ガチャ「ギャラクシーアドベンチャー II」開催!', title: '新イベント「ギャラクシーアドベンチャー II」11/2より開催！' })).toBe('イベントガチャ');
     expect(gachaGroup({ category: 'event', name: 'ガチャ「モンスト夏休み2026」開催!', title: '期間限定イベント「モンスト夏休み2026」がスタート！' })).toBe('イベントガチャ');
@@ -1099,7 +1150,7 @@ describe('ガチャセクション', () => {
     expect([...root.querySelectorAll('.g-inner .g-rows > .g-row .g-l1')].map((x) => x.textContent).slice(-3)).toEqual(['作品M', 'ピ', '作品O']);
   });
 
-  it('ピックアップの公式色: ラベルとスケジュール表の対象名に --pc とクラス(バーは既定色のまま)。#rrggbb 以外は無視する', () => {
+  it('ピックアップの公式色: ラベルとスケジュール表の対象名に --pc とクラス、バーは面は既定色のまま縁だけその色(edge-attr)。#rrggbb 以外は無視する', () => {
     const m = ev('c#0', 'collab', '2026-11-02T12:00:00+09:00', '2026-11-09T11:59:00+09:00', {
       name: 'ガチャ「作品C」開催!',
       details: [{ label: 'ガチャ開催スケジュール', lines: ['ユルピックアップ | 11/3 12:00〜11/4 11:59'], colors: { ユルピックアップ: '#a237c3' } }],
@@ -1115,7 +1166,8 @@ describe('ガチャセクション', () => {
     expect(yuru.querySelector('.g-label')?.classList.contains('colored')).toBe(true);
     // バーは色を変えず既定(ユーザ指示)
     expect(yuru.querySelector('.bar-ev')?.classList.contains('pickup-bar')).toBe(false);
-    expect((yuru.querySelector('.bar-ev') as HTMLElement).style.getPropertyValue('--pc')).toBe('');
+    expect((yuru.querySelector('.bar-ev') as HTMLElement).style.getPropertyValue('--pc')).toBe('#a237c3'); // 縁の色(面は変えない)
+    expect(yuru.querySelector('.bar-ev')?.classList.contains('edge-attr')).toBe(true);
     const wal = row('ワル');
     expect(wal.querySelector('.g-label')?.classList.contains('colored')).toBe(false);
     expect(wal.querySelector('.bar-ev')?.classList.contains('pickup-bar')).toBe(false);
@@ -1175,7 +1227,7 @@ describe('ガチャセクション', () => {
     ]);
   });
 
-  it('超究極・絶級のボス名の公式色: 行ラベルの文字だけ(--pc とクラス)。バーは既定。#rrggbb 以外は無視', () => {
+  it('超究極・絶級のボス名の公式色: 行ラベルの文字とバーの縁(--pc とクラス)。#rrggbb 以外は無視', () => {
     const a = ev('b#0', 'event', '2026-11-03T12:00:00+09:00', '2026-11-09T11:59:00+09:00', { name: '超究極・兵クエスト（ミザリー）が出現', color: '#3154ef' });
     const b = ev('b#1', 'event', '2026-11-03T12:00:00+09:00', '2026-11-09T11:59:00+09:00', { name: '超究極・傑クエスト（ララバイ）が出現', color: 'expression(1)' });
     state.events = [a, b];
@@ -1187,7 +1239,9 @@ describe('ガチャセクション', () => {
     expect(la.style.getPropertyValue('--pc')).toBe('#3154ef');
     expect(la.classList.contains('colored')).toBe(true);
     expect(la.classList.contains('pickup')).toBe(false);
-    expect((row('b#0').querySelector('.bar-ev') as HTMLElement).style.getPropertyValue('--pc')).toBe(''); // バーは既定
+    const barA = row('b#0').querySelector('.bar-ev') as HTMLElement;
+    expect(barA.style.getPropertyValue('--pc')).toBe('#3154ef'); // バーの縁もラベルと同じ色
+    expect(barA.classList.contains('edge-attr')).toBe(true);
     const lb = row('b#1').querySelector('.g-label') as HTMLElement;
     expect(lb.classList.contains('colored')).toBe(false);
   });
@@ -1202,11 +1256,11 @@ describe('ガチャセクション', () => {
     expect([...root.querySelectorAll('.g-inner .g-rows > .g-row .g-l1')].map((x) => x.textContent).slice(-3)).toEqual(['とても長い作品名のコラボ', 'フリーレン＆ヒンメル', 'フリーレン＆フェルン']);
   });
 
-  it('年代別のガチャ行(ガチャ「定例名 2013＆2014」)は定例ガチャ。同じ定例名の中で年代順、ラベルは「」の中身。「」の後に文が続く別記事の行は対象外', () => {
+  it('年代別のガチャ行(ガチャ「定例名 2013＆2014」)は定例ガチャ。同じ定例名の中で年代順、ラベルは「」の中身。「」の後に文が続く行も定例ガチャ。定例の語を含まない別のガチャは対象外', () => {
     const era = (y: string) => ({ category: 'event', name: `ガチャ「モンストジェネレーション ${y}」` });
     expect(gachaGroup(era('2013＆2014'))).toBe('定例ガチャ');
     expect(gachaGroup(era('2019'))).toBe('定例ガチャ');
-    expect(gachaGroup({ category: 'event', name: 'ガチャ「モンストジェネレーション 2019」開催！「媽祖」の排出確率超UP！' })).toBe('期間限定ガチャ');
+    expect(gachaGroup({ category: 'event', name: 'ガチャ「モンストジェネレーション 2019」開催！「媽祖」の排出確率超UP！' })).toBe('定例ガチャ'); // 派生(続きのある行)も定例ガチャ
     expect(gachaGroup({ category: 'event', name: 'ガチャ「未知のガチャ 2019」' })).toBe('期間限定ガチャ');
     expect(gachaGroup({ category: 'event', name: 'ガチャ「モンコレDX Vol.1」' })).toBe('定例ガチャ');
     // Vol 別の行も Vol 順(登場順に関わらず)
@@ -1255,7 +1309,27 @@ describe('ガチャセクション', () => {
     state.collapsed.clear();
     render(root, state);
     const order = [...root.querySelectorAll('.g-inner .g-rows > .g-group, .g-inner .g-rows > .g-row')].map((x) => (x.classList.contains('g-group') ? `H:${x.textContent}` : `R:${x.querySelector('.g-l1')?.textContent}`));
-    expect(order).toEqual(['H:イベントクエスト', 'R:ギャラクシーアドベンチャー II', 'R:黄泉のツガイ', 'H:イベントガチャ', 'R:ギャラクシーアドベンチャー II', 'R:黄泉のツガイ', 'H:定例ガチャ', 'R:超・獣神祭', 'R:激・獣神祭', 'R:RED STARS', 'R:水の遊宴', 'R:ミッドナイト・パーティー', 'R:オリエンタル・トラベラーズ', 'R:モンコレDX', 'R:モンストジェネレーション', 'H:期間限定ガチャ', 'R:あいうえお', 'R:モンコレDX 〜ビナー編〜', 'R:集結、天下五剣']);
+    expect(order).toEqual(['H:イベントクエスト', 'R:ギャラクシーアドベンチャー II', 'R:黄泉のツガイ', 'H:イベントガチャ', 'R:ギャラクシーアドベンチャー II', 'R:黄泉のツガイ', 'H:定例ガチャ', 'R:超・獣神祭', 'R:激・獣神祭', 'R:RED STARS', 'R:水の遊宴', 'R:ミッドナイト・パーティー', 'R:オリエンタル・トラベラーズ', 'R:モンコレDX', 'R:モンコレDX 〜ビナー編〜', 'R:モンストジェネレーション', 'H:期間限定ガチャ', 'R:集結、天下五剣', 'R:あいうえお']);
+  });
+
+  it('期間限定ガチャは日程(開始)順に並ぶ(名前順ではない。開始が同じなら記事・項目の順)', () => {
+    const mk = (id: string, name: string, start: string) => ev(id, 'event', start, '2026-11-09T11:59:00+09:00', { name: `ガチャ「${name}」開催!`, title: 'x' });
+    state.weekStart = '2026-11-05';
+    state.events = [mk('a#0', 'あ後のガチャ', '2026-11-07T12:00:00+09:00'), mk('b#0', 'わ先のガチャ', '2026-11-05T12:00:00+09:00'), mk('c#0', 'い中のガチャ', '2026-11-06T12:00:00+09:00')];
+    state.collapsed.clear();
+    render(root, state);
+    const rows = [...root.querySelectorAll('.g-inner .g-rows > .g-row')].map((x) => x.querySelector('.g-l1')?.textContent);
+    expect(rows).toEqual(['わ先のガチャ', 'い中のガチャ', 'あ後のガチャ']);
+  });
+
+  it('期間限定クエストの行ラベルから「期間限定クエスト」を取り除く(括弧だけ残るときは中身を使う。取り除くと空なら元のまま)', () => {
+    const lab = (name: string) => rowLabel('quest', { name, group: '期間限定クエスト' });
+    expect(lab('期間限定クエスト「ユククル」登場!').l1).toBe('ユククル');
+    expect(lab('期間限定クエスト（ユーフリィム）が再登場！').l1).toBe('ユーフリィム');
+    expect(lab('期間限定クエスト登場!').l1).toBe('期間限定クエスト');
+    expect(lab('DREAMDAZE IV開催記念クエストあゆむ').l1).toBe('DREAMDAZE IV開催記念クエストあゆむ');
+    // 他の小見出し・セクションは変えない
+    expect(rowLabel('quest', { name: '覇者の塔', group: '定例クエスト' }).l1).toBe('覇者の塔');
   });
 
   it('isOnCalendarDay: 翌4:00終了のイベントは終了日の暦日(バーの列)にもかかる', () => {
@@ -1302,5 +1376,40 @@ describe('ガチャセクション', () => {
     render(root, state);
     click(root.querySelector('.g-maint'));
     expect(q('detail')?.querySelectorAll('.detail-item')).toHaveLength(1);
+  });
+});
+
+describe('小見出しの開閉', () => {
+  // ガチャに畳めない新限定は「期間限定ガチャ」の小見出しの行として残る
+  const chara = (id: string, kind: '新限定' | '獣神化・改', name: string, day: string): ExportEvent =>
+    ev(id, 'character', `${day}T00:00:00+09:00`, `${day.slice(0, 8)}${String(Number(day.slice(8)) + 1).padStart(2, '0')}T00:00:00+09:00`, { name, character: { kind } });
+  const evs = [chara('x#c0', '新限定', 'A（G）', '2026-10-27'), chara('x#c1', '獣神化・改', 'B（獣神化・改）', '2026-10-28'), chara('x#c2', '獣神化・改', 'C（獣神化・改）', '2026-10-29')];
+  const groupBtn = (g: string) => [...root.querySelectorAll<HTMLElement>('.g-group')].find((x) => x.dataset.group === g) as HTMLElement;
+  const rowsOf = () => root.querySelectorAll('.g-row:not(.g-dates) .g-label').length;
+  beforeEach(() => {
+    state = initialState('2026-10-27', evs, INDEX);
+    state.collapsed.clear();
+    render(root, state);
+  });
+
+  it('小見出しを押すとその小見出しの行だけ畳まれ、件数が出る。もう一度で開く', () => {
+    expect(rowsOf()).toBe(3);
+    click(groupBtn('進化'));
+    expect(rowsOf()).toBe(1);
+    expect(groupBtn('進化').textContent).toBe('進化(2)');
+    expect(groupBtn('進化').getAttribute('aria-expanded')).toBe('false');
+    expect(groupBtn('期間限定ガチャ').getAttribute('aria-expanded')).toBe('true');
+    click(groupBtn('進化'));
+    expect(rowsOf()).toBe(3);
+    expect(groupBtn('進化').textContent).toBe('進化');
+  });
+
+  it('セクションを畳んで開いても、小見出しの畳みは保たれる。キーボード(Enter)でも開閉できる', () => {
+    groupBtn('期間限定ガチャ').dispatchEvent(new KeyboardEvent('keydown', { key: 'Enter', bubbles: true }));
+    expect(rowsOf()).toBe(2);
+    click(root.querySelector('.g-section'));
+    click(root.querySelector('.g-section'));
+    expect(rowsOf()).toBe(2);
+    expect(groupBtn('期間限定ガチャ').getAttribute('aria-expanded')).toBe('false');
   });
 });

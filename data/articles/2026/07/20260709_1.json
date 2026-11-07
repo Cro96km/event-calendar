@@ -7,9 +7,9 @@
     "event"
   ],
   "published": "2026-07-09",
-  "fetched_at": "2026-10-24T17:08:43+09:00",
+  "fetched_at": "2026-11-05T23:37:34+09:00",
   "lastmod": null,
-  "content_hash": "sha256:880434c0f7e7585738e93a3de32621670ad2a777b55279540515bfe8d8478600",
+  "content_hash": "sha256:54062794dc5d6b510a019183cb23fd5e647efa1deee209a7fc44c2ec9e695709",
   "parse_status": "ok",
   "events": [
     {
@@ -51,5 +51,19 @@
       "anchor": "4"
     }
   ],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "CALEzMA",
+      "kind": "新限定",
+      "start": "2026-07-11T00:00:00+09:00",
+      "end": "2026-07-12T23:59:00+09:00",
+      "attr": "木",
+      "gacha": "グリーンファンタジー"
+    }
+  ],
+  "gacha_alias": {
+    "from": "Ultra Charismatic LIVE!!",
+    "to": "グリーンファンタジー"
+  }
 }

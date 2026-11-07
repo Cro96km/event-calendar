@@ -1,10 +1,56 @@
 {
-  "_doc": "Discord 用の画像(撮影モード ?shot=…。docs/operations.md の撮影の節)の設定。summary=「概要」の画像だけに効く絞り込み(クエスト・キャンペーン・ガチャの各画像は絞らない)。sections=概要に出すセクションのid(order.json の sections)。hide_groups=セクションidごとに、概要から外す小見出しの名前(order.json の groups の name)。hide_keywords=項目名にこの語を含む行を外す。only_keywords=空でなければ、項目名にこの語のどれかを含む行だけ残す(hide より後に判定)。max_rows=セクションidごとの最大行数(上から数える。無指定=制限なし)。初期値は絞らない(現状のまま)。直すのはこのファイルだけ(コードの変更は要らない)。",
+  "_doc": "Discord 用の画像(撮影モード ?shot=…。docs/operations.md の撮影の節)の設定。summary=「概要」の画像だけに効く。クエスト・キャンペーン・キャラクター・ガチャ(セクション id gacha)の各画像は絞らない。概要はセクションの大見出し(クエスト・キャラクター・ガチャなど)も小見出しも出さず、blocks を上から順に並べる。1ブロック: section=セクションid(order.json の sections)/ groups=出す小見出しの名前(order.json の groups の name。複数ならこの順。省略=セクションの全行)/ keywords=空でなければ項目名にこの語のどれかを含む行だけ残す / hide_keywords=項目名にこの語を含む行を外す / start_day_only=true で開催日だけ出す(その週に始まるものを開始日の列1日分に描く。それ以前に始まったものは出さない)/ with_new_limited=true で、新限定キャラの名前をバーの中に持つガチャの行だけ出す(gacha セクション用。このセクションの、ほかのブロックには新限定の名前を持つ行を出さない。進化は groups に「進化」と書く)/ max_rows=最大行数。ブロックの判定順は、小見出し→hide_keywords→keywords→開催日だけ→行数。行が無いブロックは出さない。ここに無いものは概要に出ない。順番や中身を変えるのは、このファイルだけ(コードの変更は要らない)。",
   "summary": {
-    "sections": ["quest", "campaign", "gacha"],
-    "hide_groups": {},
-    "hide_keywords": [],
-    "only_keywords": [],
-    "max_rows": {}
+    "blocks": [
+      {
+        "section": "campaign",
+        "keywords": [
+          "モンストの日"
+        ]
+      },
+      {
+        "section": "campaign",
+        "keywords": [
+          "特Lの園"
+        ]
+      },
+      {
+        "section": "quest",
+        "groups": [
+          "イベントクエスト"
+        ]
+      },
+      {
+        "section": "quest",
+        "groups": [
+          "絶級クエスト",
+          "期間限定クエスト",
+          "超究極クエスト"
+        ],
+        "start_day_only": true
+      },
+      {
+        "section": "gacha",
+        "groups": [
+          "期間限定ガチャ"
+        ]
+      },
+      {
+        "section": "gacha",
+        "with_new_limited": true
+      },
+      {
+        "section": "gacha",
+        "groups": [
+          "進化"
+        ]
+      },
+      {
+        "section": "quest",
+        "groups": [
+          "定例クエスト"
+        ]
+      }
+    ]
   }
 }

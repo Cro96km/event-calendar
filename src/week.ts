@@ -1,7 +1,9 @@
 // 週表示の純ロジック（DOMなし）。spec §4.3。日付はゲーム日 YYYY-MM-DD(JST)。
 import { gameDayOf, isOnGameDay } from './gameday';
-import { GACHA_EVENT, GACHA_GROUPS, GACHA_REGULAR_GROUP, QUEST_DEFAULT, QUEST_EVENT, QUEST_GROUPS, QUEST_RAID, QUEST_SUPER, gachaEra, gachaGroup, matchGroup, regularGachaIndex, CAMPAIGN_ALIASES, CAMPAIGN_GROUPS, ROW_RULES, MAINTENANCE_CATEGORY, EVENT_QUEST_SUFFIX, SECTIONS, sectionOf, sectionOfEvent, type Section } from './sections';
+import { groupDefs, GACHA_EVENT, GACHA_GROUPS, GACHA_REGULAR_GROUP, QUEST_DEFAULT, QUEST_EVENT, QUEST_GROUPS, QUEST_RAID, QUEST_SUPER, gachaEra, gachaGroup, regularGachaDerived, matchGroup, regularGachaIndex, CAMPAIGN_ALIASES, CAMPAIGN_GROUPS, ROW_RULES, MAINTENANCE_CATEGORY, EVENT_QUEST_SUFFIX, SECTIONS, sectionOf, sectionOfEvent, type Section } from './sections';
 import type { ExportEvent } from './data/export';
+import { foldNewLimited } from './newlimited';
+import { withRegularGachaColors } from './gacha-color';
 import { labelLines, shortLabel, superUltimateLabel, superUltimateParts } from './label';
 import { labelOverride } from './label-override';
 import { MONTHLY } from './monthly';
@@ -113,13 +115,20 @@ export function slotRows(slots: readonly Slot[]): { date: string; times: string[
  * 期間表示。年をまたぐ場合だけ(表示する側に)年を付ける。
  * hide_start / hide_end の側は出さず、片方だけなら `〜 終了` / `開始 〜`、両方なら空文字(呼び出し側で行ごと出さない)。
  */
-export function periodText(e: { start: string; end: string | null; hide_start?: boolean; hide_end?: boolean }): string {
+export function periodText(e: { start: string; end: string | null; hide_start?: boolean; hide_end?: boolean; character?: { at?: string } }): string {
   if (e.hide_start && e.hide_end) return '';
+  if (e.character?.at !== undefined) return ''; // 進化の解禁は開催期間を出さない(バーは解禁日の1日分。解禁の日時は unlockText)
   const y = e.end !== null && jstYear(e.start) !== jstYear(e.end);
   const start = formatJst(e.start, y);
   const end = e.end === null ? '終了未定' : formatJst(e.end, y);
   return e.hide_start ? `〜 ${end}` : e.hide_end ? `${start} 〜` : `${start} 〜 ${end}`;
 }
+
+/** 進化の解禁の日時 `2/17(火) 12:00`(進化でなければ空)。 */
+export const unlockText = (e: { character?: { at?: string } }): string => (e.character?.at === undefined ? '' : formatJst(e.character.at));
+
+/** ツールチップ等の日時: 開催期間、進化の解禁は `解禁 2/17(火) 12:00`。 */
+export const whenText = (e: Parameters<typeof periodText>[0]): string => periodText(e) || (unlockText(e) === '' ? '' : `解禁 ${unlockText(e)}`);
 
 export interface BarSpan {
   event: ExportEvent;
@@ -243,15 +252,31 @@ export interface RowLabel {
   wrap: boolean;
 }
 
-/** 行ラベルの表示内容(ui と並び順の「名前」で共用)。キャンペーンの小見出し配下は説明のみ、超究極はキャラ名（補足）。 */
-export function rowLabel(sectionId: string, e: { name: string; pickup?: { name: string } }): RowLabel {
+/** 行ラベルの表示内容(ui と並び順の「名前」で共用)。キャンペーンの小見出し配下は説明のみ、超究極はキャラ名（補足）。小見出しの label_strip の語は取り除く。 */
+export function rowLabel(sectionId: string, e: { name: string; pickup?: { name: string }; id?: string; group?: string }): RowLabel {
+  const r = rowLabelRaw(sectionId, e);
+  const words = sectionId === 'quest' ? (groupDefs('quest').find((g) => g.name === questGroup(e))?.label_strip ?? []) : [];
+  return words.length === 0 ? r : stripLabel(r, words);
+}
+
+/** ラベルから語を取り除く。1行目が空になれば2行目(括弧は外す)を1行目に。それでも空なら元のまま。 */
+function stripLabel(r: RowLabel, words: readonly string[]): RowLabel {
+  const cut = (t: string): string => words.reduce((a, w) => a.split(w).join(''), t).replace(/^[、\s]+|[、\s]+$/g, '').trim();
+  const l1 = cut(r.l1);
+  const l2 = r.l2 === null ? null : cut(r.l2);
+  if (l1 !== '') return { ...r, l1, l2: l2 === '' ? null : l2 };
+  const alt = l2 === null ? '' : l2.replace(/^[（(](.*)[）)]$/, '$1').trim();
+  return alt === '' ? r : { ...r, l1: alt, l2: null };
+}
+
+function rowLabelRaw(sectionId: string, e: { name: string; pickup?: { name: string }; id?: string; group?: string; boss?: string }): RowLabel {
   // クエスト・キャンペーンの長いラベルの上書き(config/display/label-overrides.json)。1行(折り返さない)。ガチャには適用しない
   if (sectionId !== 'gacha') {
     const o = labelOverride(e.name);
     if (o) return { l1: o.l1, l2: o.l2, wrap: false };
   }
   const lines = labelLines(e.name);
-  const chara = sectionId === 'quest' && questGroup(e) === QUEST_SUPER ? superUltimateLabel(e.name) : null;
+  const chara = sectionId === 'quest' && questGroup(e) === QUEST_SUPER ? superUltimateLabel(e.name, e.boss) : null;
   if (chara) return { l1: chara, l2: null, wrap: true };
   // コラボガチャのピックアップ: 通常ガチャの行の直下に、ピックアップ名だけを出す(インデントと点はCSS。作品名は上の行・ツールチップ)
   if (sectionId === 'gacha' && e.pickup) return { l1: e.pickup.name, l2: null, wrap: true };
@@ -290,8 +315,10 @@ function questCmp(a: ExportEvent, b: ExportEvent): number {
   if (ga !== gb) return QUEST_GROUPS.indexOf(ga) - QUEST_GROUPS.indexOf(gb);
   if (ga === QUEST_EVENT) return Number(a.category === 'collab') - Number(b.category === 'collab');
   if (ga === QUEST_SUPER) {
-    const pa = superUltimateParts(a.name) ?? { chara: '', kind: '' };
-    const pb = superUltimateParts(b.name) ?? { chara: '', kind: '' };
+    const pa = { ...(superUltimateParts(a.name) ?? { chara: '', kind: '' }) };
+    const pb = { ...(superUltimateParts(b.name) ?? { chara: '', kind: '' }) };
+    if (a.boss) pa.chara = a.boss;
+    if (b.boss) pb.chara = b.boss;
     // 補足なしが先。補足ありは補足の名前順、同じ補足内はキャラ名順
     return Number(pa.kind !== '') - Number(pb.kind !== '') || byName(pa.kind, pb.kind) || byName(pa.chara, pb.chara);
   }
@@ -326,7 +353,7 @@ function gachaCmp(a: ExportEvent, b: ExportEvent, works: Map<string, number>): n
     return Number(a.category === 'collab') - Number(b.category === 'collab') || start(a) - start(b) || workOf(a).localeCompare(workOf(b)) || rank(a) - rank(b);
   }
   if (ga !== GACHA_REGULAR_GROUP || ROW_RULES.gacha?.[ga]?.sort !== 'fixed') return groupSortCmp(ga, 'gacha', a, b);
-  return regularGachaIndex(a.name) - regularGachaIndex(b.name) || gachaEra(a.name) - gachaEra(b.name);
+  return regularGachaIndex(a.name) - regularGachaIndex(b.name) || gachaEra(a.name) - gachaEra(b.name) || regularGachaDerived(a.name) - regularGachaDerived(b.name);
 }
 
 /** キャンペーンの並び順(CAMPAIGN_GROUPSの上から。一致しないものは末尾=その他)。spec §4.3.3。 */
@@ -393,7 +420,8 @@ export interface GanttSection {
 /** セクションごとの行。セクション設定順、行内は開始順。除外カテゴリ/空セクションは出さない。 */
 export function ganttSections(events: ExportEvent[], days: string[]): GanttSection[] {
   const map = new Map<string, GanttSection>();
-  for (const e of mergeSameLabel(events)) {
+  // 新限定キャラは、同じ記事・期間のガチャのバーに畳む(new_names。畳めなかったキャラは行のまま)
+  for (const e of mergeSameLabel(withRegularGachaColors(foldNewLimited(events)))) {
     const section = sectionOfEvent(e);
     const bar = barSpan(e, days);
     if (!section || !bar) continue;
@@ -404,6 +432,7 @@ export function ganttSections(events: ExportEvent[], days: string[]): GanttSecti
     if (section.id === 'gacha' && gachaGroup(e) === GACHA_EVENT && !e.pickup) {
       const quest = SECTIONS.find((x) => x.id === 'quest');
       const copy = { ...e, id: `${e.id}${EVENT_QUEST_SUFFIX}`, name: rowLabel('gacha', e).l1 };
+      delete copy.new_names; // 新限定の名前はキャラクター・ガチャのバーだけ
       const cbar = barSpan(copy, days);
       if (quest && cbar) {
         const q = map.get(quest.id) ?? { section: quest, bars: [], rows: [] };
@@ -425,6 +454,7 @@ export function ganttSections(events: ExportEvent[], days: string[]): GanttSecti
             ? campaignRank(a.event) - campaignRank(b.event) || groupSortCmp(campaignGroup(a.event) ?? '', 'campaign', a.event, b.event)
             : 0) ||
           Date.parse(a.event.start) - Date.parse(b.event.start) ||
+          (a.event.character?.at ?? '').localeCompare(b.event.character?.at ?? '') ||
           a.event.id.localeCompare(b.event.id),
       );
       const sameLabel = new Map<string, BarSpan[]>();

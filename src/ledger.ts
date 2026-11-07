@@ -4,6 +4,7 @@ import { type ExportEvent } from './data/export';
 import { normalQuestBlock, type DetailBlock } from './details';
 import { MONTHLY, monthlyEvents } from './monthly';
 import { EVENT_QUEST_SUFFIX, MAINTENANCE_CATEGORY, SECTIONS, gachaGroup, sectionOfEvent } from './sections';
+import { newLimitedHosts } from './newlimited';
 import { addMonths, windowRange } from './window';
 import { JST_OFFSET_MS } from './jst';
 import { barSpan, campaignGroup, ganttSections, monthDays, questGroup, rowKey, rowLabel } from './week';
@@ -77,6 +78,8 @@ export function ledgerRows(events: ExportEvent[], month: string, opts: LedgerOpt
     bySource.set(k, [...(bySource.get(k) ?? []), e]);
   }
   const out: LedgerRow[] = [];
+  // 新限定キャラは画面ではガチャのバーの中に畳まれる。項目IDを台帳で調べられるよう、そのガチャの直後に行として出す
+  const hosted = newLimitedHosts(all);
   const sourceOf = (e: ExportEvent): LedgerRow['source'] => (e.article_id === 'monthly' ? '定例日程' : e.article_id === 'manual' ? '手動(add)' : '公式');
   for (const { section, rows } of ganttSections(all, days)) {
     let shown = 0;
@@ -105,6 +108,10 @@ export function ledgerRows(events: ExportEvent[], month: string, opts: LedgerOpt
           fixed: monthlyRow ? '' : fixedOf(s),
           content: monthlyRow ? `毎月 ${srcs.map((x) => Number(day(x.start).slice(8))).join('・')}日` : contentOf(s),
         });
+        for (const c of hosted.get(s.id) ?? []) {
+          const cl = rowLabel(section.id, c);
+          out.push({ verdict: '表示', reason: opts.reasonOf?.(c) ?? '', section: section.label, group, label: cl.l2 ? `${cl.l1} / ${cl.l2}` : cl.l1, id: c.id, source: sourceOf(c), start: c.start, end: c.end, url: c.url, fixed: fixedOf(c), content: `${contentOf(c)}(ガチャのバーに表示)` });
+        }
       }
     }
   }

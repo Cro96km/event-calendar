@@ -7,10 +7,20 @@
     "update"
   ],
   "published": "2026-01-15",
-  "fetched_at": "2026-10-24T17:24:13+09:00",
+  "fetched_at": "2026-11-05T23:36:38+09:00",
   "lastmod": null,
-  "content_hash": "sha256:8bc9d328e5f11573ee8f0b264049b130b8e1e2a3c108b456f85fffe6412a8ec1",
+  "content_hash": "sha256:8ae3d6e3e8dce8354d0938936631797c7c4b1cafd3e05546f591018dfbc3719b",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "コロンブス",
+      "kind": "獣神化・改",
+      "start": "2026-01-20T00:00:00+09:00",
+      "end": "2026-01-21T00:00:00+09:00",
+      "at": "2026-01-20T12:00:00+09:00",
+      "attr": "闇"
+    }
+  ]
 }

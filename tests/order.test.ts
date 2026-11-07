@@ -36,6 +36,18 @@ describe('表示順・小見出しの設定(order.json)', () => {
     c.groups.quest?.splice(2, 0, { name: '新しい小見出し', match: { includes: ['新語'] } });
     expect(orderProblems(c)).toEqual([]);
   });
+  it('色: 現在の設定は4セクションとも同じ色相(青灰。彩度は既定)で、sat は 0〜100・lit は −15〜15 の整数だけ許す', () => {
+    const c = cfg();
+    expect(c.sections.map((x) => [x.id, x.hue, x.sat ?? null, x.lit ?? 0])).toEqual([['quest', 215, null, 0], ['campaign', 215, null, 0], ['gacha', 215, null, 0]]);
+    const badSat = cfg();
+    badSat.sections = badSat.sections.map((x) => (x.id === 'quest' ? { ...x, sat: 120 } : x));
+    expect(orderProblems(badSat).join()).toContain('sat は 0〜100');
+    const bad = cfg();
+    bad.sections = bad.sections.map((x) => (x.id === 'quest' ? { ...x, lit: 20 } : x));
+    expect(orderProblems(bad).join()).toContain('lit は −15〜15');
+    bad.sections = bad.sections.map((x) => (x.id === 'quest' ? { ...x, lit: 2.5 } : x));
+    expect(orderProblems(bad).join()).toContain('lit は −15〜15');
+  });
   it('誤りを検出する', () => {
     const bad = cfg();
     bad.sections = [{ id: 'quest', label: 'クエスト', hue: 215, categories: ['event'] }];

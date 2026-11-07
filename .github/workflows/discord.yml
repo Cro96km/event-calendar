@@ -1,0 +1,104 @@
+# Discord へ、週表示のカレンダー画像(4枚。ダーク)を Webhook で新しく投稿する。
+# 毎週の更新(update.yml。定例=毎週金曜 0:00 JST)が健全に終わったあとに update.yml が起動する。手動実行も可(臨時の転送・dry-run)。
+# Webhook の URL は Secret DISCORD_WEBHOOK_URL(未登録なら投稿せずに終わる)。docs/operations.md §18。
+name: discord
+
+on:
+  workflow_dispatch:
+    inputs:
+      date:
+        description: '基準日(YYYY-MM-DD。空=今日〈JST〉)。この日から7日間の画像'
+        type: string
+        default: ''
+      only:
+        description: '送る画像(all=4枚すべて)'
+        type: choice
+        options: [all, summary, quest, campaign, gacha]
+        default: all
+      theme:
+        description: '画像の色(定例の転送はダーク)'
+        type: choice
+        options: [dark, light]
+        default: dark
+      dry_run:
+        description: 'true=送らず、画像を作って内容だけ表示する(画像は Artifacts に残る)'
+        type: boolean
+        default: false
+      silent:
+        description: 'true=通知を鳴らさない'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: discord
+  cancel-in-progress: false
+
+jobs:
+  post:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check webhook
+        id: hook
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          IN_DRY_RUN: ${{ github.event.inputs.dry_run }}
+        run: |
+          if [ "$IN_DRY_RUN" != "true" ] && [ -z "$DISCORD_WEBHOOK_URL" ]; then
+            echo "::warning::Secret DISCORD_WEBHOOK_URL が未登録なので、投稿しません"
+            echo "skip=true" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        if: steps.hook.outputs.skip != 'true'
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        if: steps.hook.outputs.skip != 'true'
+        with:
+          node-version-file: .nvmrc
+          cache: npm
+      - name: Install
+        if: steps.hook.outputs.skip != 'true'
+        run: |
+          npm ci
+          sudo apt-get update
+          sudo apt-get install -y fonts-noto-cjk
+          npx playwright install --with-deps chromium
+      # 画像は、リポジトリのデータからその場でビルドして撮る(公開サイトにも公式サイトにもアクセスしない)
+      - name: Build
+        if: steps.hook.outputs.skip != 'true'
+        env:
+          VITE_REPO_URL: ${{ github.server_url }}/${{ github.repository }}
+        run: |
+          npm run update -- --no-collect
+          npm run build:public
+      - name: Images
+        if: steps.hook.outputs.skip != 'true'
+        env:
+          IN_DATE: ${{ github.event.inputs.date }}
+          IN_ONLY: ${{ github.event.inputs.only }}
+          IN_THEME: ${{ github.event.inputs.theme }}
+        run: |
+          args=(--theme "${IN_THEME:-dark}" --out out/discord --date "${IN_DATE:-$(TZ=Asia/Tokyo date +%F)}")
+          if [ -n "$IN_ONLY" ] && [ "$IN_ONLY" != "all" ]; then args+=(--only "$IN_ONLY"); fi
+          npm run discord:images -- "${args[@]}"
+      - name: Post
+        if: steps.hook.outputs.skip != 'true'
+        env:
+          DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}
+          IN_ONLY: ${{ github.event.inputs.only }}
+          IN_DRY_RUN: ${{ github.event.inputs.dry_run }}
+          IN_SILENT: ${{ github.event.inputs.silent }}
+        run: |
+          args=()
+          if [ -n "$IN_ONLY" ] && [ "$IN_ONLY" != "all" ]; then args+=(--only "$IN_ONLY"); fi
+          if [ "$IN_DRY_RUN" = "true" ]; then args+=(--dry-run); fi
+          if [ "$IN_SILENT" = "true" ]; then args+=(--silent); fi
+          npm run discord:post -- "${args[@]}"
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: github.event.inputs.dry_run == 'true' && steps.hook.outputs.skip != 'true'
+        with:
+          name: discord-images
+          path: out/discord
+          retention-days: 7

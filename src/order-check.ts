@@ -4,12 +4,12 @@ import type { GroupDef } from './sections';
 
 const SORTS = ['fixed', 'name', 'start', 'builtin'];
 /** コードが特別扱いする役割(セクションごとに、各1つ必須)。 */
-const ROLES: Record<string, readonly string[]> = { quest: ['event', 'raid', 'super'], gacha: ['event', 'regular'], campaign: [] };
+const ROLES: Record<string, readonly string[]> = { quest: ['event', 'raid', 'super'], gacha: ['event', 'regular', 'evolution'], campaign: [] };
 /** default(どれにも入らない項目の小見出し)が必須のセクション。 */
 const NEEDS_DEFAULT = ['quest', 'gacha'];
 
 export interface OrderConfig {
-  sections: { id: string; label: string; hue: number; categories: string[] }[];
+  sections: { id: string; label: string; hue: number; sat?: number; lit?: number; categories: string[] }[];
   groups: Record<string, GroupDef[]>;
 }
 
@@ -23,6 +23,8 @@ export function orderProblems(cfg: OrderConfig = order as unknown as OrderConfig
     if (!/^[a-z0-9][a-z0-9-]*$/.test(x.id)) p.push(`sections「${x.id}」: id は英小文字・数字・ハイフン`);
     if (x.label.trim() === '') p.push(`sections「${x.id}」: label が空です`);
     if (!Number.isInteger(x.hue) || x.hue < 0 || x.hue > 359) p.push(`sections「${x.id}」: hue は 0〜359 の整数`);
+    if (x.sat !== undefined && !(Number.isInteger(x.sat) && x.sat >= 0 && x.sat <= 100)) p.push(`sections「${x.id}」: sat は 0〜100 の整数`);
+    if (x.lit !== undefined && !(Number.isInteger(x.lit) && x.lit >= -15 && x.lit <= 15)) p.push(`sections「${x.id}」: lit は −15〜15 の整数`);
   }
   for (const sec of Object.keys(ROLES)) {
     const gs = cfg.groups[sec];
@@ -37,6 +39,10 @@ export function orderProblems(cfg: OrderConfig = order as unknown as OrderConfig
       if (g.sort !== undefined && !SORTS.includes(g.sort)) p.push(`${w}: sort は ${SORTS.join(' / ')}`);
       if (g.then !== undefined && g.then !== 'name' && g.then !== 'start') p.push(`${w}: then は name か start`);
       if (g.words?.some((x) => x.trim() === '')) p.push(`${w}: words に空の語があります`);
+      for (const [word, attr] of Object.entries(g.attrs ?? {})) {
+        if (!(g.words ?? []).includes(word)) p.push(`${w}: attrs の「${word}」は words にありません`);
+        if (!['火', '水', '木', '光', '闇'].includes(attr)) p.push(`${w}: attrs「${word}」の属性は 火・水・木・光・闇 のどれか(${attr})`);
+      }
       if (g.sort === 'fixed' && (g.words ?? []).length === 0) p.push(`${w}: sort が fixed のときは words が必要です`);
       if (g.match === 'words' && (g.words ?? []).length === 0) p.push(`${w}: match が "words" のときは words が必要です`);
       if (g.match !== undefined && g.match !== 'words' && g.match !== 'name') {
@@ -52,6 +58,7 @@ export function orderProblems(cfg: OrderConfig = order as unknown as OrderConfig
       }
       if (g.role !== undefined && !(ROLES[sec] ?? []).includes(g.role)) p.push(`${w}: role は ${(ROLES[sec] ?? []).join(' / ') || '(このセクションは無し)'}`);
       if (g.aliases?.some((x) => x.trim() === '')) p.push(`${w}: aliases に空の語があります`);
+      if (g.label_strip !== undefined && !(Array.isArray(g.label_strip) && g.label_strip.every((x) => typeof x === 'string' && x.trim() !== ''))) p.push(`${w}: label_strip は空でない語の配列`);
     }
     if (new Set(names).size !== names.length) p.push(`groups.${sec}: name が重複しています`);
     for (const role of ROLES[sec] ?? []) {

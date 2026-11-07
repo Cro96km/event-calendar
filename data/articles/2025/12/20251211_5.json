@@ -7,10 +7,28 @@
     "update"
   ],
   "published": "2025-12-11",
-  "fetched_at": "2026-10-24T17:25:48+09:00",
+  "fetched_at": "2026-11-05T23:36:20+09:00",
   "lastmod": null,
-  "content_hash": "sha256:28478af3246a02c6cbd891e562a9d6ff463a57976b109490e61ca3fd8b1caa71",
+  "content_hash": "sha256:1efd2a03f8e126494a0c76f3150b2453f8ed17ff70b0e2e262048c30319133a4",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "イシュタル",
+      "kind": "獣神化・改",
+      "start": "2025-12-16T00:00:00+09:00",
+      "end": "2025-12-17T00:00:00+09:00",
+      "at": "2025-12-16T12:00:00+09:00",
+      "attr": "光"
+    },
+    {
+      "name": "ハムレット",
+      "kind": "獣神化・改",
+      "start": "2025-12-16T00:00:00+09:00",
+      "end": "2025-12-17T00:00:00+09:00",
+      "at": "2025-12-16T12:00:00+09:00",
+      "attr": "闇"
+    }
+  ]
 }

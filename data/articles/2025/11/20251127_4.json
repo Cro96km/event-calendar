@@ -7,10 +7,28 @@
     "update"
   ],
   "published": "2025-11-27",
-  "fetched_at": "2026-10-24T17:26:24+09:00",
+  "fetched_at": "2026-11-05T23:36:14+09:00",
   "lastmod": null,
-  "content_hash": "sha256:1ac3fc40c31eff5433453ce917675c2769b72d6eebab142c02e1ad40cdee7d61",
+  "content_hash": "sha256:c15956de4060504f56f3079c8fb263d6dfe6b98d757c2cc5bfd44cdd454d239d",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "パンターG",
+      "kind": "獣神化・改",
+      "start": "2025-12-02T00:00:00+09:00",
+      "end": "2025-12-03T00:00:00+09:00",
+      "at": "2025-12-02T12:00:00+09:00",
+      "attr": "木"
+    },
+    {
+      "name": "長宗我部元親",
+      "kind": "獣神化・改",
+      "start": "2025-12-02T00:00:00+09:00",
+      "end": "2025-12-03T00:00:00+09:00",
+      "at": "2025-12-02T12:00:00+09:00",
+      "attr": "闇"
+    }
+  ]
 }

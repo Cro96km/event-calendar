@@ -7,6 +7,7 @@ import { applyManual } from './manual';
 import { applyOverrides } from './overrides';
 import { MONTHLY } from './monthly';
 import { parseShot } from './shot';
+import { applyTheme, loadTheme } from './theme';
 import './style.css';
 
 async function load(): Promise<{ index: IndexFile; events: ExportEvent[]; selection: SelectionJson | null }> {
@@ -33,6 +34,10 @@ async function refreshData(state: AppState): Promise<{ ok: boolean; message: str
   state.collectedAt = index.collected_at ?? null;
   return { ok: true, message: '更新しました' };
 }
+
+// 画面の色(ライト/ダーク)。撮影モードは常にライト。読み込み前に適用して、色のちらつきを防ぐ
+const shotParams = parseShot(location.search);
+applyTheme(shotParams ? shotParams.theme : loadTheme()); // 撮影モードは URL の theme(既定ライト)。localStorage は使わない
 
 const root = document.querySelector<HTMLDivElement>('#app');
 if (root) {

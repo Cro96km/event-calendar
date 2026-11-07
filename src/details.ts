@@ -17,17 +17,21 @@ export interface RawBlock extends DetailBlock {
 }
 
 /** 抽出対象の▼見出し。 */
-const LABEL_RE = /^▼\s*(.*(?:対象ステージ|階層.*クエスト|対象クエスト|メンテナンス内容))\s*$/;
+/** 見出しの後ろの注記(`（追記：4/24）`)は許す(ラベルには含めない)。 */
+const LABEL_RE = /^▼\s*(.*(?:対象ステージ|階層.*クエスト|対象クエスト|メンテナンス内容))(?:\s*[（(][^）)]*[）)])?\s*$/;
 const DATE_ROW_RE = /^\d{1,2}\/\d{1,2}\([月火水木金土日]\)/;
 const DATE_ONLY_RE = /^\d{1,2}\/\d{1,2}\([月火水木金土日]\)$/;
 /** 項目の最大文字数。 */
 const MAX_ITEM = 40;
 const clean = (s: string): string => s.replace(/\s+/g, ' ').trim();
 
+/** 全角・半角をそろえ、日付 `12月9日（火）` を `12/9(火)` にする(古い記事の表記)。 */
+const dateForm = (s: string): string => clean(s.normalize('NFKC')).replace(/^(\d{1,2})月(\d{1,2})日(?=\()/, '$1/$2');
+
 /** ブロック内の1行 → 項目。項目でない行は null(ブロックの終わり)。 */
 function itemOf(raw: string): string | null {
   const line = clean(raw);
-  const item = line.startsWith('・') ? clean(line.slice(1)) : /^\d+階層\s*[：:]/.test(line) ? line : DATE_ROW_RE.test(clean(line.normalize('NFKC'))) ? clean(line.normalize('NFKC')) : null;
+  const item = line.startsWith('・') ? clean(line.slice(1)) : /^\d+階層\s*[：:]/.test(line) ? line : DATE_ROW_RE.test(dateForm(line)) ? dateForm(line) : null;
   // 注意書きなど文章は項目にしない(短い名称・日付行のみ保存する。spec §4.7)
   return item === null || item.length > MAX_ITEM || item.includes('。') ? null : item;
 }

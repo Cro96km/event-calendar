@@ -7,10 +7,20 @@
     "update"
   ],
   "published": "2026-02-26",
-  "fetched_at": "2026-10-24T17:21:35+09:00",
+  "fetched_at": "2026-11-05T23:36:52+09:00",
   "lastmod": null,
-  "content_hash": "sha256:a90a516c6daa08506269955a77ac1b263b5446628f55239c75f1d68a3c3f6ed7",
+  "content_hash": "sha256:b4ba2b0b2a2c1d7413807c9bf5f7bc9da0acaba096684e5f7d5f449f43ea5122",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "マスター・コーヴ",
+      "kind": "獣神化・改",
+      "start": "2026-03-03T00:00:00+09:00",
+      "end": "2026-03-04T00:00:00+09:00",
+      "at": "2026-03-03T12:00:00+09:00",
+      "attr": "水"
+    }
+  ]
 }

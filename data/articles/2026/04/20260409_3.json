@@ -7,10 +7,20 @@
     "update"
   ],
   "published": "2026-04-09",
-  "fetched_at": "2026-10-24T17:19:50+09:00",
+  "fetched_at": "2026-11-05T23:37:06+09:00",
   "lastmod": null,
-  "content_hash": "sha256:494afd7476ecf18530ba3dc3ad1fbb093680aa690f75e7c5dde6834e67e63ad1",
+  "content_hash": "sha256:5d103125d61cb4380d4f558814f6df1e9d4bac805f2348295d01ee06a3e2a93a",
   "parse_status": "none",
   "events": [],
-  "reward_until": null
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "アップル",
+      "kind": "獣神化・改",
+      "start": "2026-04-14T00:00:00+09:00",
+      "end": "2026-04-15T00:00:00+09:00",
+      "at": "2026-04-14T12:00:00+09:00",
+      "attr": "火"
+    }
+  ]
 }

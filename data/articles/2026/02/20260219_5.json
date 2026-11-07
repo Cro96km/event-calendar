@@ -7,9 +7,9 @@
     "event"
   ],
   "published": "2026-02-19",
-  "fetched_at": "2026-10-24T17:22:53+09:00",
+  "fetched_at": "2026-11-05T23:36:50+09:00",
   "lastmod": null,
-  "content_hash": "sha256:218de9fa267167ab4fdca56fd11f2bbcc43855a6bbd17db4739f6bb8298a4d6c",
+  "content_hash": "sha256:9424139974184244f624c92504a7bb3e79206b43266f291ea4952b5db21ea52f",
   "parse_status": "ok",
   "events": [
     {
@@ -51,5 +51,19 @@
       "anchor": "4"
     }
   ],
-  "reward_until": "2026-02-25T11:59:00+09:00"
+  "reward_until": "2026-02-25T11:59:00+09:00",
+  "characters": [
+    {
+      "name": "東方萌萌美人",
+      "kind": "新限定",
+      "start": "2026-02-20T12:00:00+09:00",
+      "end": "2026-02-23T11:59:00+09:00",
+      "attr": "水",
+      "gacha": "オリエンタル・トラベラーズ"
+    }
+  ],
+  "gacha_alias": {
+    "from": "Oriental Charming LIVE!!",
+    "to": "オリエンタル・トラベラーズ"
+  }
 }

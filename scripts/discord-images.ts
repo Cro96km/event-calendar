@@ -1,4 +1,4 @@
-// npm run discord:images — 週表示のカレンダー画像(概要・クエスト・キャンペーン・ガチャの4枚)をローカルに作る。Discord には送らない。
+// npm run discord:images — 週表示のカレンダー画像(概要・クエスト・キャンペーン・キャラクター・ガチャの4枚)をローカルに作る。Discord には送らない。
 import { createServer } from 'node:http';
 import { mkdir, readFile, stat } from 'node:fs/promises';
 import { extname, join, normalize, resolve, sep } from 'node:path';
@@ -7,11 +7,11 @@ import { SHOT_KINDS, isDay, type ShotKind } from '../src/shot';
 import { showHelpIfRequested } from './_help';
 
 showHelpIfRequested(`npm run discord:images [-- --dist DIR] [--out DIR] [--date YYYY-MM-DD] [--only KIND]
-  目的: Discord 用に、週表示(基準日から7日)のカレンダーを PNG にする。概要(summary)・クエスト(quest)・キャンペーン(campaign)・ガチャ(gacha)の4枚。メンテナンスの帯は4枚とも出る。
+  目的: Discord 用に、週表示(基準日から7日)のカレンダーを PNG にする。概要(summary)・クエスト(quest)・キャンペーン(campaign)・キャラクター・ガチャ(gacha)の4枚。メンテナンスの帯は4枚とも出る。
   使う場面: 画像の見た目や、概要の絞り込み(config/display/discord.json)を確認するとき。
-  オプション: --dist DIR(ビルド結果。既定 dist)、--out DIR(出力先。既定 out/discord)、--date(基準日。既定=今日〈ゲーム日〉)、--only KIND(summary/quest/campaign/gacha のどれか1枚だけ)
+  オプション: --dist DIR(ビルド結果。既定 dist)、--out DIR(出力先。既定 out/discord)、--date(基準日。既定=今日〈ゲーム日〉)、--theme light|dark(既定 light。dark は試作で、既定の出力先は out/discord-dark。送信 discord:post の対象外)、--only KIND(summary/quest/campaign/gacha のどれか1枚だけ)
   入力: npm run build:public の出力(dist/ と dist/data)。ローカルで配信して撮る。公式サイトにも公開サイトにもアクセスしない。ブラウザは Playwright の Chromium(初回は npx playwright install chromium。日本語フォント fonts-noto-cjk などが必要)。
-  出力: <out>/<kind>.png(summary.png など)。標準出力に各ファイルのサイズ。画像は git に含めない(out/ は ignore)。
+  出力: <out>/<開始日>_<終了日>_<kind>.png(例: 2026-11-06_2026-11-12_summary.png。ファイル名の日付は、画像に写る7日間の期間)。標準出力に各ファイルのサイズ。画像は git に含めない(out/ は ignore)。
   副作用: out の同名ファイルを上書き。ローカルのポートを一時的に使う。ネットワークには出ない。`);
 
 const argv = process.argv.slice(2);
@@ -20,11 +20,15 @@ const arg = (name: string): string | undefined => {
   return i >= 0 ? argv[i + 1] : undefined;
 };
 const dist = resolve(arg('--dist') ?? 'dist');
-const outDir = resolve(arg('--out') ?? 'out/discord');
+const theme = arg('--theme') ?? 'light';
+if (theme !== 'light' && theme !== 'dark') throw new Error(`--theme は light / dark: ${theme}`);
+const outDir = resolve(arg('--out') ?? (theme === 'dark' ? 'out/discord-dark' : 'out/discord'));
 const date = arg('--date');
 const only = arg('--only');
 if (date !== undefined && !isDay(date)) throw new Error(`--date は YYYY-MM-DD(実在の日付): ${date}`);
 if (only !== undefined && !(SHOT_KINDS as readonly string[]).includes(only)) throw new Error(`--only は ${SHOT_KINDS.join(' / ')}: ${only}`);
+/** 画像の横幅(CSS px。src/style.css の .shot と同じ) */
+const SHOT_WIDTH = 760;
 const kinds: readonly ShotKind[] = only ? [only as ShotKind] : SHOT_KINDS;
 
 await stat(join(dist, 'data', 'index.json')).catch(() => {
@@ -54,13 +58,21 @@ await mkdir(outDir, { recursive: true });
 const browser = await chromium.launch();
 try {
   // 日時はJST・日本語・ライト固定。2倍の解像度で、文字を読みやすくする
-  const context = await browser.newContext({ timezoneId: 'Asia/Tokyo', locale: 'ja-JP', colorScheme: 'light', viewport: { width: 800, height: 900 }, deviceScaleFactor: 2 });
+  const context = await browser.newContext({ timezoneId: 'Asia/Tokyo', locale: 'ja-JP', colorScheme: theme, viewport: { width: 800, height: 900 }, deviceScaleFactor: 2 });
   for (const kind of kinds) {
     const page = await context.newPage();
-    await page.goto(`http://127.0.0.1:${port}/?shot=${kind}${date ? `&date=${date}` : ''}`);
+    await page.goto(`http://127.0.0.1:${port}/?shot=${kind}${date ? `&date=${date}` : ''}${theme === 'dark' ? '&theme=dark' : ''}`);
     await page.waitForSelector('[data-testid="shot"]', { timeout: 15000 });
     await page.evaluate(() => document.fonts.ready);
-    const file = join(outDir, `${kind}.png`);
+    // ファイル名は画像に写る期間(日付ヘッダの最初と最後の日)
+    const days = await page.locator('.day[data-day]').evaluateAll((els) => els.map((e) => (e as HTMLElement).dataset.day ?? ''));
+    const first = days[0];
+    const last = days[days.length - 1];
+    if (!first || !last) throw new Error('日付ヘッダから期間を読めませんでした');
+    // 画像の横幅は全種類・全週で固定(CSS 760px)。中身がはみ出して広がったら止める
+    const box = await page.locator('[data-testid="shot"]').boundingBox();
+    if (!box || Math.round(box.width) !== SHOT_WIDTH) throw new Error(`${kind}: 画像の横幅が ${SHOT_WIDTH}px ではありません(${box?.width}px)。中身がはみ出しています`);
+    const file = join(outDir, `${first}_${last}_${kind}.png`);
     await page.locator('[data-testid="shot"]').screenshot({ path: file });
     console.log(`${file} (${((await stat(file)).size / 1024).toFixed(0)} KB)`);
     await page.close();

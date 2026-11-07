@@ -1,14 +1,17 @@
 // カテゴリ → カレンダーのセクション対応。表示の調整はこのファイルだけで行う。spec §4.3。
 import order from '../config/display/order.json';
+import { CHARACTER_CATEGORY } from './characters';
 
 /** 小見出しの定義(config/display/order.json の groups。配列の順が表示順)。 */
 export interface GroupDef {
   name: string;
-  /** コードが特別扱いする役割(quest: event / raid / super、gacha: event / regular) */
+  /** コードが特別扱いする役割(quest: event / raid / super、gacha: event / regular / evolution) */
   role?: string;
   /** どの項目が入るか: "words"=自分の words / "name"=自分の name / {includes} / {pattern}。無ければ名称では入らない */
   match?: 'words' | 'name' | { includes?: string[]; pattern?: string };
   words?: string[];
+  /** 行の名前に含む語 → 属性(火・水・木・光・闇)。ラベルとバーの縁をその属性色にする(定例ガチャ) */
+  attrs?: Record<string, string>;
   sort?: 'fixed' | 'name' | 'start' | 'builtin';
   then?: 'name' | 'start';
   /** 項目名にこの語を含めばこの小見出し(キャンペーン) */
@@ -17,6 +20,8 @@ export interface GroupDef {
   late?: boolean;
   /** どれにも入らない項目の小見出し */
   default?: boolean;
+  /** この小見出しの行ラベルから取り除く語(小見出しの名前で自明な語。取り除いて空になるときは元のまま) */
+  label_strip?: string[];
 }
 
 const GROUPS = order.groups as Record<string, GroupDef[]>;
@@ -41,6 +46,7 @@ export const QUEST_GROUPS: readonly string[] = namesOf('quest');
 export const CAMPAIGN_GROUPS: readonly string[] = namesOf('campaign');
 export const GACHA_GROUPS: readonly string[] = namesOf('gacha');
 /** 役割の小見出し(名前を変えても役割で引く)。 */
+export const CHARACTER_EVOLUTION = roleName('gacha', 'evolution');
 export const QUEST_EVENT = roleName('quest', 'event');
 export const QUEST_RAID = roleName('quest', 'raid');
 export const QUEST_SUPER = roleName('quest', 'super');
@@ -80,10 +86,17 @@ export function matchGroup(section: string, name: string): string | null {
 /** 年代別の行 `ガチャ「<定例ガチャ名> 2013＆2014」`(年代の表由来)。 */
 const ERA_GACHA = /^ガチャ「(.+?) (?:(\d{4})(?:[＆&]\d{4})?|Vol\.(\d+))」$/;
 
-/** 定例ガチャの語の順位(GACHA_REGULAR の添字)。定例でなければ -1。名称が `ガチャ「語」` を含むか、年代別の行(`ガチャ「語 2013＆2014」`)。 */
+/** 定例ガチャの語の順位(GACHA_REGULAR の添字)。定例でなければ -1。名称が `ガチャ「語` で始まる(派生を含む)か、年代別の行(`ガチャ「語 2013＆2014」`)。 */
 export function regularGachaIndex(name: string): number {
   const era = ERA_GACHA.exec(name)?.[1];
-  return GACHA_REGULAR.findIndex((k) => name.includes(`ガチャ「${k}」`) || k === era);
+  // `ガチャ「語」`、および語で始まる派生(`ガチャ「モンコレDX 〜アルセーヌ編〜」`・`ガチャ「モンストジェネレーション2019 〜ソロモン編〜」`)も定例ガチャ
+  return GACHA_REGULAR.findIndex((k) => name.includes(`ガチャ「${k}`) || k === era);
+}
+
+/** 定例ガチャの行のうち、`ガチャ「語」` そのもの(0)か、語のあとに続く派生(`ガチャ「モンコレDX 〜ビナー編〜」`。1)か。同じ定例ガチャの中で、本体を派生の前に並べる。 */
+export function regularGachaDerived(name: string): number {
+  const k = GACHA_REGULAR[regularGachaIndex(name)];
+  return k !== undefined && name.includes(`ガチャ「${k}」`) ? 0 : 1;
 }
 
 /** 年代別の行の年代(先頭の西暦。2013＆2014 は 2013)。年代別でなければ 0。同じ定例ガチャ内の並び(年代順)に使う。 */
@@ -92,8 +105,12 @@ export function gachaEra(name: string): number {
   return Number(m?.[2] ?? m?.[3] ?? 0);
 }
 
-/** ガチャの小見出し。ガチャでなければ null。コラボ記事は「ガチャ「」で始まる本体のみ(付随項目は対象外)。 */
-export function gachaGroup(e: { category: string; name: string; title?: string }): string | null {
+/**
+ * ガチャ(キャラクター・ガチャ)セクションの小見出し。対象でなければ null。コラボ記事は「ガチャ「」で始まる本体のみ(付随項目は対象外)。
+ * キャラクターの項目: 進化=role evolution の小見出し。新限定はふだんはガチャのバーに畳まれる(newlimited.ts)ので、畳めなかった行だけここに来て、既定の小見出し。
+ */
+export function gachaGroup(e: { category: string; name: string; title?: string; character?: { kind: string } }): string | null {
+  if (e.character !== undefined) return e.character.kind === '新限定' ? GACHA_DEFAULT : CHARACTER_EVOLUTION;
   if (!e.name.includes('ガチャ') || order.classify.gacha.not_gacha.some((k) => e.name.includes(k))) return null;
   if (e.category === 'collab') return e.name.startsWith('ガチャ「') ? GACHA_EVENT : null;
   if (regularGachaIndex(e.name) >= 0) return GACHA_REGULAR_GROUP;
@@ -106,6 +123,10 @@ export interface Section {
   label: string;
   /** バー/見出しの色相(hsl) */
   hue: number;
+  /** 彩度(%。0〜100。省略は CSS の既定=16) */
+  sat?: number;
+  /** 濃い色(縁・線)の明るさの補正(%。−15〜15。省略は0) */
+  lit?: number;
   /** このセクションに入る公式ニュースのカテゴリ */
   categories: readonly string[];
 }
@@ -120,6 +141,8 @@ export function sectionOfEvent(e: { category: string; name: string; title?: stri
     const forced = SECTIONS.find((s) => s.id === e.section);
     if (forced) return forced;
   }
+  // キャラクターは名称に関わらずキャラクター・ガチャのセクション(id gacha。進化は小見出し「進化」、新限定は畳めなかったときの行)
+  if (e.category === CHARACTER_CATEGORY) return SECTIONS.find((s) => s.id === 'gacha') ?? null;
   if (!EXCLUDED_CATEGORIES.includes(e.category) && gachaGroup(e) !== null) return SECTIONS.find((s) => s.id === 'gacha') ?? null;
   if (e.category === 'collab') return null; // collab はガチャ本体のみ表示(付随項目は出さない)
   if (e.category === 'event' && (CAMPAIGN_ORDER.some((k) => e.name.includes(k)))) return SECTIONS.find((s) => s.id === 'campaign') ?? null;

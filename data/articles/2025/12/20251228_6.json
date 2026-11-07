@@ -7,9 +7,9 @@
     "event"
   ],
   "published": "2025-12-28",
-  "fetched_at": "2026-10-24T17:24:57+09:00",
+  "fetched_at": "2026-11-05T23:36:32+09:00",
   "lastmod": null,
-  "content_hash": "sha256:632da84414678df5e40e8301eab3385ab7f9984eb63f72288f01156be81a5747",
+  "content_hash": "sha256:2ca64512695b928a161b0421efb4a87e7ecda9a9fcd591df43a2d490ae550e88",
   "parse_status": "ok",
   "events": [
     {
@@ -126,5 +126,19 @@
       "anchor": "4"
     }
   ],
-  "reward_until": "2026-01-02T23:59:00+09:00"
+  "reward_until": "2026-01-02T23:59:00+09:00",
+  "characters": [
+    {
+      "name": "リンネ",
+      "kind": "新限定",
+      "start": "2026-01-01T00:00:00+09:00",
+      "end": "2026-01-07T23:59:00+09:00",
+      "attr": "闇",
+      "gacha": "超・獣神祭"
+    }
+  ],
+  "gacha_alias": {
+    "from": "新春!特別おまけ付き 超・獣神祭",
+    "to": "超・獣神祭"
+  }
 }
