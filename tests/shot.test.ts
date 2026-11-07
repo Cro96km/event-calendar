@@ -24,9 +24,10 @@ const grp = (sectionId: string, e: ExportEvent): string | null => (sectionId ===
 
 describe('撮影モードのURLパラメータ', () => {
   it('shot と date を読む。shot が無い・不正なら通常表示(null)、date が不正なら無視', () => {
-    expect(parseShot('?shot=quest&date=2026-11-05')).toEqual({ kind: 'quest', date: '2026-11-05' });
-    expect(parseShot('?shot=summary')).toEqual({ kind: 'summary', date: null });
-    expect(parseShot('?shot=gacha&date=2026-02-30')).toEqual({ kind: 'gacha', date: null });
+    expect(parseShot('?shot=quest&date=2026-11-05')).toEqual({ kind: 'quest', date: '2026-11-05', theme: 'light' });
+    expect(parseShot('?shot=summary')).toEqual({ kind: 'summary', date: null, theme: 'light' });
+    expect(parseShot('?shot=gacha&date=2026-02-30')).toEqual({ kind: 'gacha', date: null, theme: 'light' });
+    expect(parseShot('?shot=quest&theme=dark')?.theme).toBe('dark');
     expect(parseShot('')).toBeNull();
     expect(parseShot('?shot=other')).toBeNull();
   });

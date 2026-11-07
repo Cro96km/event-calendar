@@ -36,7 +36,8 @@ async function refreshData(state: AppState): Promise<{ ok: boolean; message: str
 }
 
 // 画面の色(ライト/ダーク)。撮影モードは常にライト。読み込み前に適用して、色のちらつきを防ぐ
-if (!parseShot(location.search)) applyTheme(loadTheme());
+const shotParams = parseShot(location.search);
+applyTheme(shotParams ? shotParams.theme : loadTheme()); // 撮影モードは URL の theme(既定ライト)。localStorage は使わない
 
 const root = document.querySelector<HTMLDivElement>('#app');
 if (root) {

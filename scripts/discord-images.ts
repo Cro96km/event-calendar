@@ -9,7 +9,7 @@ import { showHelpIfRequested } from './_help';
 showHelpIfRequested(`npm run discord:images [-- --dist DIR] [--out DIR] [--date YYYY-MM-DD] [--only KIND]
   目的: Discord 用に、週表示(基準日から7日)のカレンダーを PNG にする。概要(summary)・クエスト(quest)・キャンペーン(campaign)・キャラクター・ガチャ(gacha)の4枚。メンテナンスの帯は4枚とも出る。
   使う場面: 画像の見た目や、概要の絞り込み(config/display/discord.json)を確認するとき。
-  オプション: --dist DIR(ビルド結果。既定 dist)、--out DIR(出力先。既定 out/discord)、--date(基準日。既定=今日〈ゲーム日〉)、--only KIND(summary/quest/campaign/gacha のどれか1枚だけ)
+  オプション: --dist DIR(ビルド結果。既定 dist)、--out DIR(出力先。既定 out/discord)、--date(基準日。既定=今日〈ゲーム日〉)、--theme light|dark(既定 light。dark は試作で、既定の出力先は out/discord-dark。送信 discord:post の対象外)、--only KIND(summary/quest/campaign/gacha のどれか1枚だけ)
   入力: npm run build:public の出力(dist/ と dist/data)。ローカルで配信して撮る。公式サイトにも公開サイトにもアクセスしない。ブラウザは Playwright の Chromium(初回は npx playwright install chromium。日本語フォント fonts-noto-cjk などが必要)。
   出力: <out>/<開始日>_<終了日>_<kind>.png(例: 2026-11-06_2026-11-12_summary.png。ファイル名の日付は、画像に写る7日間の期間)。標準出力に各ファイルのサイズ。画像は git に含めない(out/ は ignore)。
   副作用: out の同名ファイルを上書き。ローカルのポートを一時的に使う。ネットワークには出ない。`);
@@ -20,7 +20,9 @@ const arg = (name: string): string | undefined => {
   return i >= 0 ? argv[i + 1] : undefined;
 };
 const dist = resolve(arg('--dist') ?? 'dist');
-const outDir = resolve(arg('--out') ?? 'out/discord');
+const theme = arg('--theme') ?? 'light';
+if (theme !== 'light' && theme !== 'dark') throw new Error(`--theme は light / dark: ${theme}`);
+const outDir = resolve(arg('--out') ?? (theme === 'dark' ? 'out/discord-dark' : 'out/discord'));
 const date = arg('--date');
 const only = arg('--only');
 if (date !== undefined && !isDay(date)) throw new Error(`--date は YYYY-MM-DD(実在の日付): ${date}`);
@@ -56,10 +58,10 @@ await mkdir(outDir, { recursive: true });
 const browser = await chromium.launch();
 try {
   // 日時はJST・日本語・ライト固定。2倍の解像度で、文字を読みやすくする
-  const context = await browser.newContext({ timezoneId: 'Asia/Tokyo', locale: 'ja-JP', colorScheme: 'light', viewport: { width: 800, height: 900 }, deviceScaleFactor: 2 });
+  const context = await browser.newContext({ timezoneId: 'Asia/Tokyo', locale: 'ja-JP', colorScheme: theme, viewport: { width: 800, height: 900 }, deviceScaleFactor: 2 });
   for (const kind of kinds) {
     const page = await context.newPage();
-    await page.goto(`http://127.0.0.1:${port}/?shot=${kind}${date ? `&date=${date}` : ''}`);
+    await page.goto(`http://127.0.0.1:${port}/?shot=${kind}${date ? `&date=${date}` : ''}${theme === 'dark' ? '&theme=dark' : ''}`);
     await page.waitForSelector('[data-testid="shot"]', { timeout: 15000 });
     await page.evaluate(() => document.fonts.ready);
     // ファイル名は画像に写る期間(日付ヘッダの最初と最後の日)
