@@ -227,14 +227,14 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 - 初回は `npx playwright install chromium`。日本語フォント(Linux は `fonts-noto-cjk` など)が必要。ブラウザのタイムゾーンは Asia/Tokyo、ライト固定。
 - 画像は通常のカレンダーと同じ描き方(進化の1行まとめ・4:00 の位置ずらしは無い。進化のバーには `12:00解禁` が入る)。**概要だけ**、行の高さ・文字・バーを少し詰める(`.shot[data-shot="summary"]`)。新限定はガチャのバーの中に名前を属性色で書く。docs/spec.md §4.12。
 - メンテナンスの帯は4枚とも出る。画像にはフッター(注記)を入れない。公式の画像・ロゴは使わない。公式サイト・公開サイトにはアクセスしない(`dist/` をローカルで配信して撮る)。
-- **ダークの試作**: `npm run discord:images -- --theme dark` で `out/discord-dark/` に出す(URL は `&theme=dark`)。送信(`discord:post`)の対象外。配色の確認は目視。
+- **ダーク**: `npm run discord:images -- --theme dark` は `out/discord-dark/` に出す(URL は `&theme=dark`)。ローカルで送るなら `-- --theme dark --out out/discord` で作ってから `discord:post`。**Actions の discord.yml は既定でダークの画像を送る**。配色の確認は目視。
 - 画面でも `?shot=summary|quest|campaign|gacha`(と `&date=YYYY-MM-DD`)を付けると撮影モードで見られる(`npm run dev` / `npm run preview`)。
 - **概要の並びと中身は `config/display/discord.json` の `summary.blocks` だけを直す**(コード変更は要らない)。概要はセクションの大見出しも小見出しも出さず、blocks を上から順に並べる。1ブロック: `section`(セクションid)・`groups`(出す小見出し。複数ならこの順)・`keywords`(この語を含む行だけ)・`hide_keywords`・`start_day_only`(開催日だけ。その週に始まるものを開始日の列1日分に描き、それ以前に始まったものは出さない)・`with_new_limited`(true=新限定キャラの名前をバーの中に持つガチャの行だけ。ほかのブロックにはその行を出さない)・`max_rows`。**現在の並び**: ①モンストの日 ②特Lの園 ③イベントクエスト ④絶級・期間限定・超究極クエスト(開催日だけ) ⑤期間限定ガチャ ⑥新限定(名前を持つガチャ) ⑦進化 ⑧定例クエスト(常設クエスト・その他は出さない)。小見出しはどのブロックにも出ない。行が無いブロックは出さない。クエスト・キャンペーン・キャラクター・ガチャの各画像は絞らない(大見出しあり)。
 
 ### Discord への送信(`npm run discord:post` / `.github/workflows/discord.yml`)
 - **方式**: Webhook で、画像1枚ずつを**毎回新しく投稿**する(5メッセージ。見出し `**概要** 11/6〜11/12` + 画像。過去の投稿は書き換えない=履歴が残る)。メンション・`@` は解釈させない。通知を鳴らさないのは `--silent`(Actions では `silent` 入力)。
 - **毎週の自動転送**: 定例の `update.yml`(金曜 0:00 JST)が**健全に終わった**(自動マージ済み、または変更なし)あとに `discord.yml` を起動する。`要確認` の週(main が古い)は送らない。画像はリポジトリのデータからその場で作るので、deploy の完了は待たない。`update.yml` の手動実行は、入力 `discord=true` のときだけ転送する(既定は送らない)。
-- **臨時の転送**: Actions → discord → Run workflow。入力: `date`(基準日。空=今日〈JST〉)・`only`(all か1枚)・`dry_run`(true=送らず、内容を表示し、画像を Artifacts〈7日〉に残す)・`silent`。重複投稿になるので、本番では先に `dry_run=true` で確かめる。
+- **臨時の転送**: Actions → discord → Run workflow。入力: `date`(基準日。空=今日〈JST〉)・`only`(all か1枚)・`theme`(dark〈既定。定例の転送もダーク〉か light)・`dry_run`(true=送らず、内容を表示し、画像を Artifacts〈7日〉に残す)・`silent`。重複投稿になるので、本番では先に `dry_run=true` で確かめる。
 - **Webhook の URL は Secret `DISCORD_WEBHOOK_URL`**(Settings → Secrets and variables → Actions。登録はリポジトリ所有者が行う)。未登録なら警告を出して**何も投稿せずに成功で終わる**(dry-run は Secret 不要)。URL はログに出さない(形が違えば値を伏せて失敗)。URL が漏れたら Discord 側でウェブフックを削除して作り直す。
 - **ローカルで試す**: `npm run update && npm run build:public && npm run discord:images` のあと `npm run discord:post -- --dry-run`。実際に送るなら、リポジトリの外のファイルに URL を置き(例 `~/.config/monst/discord-test-webhook`。`chmod 600`)、`DISCORD_WEBHOOK_URL="$(cat ~/.config/monst/discord-test-webhook)" npm run discord:post`(テスト用チャンネルで)。`out/discord/` に複数の期間の画像があれば、最新の期間だけ送る。
 - **失敗したとき**: 送信は直列(1秒あけ)。429 は待って最大3回やり直す。途中で失敗したら止まり、送れた分は再送しない(`only` で残りだけ送る)。

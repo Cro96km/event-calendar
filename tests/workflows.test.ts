@@ -91,6 +91,8 @@ describe('GitHub Actions ワークフローの不変条件', () => {
     expect(t).toMatch(/on:\n\s+workflow_dispatch:/);
     expect(t).not.toMatch(/^\s+(push|pull_request|schedule|issue_comment|issues):/m);
     expect(t).toMatch(/dry_run:[\s\S]*?default: false/);
+    expect(t).toMatch(/theme:[\s\S]*?default: dark/); // 定例の転送はダークの画像
+    expect(t).toContain('--theme "${IN_THEME:-dark}" --out out/discord');
     expect(t).toContain('npm run discord:post --');
     expect(t).toContain('TZ=Asia/Tokyo date +%F');
     expect(t).toContain('DISCORD_WEBHOOK_URL: ${{ secrets.DISCORD_WEBHOOK_URL }}');
