@@ -1,9 +1,6 @@
 // Discord への送信用の純関数(I/Oなし)。docs/operations.md §18 / scripts/discord-post.ts
 import { SHOT_KINDS, type ShotKind } from './shot';
 
-/** 各画像のメッセージの見出し語。 */
-export const KIND_LABELS: Record<ShotKind, string> = { summary: '概要', quest: 'クエスト', campaign: 'キャンペーン', gacha: 'キャラクター・ガチャ' };
-
 /** Discord のメッセージの flags: 通知を鳴らさない(SUPPRESS_NOTIFICATIONS)。 */
 export const FLAG_SILENT = 4096;
 
@@ -31,16 +28,16 @@ export function selectLatest(files: readonly string[], only?: ShotKind): ShotFil
     .sort((a, b) => SHOT_KINDS.indexOf(a.kind) - SHOT_KINDS.indexOf(b.kind));
 }
 
-/** `2026-11-06` → `11/6`。 */
-function md(day: string): string {
-  return `${Number(day.slice(5, 7))}/${Number(day.slice(8, 10))}`;
+/** `2026-11-06` → `2026/11/06`。 */
+function ymd(day: string): string {
+  return day.replaceAll('-', '/');
 }
 
-/** メッセージの本文(見出し)。全画像を1通で送る。例: `**11/6〜11/12** 概要・クエスト・キャンペーン・キャラクター・ガチャ` */
+/** メッセージの本文: 期間だけ。全画像を1通で送る。例: `2026/11/06 ~ 2026/11/12` */
 export function messageContent(files: readonly ShotFile[]): string {
   const first = files[0];
   if (!first) throw new Error('送る画像がありません');
-  return `**${md(first.start)}〜${md(first.end)}** ${files.map((f) => KIND_LABELS[f.kind]).join('・')}`;
+  return `${ymd(first.start)} ~ ${ymd(first.end)}`;
 }
 
 /** Discord は1通に最大10添付。 */
@@ -60,6 +57,21 @@ export function buildPayload(files: readonly ShotFile[], silent: boolean): { con
 /** Webhook の URL の形(https://discord.com/api/webhooks/<id>/<token>)か。値そのものは出力しない。 */
 export function isWebhookUrl(url: string): boolean {
   return /^https:\/\/(?:discord|discordapp)\.com\/api\/webhooks\/\d+\/[\w-]+$/.test(url);
+}
+
+/**
+ * 環境変数 DISCORD_WEBHOOK_URL の値 → Webhook の URL の一覧。改行・カンマ区切りで複数可。空は除き、重複は1つにまとめる。
+ * 形が違うものは invalid に、何件目か(1始まり)だけ入れる(値そのものは返さない・出さない)。
+ */
+export function parseWebhookUrls(raw: string): { urls: string[]; invalid: number[] } {
+  const items = raw.split(/[\r\n,]+/).map((x) => x.trim()).filter((x) => x !== '');
+  const urls: string[] = [];
+  const invalid: number[] = [];
+  items.forEach((x, i) => {
+    if (!isWebhookUrl(x)) invalid.push(i + 1);
+    else if (!urls.includes(x)) urls.push(x);
+  });
+  return { urls, invalid };
 }
 
 /** 429 のときの待ち時間(ミリ秒)。retry_after は秒。読めなければ null。上限 30 秒。 */

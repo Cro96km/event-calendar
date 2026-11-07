@@ -15,7 +15,7 @@ import { padDateTime } from './jst';
 import { isQuestNameBlock, questNameColor, withFixedFloors } from './quest-color';
 import { icon } from './icons';
 import { applyTheme, currentTheme, saveTheme } from './theme';
-import { summaryBlocks, type ShotKind } from './shot';
+import { SUMMARY, summaryBlocks, type ShotKind } from './shot';
 
 interface Selection {
   day: string;
@@ -550,6 +550,13 @@ export function render(root: HTMLElement, state: AppState): void {
       : sections
           .filter((x) => !state.shot || state.shot === x.section.id)
           .map((x) => ({ section: x.section, rows: x.rows, header: true, headings: true }));
+  if (state.shot === 'summary' && entries.length > 0) {
+    // 概要は各セクションの大見出しを出さない代わりに、ほかの画像のセクション名と同じ見た目の見出しを先頭に1つ付ける(無彩色)
+    const h = el('div', 'g-section', SUMMARY.label);
+    paintSection(h, { hue: 0, sat: 0 });
+    h.setAttribute('aria-expanded', 'true'); // ほかの画像の見出しと同じ矢印(▾)を出す
+    rowsBox.append(h);
+  }
   for (const { section, rows, header, headings } of entries) {
     const folded = header && !state.shot && state.collapsed.has(section.id);
     if (header) {
