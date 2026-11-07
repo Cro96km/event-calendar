@@ -72,3 +72,23 @@ describe('項目ごとの修正: 台帳', () => {
     expect(row?.start).toBe('2026-11-04T13:00:00+09:00');
   });
 });
+
+describe('項目ごとの修正: 色', () => {
+  const one = (set: object, extra: Partial<ExportEvent> = {}) => applyOverrides([ev('a#0', extra)], cfg([{ id: 'a#0', set }]))[0] as ExportEvent;
+  it('color は文字と縁の両方、edge_color で縁だけ別にできる(色名と #rrggbb)', () => {
+    expect(one({ color: 'blue' })).toMatchObject({ color: '#3154ef', edge_color: '#3154ef' });
+    expect(one({ color: 'blue', edge_color: '#A237C3' })).toMatchObject({ color: '#3154ef', edge_color: '#a237c3' });
+    expect(one({ edge_color: 'red' }).color).toBeUndefined();
+  });
+  it('公式の色より優先し、none で色なしにする(空文字)', () => {
+    expect(one({ color: 'green' }, { color: '#eb0043' }).color).toBe('#007d32');
+    expect(one({ color: 'none' }, { color: '#eb0043' })).toMatchObject({ color: '', edge_color: '' });
+  });
+  it('書式の誤りを検出し、台帳の「修正」列に出る', () => {
+    expect(overrideProblems(cfg([{ id: 'a#0', set: { color: 'pink' } }])).problems[0]).toContain('color');
+    expect(overrideProblems(cfg([{ id: 'a#0', set: { edge_color: '#fff' } }])).problems[0]).toContain('edge_color');
+    expect(overrideProblems(cfg([{ id: 'a#0', set: { color: 'red', edge_color: 'none' } }])).problems).toEqual([]);
+    const o = one({ color: 'red', edge_color: 'blue' });
+    expect(ledgerRows([o], '2026-11').find((r) => r.id === 'a#0')?.fixed).toBe('修正: 文字の色・縁の色');
+  });
+});

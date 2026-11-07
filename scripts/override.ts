@@ -2,6 +2,7 @@
 import { readFile, writeFile } from 'node:fs/promises';
 import { readAllRecords } from '../src/data/store';
 import { jstText, overrideProblems, setItem, unsetItem, type OfficialValue, type OverrideItem, type OverrideSet, type OverrideWas, type OverridesConfig } from '../src/overrides';
+import { COLOR_SPEC_HELP } from '../src/color-spec';
 import { showHelpIfRequested } from './_help';
 
 const FILE = 'config/schedule/overrides.json';
@@ -11,7 +12,9 @@ showHelpIfRequested(`npm run override -- <set|unset|list> [オプション]
   使う場面: 自動収集の期間・内容が公式と違うとき、項目を別のセクションに入れたいとき、詳細に注記を足すとき。
   コマンド:
     set --id 項目ID [--name 名前] [--start "YYYY-MM-DD HH:MM"] [--end "YYYY-MM-DD HH:MM"] [--group 小見出し] [--section セクションid]
+        [--color 色] [--edge-color 色]
         [--notes 注記|注記] [--hide-blocks 見出し,見出し] [--add-block "見出し=行1|行2"] [--note 理由]
+        色: ラベルの文字(--color)とバーの縁(--edge-color。省略時は --color と同じ)。値は ${COLOR_SPEC_HELP}(none=色なしに戻す)。
         同じ項目IDには上書きではなく追加(指定した項目だけ変わる)。直す前の公式の値(was)は自動で記録する。
     unset --id 項目ID [--field 項目名]   修正を取り消す(--field なら、その項目だけ)
     list                                 現在の修正を表示する
@@ -60,6 +63,8 @@ switch (cmd) {
     take('end');
     if (arg('--group') !== undefined) set.group = need('--group');
     if (arg('--section') !== undefined) set.section = need('--section');
+    if (arg('--color') !== undefined) set.color = need('--color');
+    if (arg('--edge-color') !== undefined) set.edge_color = need('--edge-color');
     if (arg('--notes') !== undefined) set.notes = list(arg('--notes'), '|');
     if (arg('--hide-blocks') !== undefined) set.hide_blocks = list(arg('--hide-blocks'), ',');
     const block = arg('--add-block');

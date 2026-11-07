@@ -219,7 +219,7 @@
 
 ### 4.11 項目ごとの手動の修正(`config/schedule/overrides.json` / `src/overrides.ts` / `npm run override`)
 自動収集は精度が限られるため、台帳(§4.10)で見つけた誤りを**項目ID単位**で直す。表示の選択のあと・手動の調整(`manual.json`)の前に適用する(表示の判断のキー `item` は変わらないので、判断には影響しない)。
-- **直せるもの(`set`)**: `name`(表示名)・`start`/`end`(JSTの `"YYYY-MM-DD HH:MM"`。期間を直すと日別の時間帯 `slots` は外す)・`group`(クエスト・キャンペーンの小見出し)・`section`(セクションid。`order.json` の `sections` の id。追加したセクションにも入れられる)・`notes`(詳細パネルの見出し直下に出す注記)・`hide_blocks`(詳細で出さないブロックの見出し)・`add_blocks`(詳細に足すブロック `{label, lines}`。同じ見出しは置換)。並びは `order.json`(§4.3.8)で、項目単位の位置指定は持たない。
+- **直せるもの(`set`)**: `name`(表示名)・`start`/`end`(JSTの `"YYYY-MM-DD HH:MM"`。期間を直すと日別の時間帯 `slots` は外す)・`group`(クエスト・キャンペーンの小見出し)・`color`・`edge_color`(ラベルの文字の色とバーの縁の色。`src/color-spec.ts`: palette〈`quest-colors.json`〉の色名・`#rrggbb`・`none`=色なし。縁は省略すると文字と同じ。公式・自動(定例ガチャの属性色など)の色より優先。台帳の「修正」列に出る)・`section`(セクションid。`order.json` の `sections` の id。追加したセクションにも入れられる)・`notes`(詳細パネルの見出し直下に出す注記)・`hide_blocks`(詳細で出さないブロックの見出し)・`add_blocks`(詳細に足すブロック `{label, lines}`。同じ見出しは置換)。並びは `order.json`(§4.3.8)で、項目単位の位置指定は持たない。
 - **`was`(直す前の公式の値)**: `name`・`start`・`end` を直すとき `npm run override` が自動で記録する。公式の記事が後から変わって `was` と食い違うと `npm run check` が警告する(修正の見直しの合図。自動マージは止めない)。存在しない項目ID・修正が今の公式の値と同じ(不要)も警告。書式の誤りは要確認(終了コード1)。
 - 対象は公式の項目のみ(`manual:`・`monthly:` は `manual.json`・`monthly-days.json` を直す)。非表示は `manual.json` の `hide`。
 - 台帳の「修正」列に、修正が入った項目と直した項目名が出る。公式の記事本文は書かない(§4.7。短い名称・日付のみ)。
@@ -261,7 +261,7 @@
 
 ### 4.8 表示範囲・手動の調整・不要データの削除
 - **表示範囲**(`config/display/window.json`): 今日を基準に、過去 `past_months`=12 か月・未来 `future_months`=12 か月。公開サイトのデータ(範囲外の項目・月ファイルは出さない)、カレンダーの移動の限界(`src/window.ts` の `clampToWindow`。`<` `>`・ドラッグ・週月切替のすべて)、判断の月別の表(`config/judge/selection/`)、不要データの削除(`npm run prune`)が同じ値を使う。
-- **手動の調整**(`config/schedule/manual.json`、`src/manual.ts`): `add`=公式ニュースに無い項目を足す(`name`・`category`(`event`=クエスト / `campaign`=キャンペーン)・`start`・`end`(JST の `"YYYY-MM-DD HH:MM"`)・`group`(小見出し。省略可)・`note`)。公式由来の項目と同じ扱い(色や印の区別なし)で、表示の判断(選択)の対象外=常に表示。`hide`=項目ID(`20261030_3#0`)または記事ID(`20261030_3`)を表示から外す(メンテナンスにも効く。データは消さない)。選択の適用(`applySelection`)のあとに適用する。書式の誤りは `npm run check` が検知する。編集は `npm run manual` か Actions の manual(operations.md §14)。
+- **手動の調整**(`config/schedule/manual.json`、`src/manual.ts`): `add`=公式ニュースに無い項目を足す(`name`・`category`(`event`=クエスト / `campaign`=キャンペーン)・`start`・`end`(JST の `"YYYY-MM-DD HH:MM"`)・`group`(小見出し。省略可)・`color`・`edge_color`(省略可。ラベルの文字とバーの縁の色。書式は §4.11)・`note`)。公式由来の項目と同じ扱い(色や印の区別なし)で、表示の判断(選択)の対象外=常に表示。`hide`=項目ID(`20261030_3#0`)または記事ID(`20261030_3`)を表示から外す(メンテナンスにも効く。データは消さない)。選択の適用(`applySelection`)のあとに適用する。書式の誤りは `npm run check` が検知する。編集は `npm run manual` か Actions の manual(operations.md §14)。
 - **不要データの削除**(`npm run prune`、`src/prune.ts`): 表示範囲の過去の限界より前に終わった記事(最も遅い項目の終了=未定は開始、項目が無い記事は公開日)を `data/articles` から削除する。既定は確認だけ、`--apply` で削除。Actions の prune からも実行できる(operations.md §15)。
 
 ## 5. データ

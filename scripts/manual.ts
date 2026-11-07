@@ -1,6 +1,7 @@
 // npm run manual — 手動の調整(config/schedule/manual.json)を、書式を守って編集する。詳細は --help と docs/operations.md §14。
 import { readFile, writeFile } from 'node:fs/promises';
 import { addEntry, hideEntry, manualProblems, removeEntry, unhideEntry, type ManualAdd, type ManualCategory, type ManualConfig } from '../src/manual';
+import { COLOR_SPEC_HELP } from '../src/color-spec';
 import { showHelpIfRequested } from './_help';
 
 const FILE = 'config/schedule/manual.json';
@@ -10,7 +11,8 @@ showHelpIfRequested(`npm run manual -- <add|remove|hide|unhide|list> [オプシ�
         add=公式ニュースに無い項目を足す / hide=項目(または記事ごと)を表示から外す(データは消さない)。
   使う場面: 公式に無い常設・臨時の項目を足すとき、中止になった項目などを外すとき。Actions の manual からも同じ処理が動く。
   コマンド:
-    add --name 名前 --category event|campaign --start "YYYY-MM-DD HH:MM" --end "YYYY-MM-DD HH:MM" [--group 小見出し] [--hide-start] [--hide-end] [--note メモ]
+    add --name 名前 --category event|campaign --start "YYYY-MM-DD HH:MM" --end "YYYY-MM-DD HH:MM" [--group 小見出し] [--hide-start] [--hide-end] [--color 色] [--edge-color 色] [--note メモ]
+          色: ラベルの文字(--color)とバーの縁(--edge-color。省略時は --color と同じ)。値は ${COLOR_SPEC_HELP}。
           項目を足す(同じ name と start があれば置き換え)。event=クエスト、campaign=キャンペーン。時刻は JST。
     remove --name 名前          add の項目を取り除く
     hide --id ID [--note 理由]  項目ID(例 20261030_3#0)または記事ID(例 20261030_3)を表示から外す
@@ -43,6 +45,8 @@ switch (cmd) {
   case 'add': {
     const note = arg('--note');
     const group = arg('--group');
+    const color = arg('--color');
+    const edge = arg('--edge-color');
     const a: ManualAdd = {
       name: need('--name'),
       category: need('--category') as ManualCategory,
@@ -51,6 +55,8 @@ switch (cmd) {
       ...(group !== undefined && group.trim() !== '' ? { group: group.trim() } : {}),
       ...(process.argv.includes('--hide-start') ? { hide_start: true } : {}),
       ...(process.argv.includes('--hide-end') ? { hide_end: true } : {}),
+      ...(color !== undefined && color.trim() !== '' ? { color: color.trim() } : {}),
+      ...(edge !== undefined && edge.trim() !== '' ? { edge_color: edge.trim() } : {}),
       ...(note !== undefined && note.trim() !== '' ? { note: note.trim() } : {}),
     };
     next = addEntry(cfg, a);

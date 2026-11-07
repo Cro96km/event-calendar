@@ -2,6 +2,7 @@
 import config from '../config/schedule/manual.json';
 import type { ExportEvent } from './data/export';
 import { CAMPAIGN_GROUPS, QUEST_GROUPS } from './sections';
+import { COLOR_SPEC_HELP, resolveColorSpec, validColorSpec } from './color-spec';
 
 export type ManualCategory = 'event' | 'campaign';
 
@@ -15,6 +16,10 @@ export interface ManualAdd {
   /** true なら期間の開始/終了を表示しない(両方 true なら期間の行ごと出さない)。仮置きの期間の常設クエスト用 */
   hide_start?: boolean;
   hide_end?: boolean;
+  /** ラベルの文字の色(palette の色名・`#rrggbb`)。バーの縁も同じ色(edge_color で別にできる) */
+  color?: string;
+  /** バーの縁の色(同じ書式。省略時は color と同じ) */
+  edge_color?: string;
   note?: string;
 }
 
@@ -46,21 +51,27 @@ const iso = (s: string): string => `${s.replace(' ', 'T')}:00+09:00`;
 
 /** add の項目を、公式由来の項目と同じ形(ExportEvent)にする。 */
 export function manualEvents(add: readonly ManualAdd[] = MANUAL.add): ExportEvent[] {
-  return add.map((a) => ({
-    id: `manual:${a.name}:${a.start}`,
-    article_id: 'manual',
-    name: a.name,
-    title: a.name,
-    category: a.category,
-    start: iso(a.start),
-    end: iso(a.end),
-    reward_until: null,
-    url: '',
-    item: `manual:${a.name}`,
-    ...(a.group !== undefined ? { group: a.group } : {}),
-    ...(a.hide_start ? { hide_start: true as const } : {}),
-    ...(a.hide_end ? { hide_end: true as const } : {}),
-  }));
+  return add.map((a) => {
+    const color = a.color === undefined ? undefined : resolveColorSpec(a.color);
+    const edge = a.edge_color === undefined ? color : resolveColorSpec(a.edge_color);
+    return {
+      id: `manual:${a.name}:${a.start}`,
+      article_id: 'manual',
+      name: a.name,
+      title: a.name,
+      category: a.category,
+      start: iso(a.start),
+      end: iso(a.end),
+      reward_until: null,
+      url: '',
+      item: `manual:${a.name}`,
+      ...(a.group !== undefined ? { group: a.group } : {}),
+      ...(a.hide_start ? { hide_start: true as const } : {}),
+      ...(a.hide_end ? { hide_end: true as const } : {}),
+      ...(color ? { color } : {}),
+      ...(edge ? { edge_color: edge } : {}),
+    };
+  });
 }
 
 /** hide の項目(または記事)を外し、add の項目を足す。表示の選択(selection)のあとに適用する。 */
@@ -83,6 +94,7 @@ export function manualProblems(cfg: ManualConfig, knownIds?: ReadonlySet<string>
     const groups: readonly string[] = a.category === 'campaign' ? CAMPAIGN_GROUPS : QUEST_GROUPS;
     if (a.group !== undefined && !groups.includes(a.group)) problems.push(`${where}: group「${a.group}」は ${groups.join(' / ')} のいずれか`);
     for (const k of ['hide_start', 'hide_end'] as const) if (a[k] !== undefined && typeof a[k] !== 'boolean') problems.push(`${where}: ${k} は true か false`);
+    for (const k of ['color', 'edge_color'] as const) if (a[k] !== undefined && !validColorSpec(a[k])) problems.push(`${where}: ${k} は ${COLOR_SPEC_HELP} のいずれか: ${a[k]}`);
     const key = `${a.name}\u0000${a.start}`;
     if (seen.has(key)) problems.push(`${where}: 同じ name と start の項目が重複しています`);
     seen.add(key);
