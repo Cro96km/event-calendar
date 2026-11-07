@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildPayload, isWebhookUrl, messageContent, parseShotFile, retryDelayMs, selectLatest } from '../src/discord';
+import { buildPayload, isWebhookUrl, messageContent, parseShotFile, parseWebhookUrls, retryDelayMs, selectLatest } from '../src/discord';
 
 const week1 = ['2026-11-06_2026-11-12_gacha.png', '2026-11-06_2026-11-12_summary.png', '2026-11-06_2026-11-12_quest.png'];
 const old = ['2026-10-30_2026-11-05_summary.png', '2026-10-30_2026-11-05_character.png'];
@@ -18,15 +18,15 @@ describe('Discord 送信の純関数', () => {
     expect(selectLatest(['x.txt'])).toEqual([]);
   });
 
-  it('見出しは「M/D〜M/D 種類・種類…」(0埋めなし)', () => {
-    expect(messageContent(selectLatest(['2026-11-06_2026-11-12_summary.png', '2026-11-06_2026-11-12_quest.png']))).toBe('**11/6〜11/12** 概要・クエスト');
-    expect(messageContent(selectLatest(['2026-12-31_2027-01-06_campaign.png']))).toBe('**12/31〜1/6** キャンペーン');
+  it('本文は期間だけ「YYYY/MM/DD ~ YYYY/MM/DD」(0埋め・種類名なし)', () => {
+    expect(messageContent(selectLatest(['2026-11-06_2026-11-12_summary.png', '2026-11-06_2026-11-12_quest.png']))).toBe('2026/11/06 ~ 2026/11/12');
+    expect(messageContent(selectLatest(['2026-12-31_2027-01-06_campaign.png']))).toBe('2026/12/31 ~ 2027/01/06');
   });
 
   it('payload は全画像を1通に添付・メンション無効。silent のときだけ flags=4096', () => {
     const fs = selectLatest(week1);
     expect(buildPayload(fs, false)).toEqual({
-      content: '**11/6〜11/12** 概要・クエスト・キャラクター・ガチャ',
+      content: '2026/11/06 ~ 2026/11/12',
       allowed_mentions: { parse: [] },
       attachments: fs.map((f, id) => ({ id, filename: f.file })),
     });
@@ -39,6 +39,15 @@ describe('Discord 送信の純関数', () => {
     expect(isWebhookUrl('https://example.com/api/webhooks/123/abc')).toBe(false);
     expect(isWebhookUrl('https://discord.com/api/webhooks/123')).toBe(false);
     expect(isWebhookUrl('')).toBe(false);
+  });
+
+  it('Webhook の URL は改行・カンマ区切りで複数。空・重複は除き、形が違うものは何件目かだけ返す', () => {
+    const a = 'https://discord.com/api/webhooks/1/aaa';
+    const b = 'https://discordapp.com/api/webhooks/2/bbb';
+    expect(parseWebhookUrls(a)).toEqual({ urls: [a], invalid: [] });
+    expect(parseWebhookUrls(` ${a}\r\n\n${b},${a}, `)).toEqual({ urls: [a, b], invalid: [] });
+    expect(parseWebhookUrls(`${a}\nhttp://x.example/y`)).toEqual({ urls: [a], invalid: [2] });
+    expect(parseWebhookUrls('')).toEqual({ urls: [], invalid: [] });
   });
 
   it('429 の待ち時間は retry_after(秒)から。読めなければ null、上限30秒', () => {

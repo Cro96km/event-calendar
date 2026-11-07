@@ -19,7 +19,7 @@ const EVENTS = [
   ev('g#0', 'collab', 'ガチャ「テスト作品」'),
   ev('m#0', 'maintenance', 'メンテナンス', '2026-11-06T00:00:00+09:00', '2026-11-06T05:00:00+09:00'),
 ];
-const cfg = (...blocks: SummaryConfig['blocks']): SummaryConfig => ({ blocks });
+const cfg = (...blocks: SummaryConfig['blocks']): SummaryConfig => ({ label: 'ハイライト', blocks });
 const grp = (sectionId: string, e: ExportEvent): string | null => (sectionId === 'quest' ? questGroup(e) : sectionId === 'gacha' ? gachaGroup(e) : campaignGroup(e));
 
 describe('撮影モードのURLパラメータ', () => {
@@ -46,6 +46,10 @@ describe('概要の設定(discord.json の summary.blocks)', () => {
     ]);
     expect(config.summary.blocks[3]?.start_day_only).toBe(true);
     expect(config.summary.blocks[5]?.with_new_limited).toBe(true);
+  });
+  it('概要の見出し(label)は空でない文字列。現在の設定は「ハイライト」', () => {
+    expect(SUMMARY.label).toBe('ハイライト');
+    expect(shotConfigProblems({ ...cfg({ section: 'quest' }), label: ' ' }, ['quest'], () => []).join()).toContain('summary.label');
   });
   it('誤りを見つける', () => {
     const ids = ['quest', 'campaign', 'gacha'];
@@ -99,9 +103,9 @@ describe('撮影モードの描画', () => {
       expect(root.querySelectorAll('.g-maint')).toHaveLength(1);
     }
   });
-  it('概要は、セクションの大見出しを出さず、操作・詳細・注意書きも出さず、フッター(注記)も出さない', () => {
+  it('概要は、各セクションの大見出しの代わりに「ハイライト」の見出しを先頭に1つだけ出し、操作・詳細・注意書きも出さず、フッター(注記)も出さない', () => {
     const root = draw('summary');
-    expect(root.querySelectorAll('.g-section')).toHaveLength(0);
+    expect([...root.querySelectorAll('.g-section')].map((x) => x.textContent)).toEqual(['ハイライト']);
     expect(root.querySelector('.view-nav')).toBeNull();
     expect(root.querySelector('[data-testid="detail"]')).toBeNull();
     expect(root.querySelector('.site-footer')).toBeNull();

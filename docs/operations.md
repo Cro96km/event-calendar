@@ -92,7 +92,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 | フォルダ | 役割 | ファイル(いつ直すか) |
 |---|---|---|
 | `config/judge/` | 表示・非表示の判断 | `rules.json`(自動判定のルール。上から最初の一致)、`decisions.json`(判断の記憶。`npm run candidates` が要判断ファイルから取り込む生成物なので、通常は手で編集しない)。`calendar/YYYY/MM.md`(台帳。収集した項目を判定〈表示/非表示/要判断〉・理由・期間・内容・項目IDつきで月別に出力。自動生成・git管理・読む用。§16)。ローカルの生成物 `needs-review.md`(要判断の一覧・編集する)はgit管理外 |
-| `config/display/` | 表記・並び・色・表示範囲 | `bar-style.json`(日ごとに属性が決まるバーの見せ方。`default`・`sections` で `lines`/`stripes`/`underline`/`edge`/`off`。spec §4.7)、`window.json`(カレンダーの表示範囲。過去・未来それぞれの月数。公開データ・移動の限界・判断の表・`npm run prune` が使う)、`label-overrides.json`(長いラベルを短くする)、`order.json`(**セクション・小見出し(名前・個数・並び・振り分け)・行の並び方の唯一の設定**。spec §4.3.8。記入例は `order.md`)、`quest-colors.json`(禁忌の獄の属性色と色の定義)、`recurring.json`(定例のラベル)、`discord.json`(Discord 用の画像の「概要」の絞り込み。§18) |
+| `config/display/` | 表記・並び・色・表示範囲 | `bar-style.json`(日ごとに属性が決まるバーの見せ方。`default`・`sections` で `lines`/`stripes`/`underline`/`edge`/`off`。spec §4.7)、`window.json`(カレンダーの表示範囲。過去・未来それぞれの月数。公開データ・移動の限界・判断の表・`npm run prune` が使う)、`label-overrides.json`(長いラベルを短くする)、`order.json`(**セクション・小見出し(名前・個数・並び・振り分け)・行の並び方の唯一の設定**。spec §4.3.8。記入例は `order.md`)、`quest-colors.json`(禁忌の獄の属性色と色の定義)、`recurring.json`(定例のラベル)、`discord.json`(Discord 用の画像の「概要(ハイライト)」の見出し名と絞り込み。§18) |
 | `config/schedule/` | ニュースに載らない日程・事実 | `manual.json`(手動の調整。公式に無い項目の追加・項目の非表示。§14)、`overrides.json`(項目IDごとの修正。期間・名前・セクション・詳細の内容。§17)、`hakai.json`(星墓のクエスト名→色と、固定の階層。§8)、`monthly-days.json`(毎月決まった日に出る項目)、`normal-quest-attributes.json`(ノーマルクエストの曜日別の対象属性) |
 
 過去記事を全体から判断し直す仕組み(`npm run review-year`・`config/review/`)は廃止した。更新ごとの差分で判断する(運用の再設計。。
@@ -153,7 +153,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 | `apply.yml` | 要対応Issue(タイトルが「要対応」)に `/apply` とコメント(所有者・メンバー・共同作業者のみ。Issueの作者も更新ワークフローのbotか所有者のものだけ) | Issue本文のチェックを `npm run judge` で判断の記憶に取り込み、検証して PR→自動マージ→`deploy.yml` 起動→Issue を閉じる。検証が通らなければ『要確認』で待機 |
 | `manual.yml` | 手動実行のみ(Actions → manual → Run workflow) | 入力(操作・項目名・期間など)で `npm run manual` を実行 → 検証(lint・テスト・ビルド・`npm run check`) → `config/schedule/manual.json` を更新する PR → 健全なら自動マージして `deploy.yml` を起動。検証が通らなければ『要確認』で待機。手順は §14 |
 | `prune.yml` | 手動実行のみ(Actions → prune → Run workflow) | 既定は確認だけ(`npm run prune`。対象の件数と月別の内訳を実行結果の概要に出す)。`apply=true` のときだけ、削除 → 表示用データの作り直し → 検証 → `data: prune old articles` の PR → 健全なら自動マージして `deploy.yml` を起動。手順は §15 |
-| `discord.yml` | `update.yml` の定例が健全に終わったあと(自動)、手動実行 | リポジトリのデータから週表示の画像4枚を作り、Discord の Webhook へ新しく投稿(§18)。Secret `DISCORD_WEBHOOK_URL` が無ければ投稿しない。`dry_run` で内容だけ確認 |
+| `discord.yml` | `update.yml` の定例が健全に終わったあと(自動)、手動実行 | リポジトリのデータから週表示の画像4枚を作り、Discord の Webhook へ新しく投稿(§18)。Secret `DISCORD_WEBHOOK_URL`(複数可)が無ければ投稿しない。`dry_run` で内容だけ確認 |
 | `ci.yml` | PR、main への push | lint・テスト・ビルド(人が作る PR 用) |
 
 **手動実行の入力(update.yml)**: `discord`(true なら健全に終わったあと Discord へ転送。既定 false)、`collect`(false にすると収集せず、設定の変更だけを反映して判定とレポートを作り直す)、`pages`(既定2)、`since`(初回・過去分用。公式サイトへの負荷が大きい)。
@@ -230,13 +230,13 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 - メンテナンスの帯は4枚とも出る。画像にはフッター(注記)を入れない。公式の画像・ロゴは使わない。公式サイト・公開サイトにはアクセスしない(`dist/` をローカルで配信して撮る)。
 - **ダーク**: `npm run discord:images -- --theme dark` は `out/discord-dark/` に出す(URL は `&theme=dark`)。ローカルで送るなら `-- --theme dark --out out/discord` で作ってから `discord:post`。**Actions の discord.yml は既定でダークの画像を送る**。配色の確認は目視。
 - 画面でも `?shot=summary|quest|campaign|gacha`(と `&date=YYYY-MM-DD`)を付けると撮影モードで見られる(`npm run dev` / `npm run preview`)。
-- **概要の並びと中身は `config/display/discord.json` の `summary.blocks` だけを直す**(コード変更は要らない)。概要はセクションの大見出しも小見出しも出さず、blocks を上から順に並べる。1ブロック: `section`(セクションid)・`groups`(出す小見出し。複数ならこの順)・`keywords`(この語を含む行だけ)・`hide_keywords`・`start_day_only`(開催日だけ。その週に始まるものを開始日の列1日分に描き、それ以前に始まったものは出さない)・`with_new_limited`(true=新限定キャラの名前をバーの中に持つガチャの行だけ。ほかのブロックにはその行を出さない)・`max_rows`。**現在の並び**: ①モンストの日 ②特Lの園 ③イベントクエスト ④絶級・期間限定・超究極クエスト(開催日だけ) ⑤期間限定ガチャ ⑥新限定(名前を持つガチャ) ⑦進化 ⑧定例クエスト(常設クエスト・その他は出さない)。小見出しはどのブロックにも出ない。行が無いブロックは出さない。クエスト・キャンペーン・キャラクター・ガチャの各画像は絞らない(大見出しあり)。
+- **概要の並びと中身は `config/display/discord.json` の `summary.blocks` だけを直す**(コード変更は要らない)。概要は各セクションの大見出しも小見出しも出さず、先頭に `summary.label`(現在「ハイライト」)の見出しを1つ付けて、blocks を上から順に並べる。1ブロック: `section`(セクションid)・`groups`(出す小見出し。複数ならこの順)・`keywords`(この語を含む行だけ)・`hide_keywords`・`start_day_only`(開催日だけ。その週に始まるものを開始日の列1日分に描き、それ以前に始まったものは出さない)・`with_new_limited`(true=新限定キャラの名前をバーの中に持つガチャの行だけ。ほかのブロックにはその行を出さない)・`max_rows`。**現在の並び**: ①モンストの日 ②特Lの園 ③イベントクエスト ④絶級・期間限定・超究極クエスト(開催日だけ) ⑤期間限定ガチャ ⑥新限定(名前を持つガチャ) ⑦進化 ⑧定例クエスト(常設クエスト・その他は出さない)。小見出しはどのブロックにも出ない。行が無いブロックは出さない。クエスト・キャンペーン・キャラクター・ガチャの各画像は絞らない(大見出しあり)。
 
 ### Discord への送信(`npm run discord:post` / `.github/workflows/discord.yml`)
-- **方式**: Webhook で、画像を**1通のメッセージにまとめて毎回新しく投稿**する(見出し `**11/6〜11/12** 概要・クエスト・キャンペーン・キャラクター・ガチャ` + 添付。過去の投稿は書き換えない=履歴が残る)。メンション・`@` は解釈させない。通知を鳴らさないのは `--silent`(Actions では `silent` 入力)。
+- **方式**: Webhook で、画像を**1通のメッセージにまとめて毎回新しく投稿**する(本文は期間だけ `2026/11/06 ~ 2026/11/12` + 添付。過去の投稿は書き換えない=履歴が残る)。メンション・`@` は解釈させない。通知を鳴らさないのは `--silent`(Actions では `silent` 入力)。
 - **毎週の自動転送**: 定例の `update.yml`(金曜 0:00 JST)が**健全に終わった**(自動マージ済み、または変更なし)あとに `discord.yml` を起動する。`要確認` の週(main が古い)は送らない。画像はリポジトリのデータからその場で作るので、deploy の完了は待たない。`update.yml` の手動実行は、入力 `discord=true` のときだけ転送する(既定は送らない)。
 - **臨時の転送**: Actions → discord → Run workflow。入力: `date`(基準日。空=今日〈JST〉)・`only`(all か1枚)・`theme`(dark〈既定。定例の転送もダーク〉か light)・`dry_run`(true=送らず、内容を表示し、画像を Artifacts〈7日〉に残す)・`silent`。重複投稿になるので、本番では先に `dry_run=true` で確かめる。
-- **Webhook の URL は Secret `DISCORD_WEBHOOK_URL`**(Settings → Secrets and variables → Actions。登録はリポジトリ所有者が行う)。未登録なら警告を出して**何も投稿せずに成功で終わる**(dry-run は Secret 不要)。URL はログに出さない(形が違えば値を伏せて失敗)。URL が漏れたら Discord 側でウェブフックを削除して作り直す。
+- **Webhook の URL は Secret `DISCORD_WEBHOOK_URL`**。**複数の送り先は、改行(またはカンマ)区切りで並べる**(空行・重複は無視)。1つずつ送り、どれかが失敗しても残りには送って、最後に失敗があればジョブを失敗にする。ログには何件目かだけ出す(Secret の値の差し替え・追加でも URL を変える。Settings → Secrets and variables → Actions。登録はリポジトリ所有者が行う)。未登録なら警告を出して**何も投稿せずに成功で終わる**(dry-run は Secret 不要)。URL はログに出さない(形が違えば値を伏せて失敗)。URL が漏れたら Discord 側でウェブフックを削除して作り直す。
 - **ローカルで試す**: `npm run update && npm run build:public && npm run discord:images` のあと `npm run discord:post -- --dry-run`。実際に送るなら、リポジトリの外のファイルに URL を置き(例 `~/.config/monst/discord-test-webhook`。`chmod 600`)、`DISCORD_WEBHOOK_URL="$(cat ~/.config/monst/discord-test-webhook)" npm run discord:post`(テスト用チャンネルで)。`out/discord/` に複数の期間の画像があれば、最新の期間だけ送る。
 - **失敗したとき**: 送信は直列(1秒あけ)。429 は待って最大3回やり直す。途中で失敗したら止まり、送れた分は再送しない(`only` で残りだけ送る)。
 - 経緯・決定事項は `docs/discord-handoff.md`。
