@@ -11,6 +11,8 @@ export interface ShotParams {
   kind: ShotKind;
   /** 基準日(YYYY-MM-DD)。無ければ今日(ゲーム日) */
   date: string | null;
+  /** 画面の色。既定 light(&theme=dark でダーク。試作) */
+  theme: 'light' | 'dark';
 }
 
 /** 実在する日付(YYYY-MM-DD)か。 */
@@ -26,7 +28,7 @@ export function parseShot(search: string): ShotParams | null {
   const kind = q.get('shot');
   if (!kind || !(SHOT_KINDS as readonly string[]).includes(kind)) return null;
   const date = q.get('date');
-  return { kind: kind as ShotKind, date: date !== null && isDay(date) ? date : null };
+  return { kind: kind as ShotKind, date: date !== null && isDay(date) ? date : null, theme: q.get('theme') === 'dark' ? 'dark' : 'light' };
 }
 
 /** 概要の1ブロック(config/display/discord.json の summary.blocks)。上から順に、条件に合う行を並べる。 */

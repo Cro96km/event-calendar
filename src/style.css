@@ -137,7 +137,9 @@ button { font: inherit; color: inherit; }
 .detail-note { margin: .3rem 0; font-size: .9rem; white-space: pre-wrap; }
 /* 撮影モード(?shot=…。Discord 用の画像。spec §4.12)。ライト固定・操作なし。撮影の対象は .shot */
 body:has(.shot) { padding: 0; background: #fff; }
+:root[data-theme="dark"] body:has(.shot) { background: var(--bg); }
 .shot { background: #fff; padding: 12px; width: 760px; }
+:root[data-theme="dark"] .shot { background: var(--bg); }
 .shot .gantt { --label: 12rem; overflow: visible; }
 .shot .g-row:not(.g-dates) > .g-label { cursor: default; }
 /* 概要の画像だけ、行を詰める(行の高さ・文字の大きさ・バーの高さ。ほかの画像と通常のカレンダーは変えない) */
