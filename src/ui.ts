@@ -43,6 +43,8 @@ export interface AppState {
   refresh?: () => Promise<{ ok: boolean; message: string }>;
   updating: boolean;
   updateMessage: string;
+  /** 詳細パネルへスクロール済みの選択(`日|項目ID`)。同じ選択のまま再描画(セクションの開閉など)してもスクロールしない */
+  scrolledSelection?: string | null;
   /** 撮影モード(?shot=…。Discord 用の画像。spec §4.12)。指定時は操作・詳細・注意書きを出さず、種類のセクションだけを週表示で描く */
   shot?: ShotKind;
 }
@@ -814,8 +816,12 @@ export function render(root: HTMLElement, state: AppState): void {
   }
   const detail = renderDetail(state, rerender);
   root.append(header, grid, detail, footer());
-  // 選択したら詳細パネルまで自動で移動する(見えていれば動かさない)。環境が未対応/動きを減らす設定なら即時移動
-  if (state.selection && typeof detail.scrollIntoView === 'function') {
+  // 選択したら詳細パネルまで自動で移動する(見えていれば動かさない)。環境が未対応/動きを減らす設定なら即時移動。
+  // 選択が変わったときだけ(同じ選択のままの再描画、たとえばセクション・小見出しの開閉では動かさない)
+  const selectionKey = state.selection ? `${state.selection.day}|${state.selection.eventId}` : null;
+  const selectionChanged = selectionKey !== null && selectionKey !== state.scrolledSelection;
+  state.scrolledSelection = selectionKey;
+  if (selectionChanged && typeof detail.scrollIntoView === 'function') {
     const reduce = typeof matchMedia === 'function' && matchMedia('(prefers-reduced-motion: reduce)').matches;
     detail.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'nearest' });
   }

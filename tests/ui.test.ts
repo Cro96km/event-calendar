@@ -501,6 +501,18 @@ describe('詳細パネルの改善', () => {
     click(q('detail-close'));
     expect(calls).toHaveLength(1);
   });
+  it('詳細を開いたまま、セクションや小見出しを開閉しても、詳細パネルへスクロールしない(別の項目を選んだときは動く)', () => {
+    const calls: unknown[] = [];
+    HTMLElement.prototype.scrollIntoView = function (o?: boolean | ScrollIntoViewOptions) {
+      calls.push(o);
+    };
+    click(bar('a#0'));
+    expect(calls).toHaveLength(1);
+    click(root.querySelector<HTMLElement>('.g-section') as HTMLElement); // 畳む
+    click(root.querySelector<HTMLElement>('.g-section') as HTMLElement); // 開く
+    expect(calls).toHaveLength(1);
+    expect(q('detail-close')).not.toBeNull(); // 選択は残っている
+  });
 });
 
 describe('週/月表示', () => {
