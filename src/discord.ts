@@ -3,6 +3,11 @@ import { SHOT_KINDS, type ShotKind } from './shot';
 
 /** Discord のメッセージの flags: 通知を鳴らさない(SUPPRESS_NOTIFICATIONS)。 */
 export const FLAG_SILENT = 4096;
+/** Discord のメッセージの flags: リンクの埋め込みプレビューを出さない(SUPPRESS_EMBEDS)。 */
+export const FLAG_SUPPRESS_EMBEDS = 4;
+
+/** 本文の末尾に付けるカレンダー(Web ページ)へのリンク。 */
+export const CALENDAR_URL = 'https://cro96km.github.io/event-calendar/';
 
 export interface ShotFile {
   file: string;
@@ -33,22 +38,22 @@ function ymd(day: string): string {
   return day.replaceAll('-', '/');
 }
 
-/** メッセージの本文: 期間だけ。全画像を1通で送る。例: `2026/11/06 ~ 2026/11/12` */
+/** メッセージの本文: 期間+カレンダーへのリンク。全画像を1通で送る。例: `2026/11/06 ~ 2026/11/12 ｜ [カレンダー全体はこちら](https://…/)` */
 export function messageContent(files: readonly ShotFile[]): string {
   const first = files[0];
   if (!first) throw new Error('送る画像がありません');
-  return `${ymd(first.start)} ~ ${ymd(first.end)}`;
+  return `${ymd(first.start)} ~ ${ymd(first.end)} ｜ [カレンダー全体はこちら](${CALENDAR_URL})`;
 }
 
 /** Discord は1通に最大10添付。 */
 export const MAX_ATTACHMENTS = 10;
 
-/** multipart の payload_json。全画像を1通に添付する。メンションは一切解釈させない。 */
-export function buildPayload(files: readonly ShotFile[], silent: boolean): { content: string; flags?: number; allowed_mentions: { parse: [] }; attachments: { id: number; filename: string }[] } {
+/** multipart の payload_json。全画像を1通に添付する。メンションは一切解釈させない。リンクの埋め込みプレビューは常に出さない。 */
+export function buildPayload(files: readonly ShotFile[], silent: boolean): { content: string; flags: number; allowed_mentions: { parse: [] }; attachments: { id: number; filename: string }[] } {
   if (files.length > MAX_ATTACHMENTS) throw new Error(`1通に添付できるのは ${MAX_ATTACHMENTS} 枚まで`);
   return {
     content: messageContent(files),
-    ...(silent ? { flags: FLAG_SILENT } : {}),
+    flags: silent ? FLAG_SUPPRESS_EMBEDS | FLAG_SILENT : FLAG_SUPPRESS_EMBEDS,
     allowed_mentions: { parse: [] },
     attachments: files.map((f, id) => ({ id, filename: f.file })),
   };

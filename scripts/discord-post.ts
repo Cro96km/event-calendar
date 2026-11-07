@@ -6,7 +6,7 @@ import { buildPayload, messageContent, parseWebhookUrls, retryDelayMs, selectLat
 import { showHelpIfRequested } from './_help';
 
 showHelpIfRequested(`npm run discord:post [-- --dir DIR] [--only KIND] [--silent] [--dry-run]
-  目的: 週表示の画像(ハイライト・クエスト・キャンペーン・キャラクター・ガチャ)を、Discord の Webhook へ1通にまとめて(本文は期間 YYYY/MM/DD ~ YYYY/MM/DD だけ)新しく投稿する。Webhook は複数可。
+  目的: 週表示の画像(ハイライト・クエスト・キャンペーン・キャラクター・ガチャ)を、Discord の Webhook へ1通にまとめて(本文は「YYYY/MM/DD ~ YYYY/MM/DD ｜ [カレンダー全体はこちら](Webページの URL)」。リンクの埋め込みプレビューは出さない)新しく投稿する。Webhook は複数可。
   使う場面: 毎週の転送(.github/workflows/discord.yml)と、画像の送信内容の確認(--dry-run)。
   オプション: --dir DIR(画像の置き場。既定 out/discord。複数の期間があれば最新の期間だけ送る)、--only KIND(summary/quest/campaign/gacha のどれか1枚だけ)、--silent(通知を鳴らさない)、--dry-run(送らず、送る内容だけ表示。Webhook の URL は不要)
   入力: 環境変数 DISCORD_WEBHOOK_URL(Webhook の URL。複数なら改行またはカンマ区切り。値は表示しない)。先に npm run discord:images で画像を作る。
