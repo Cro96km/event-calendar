@@ -24,7 +24,7 @@ export const COMMANDS: readonly CommandInfo[] = [
   { name: 'report:unparsed', summary: '期間が取れなかった記事(none)を分類して表示(ファイルは書かない)', group: '保守・調査', cli: 'scripts/report-unparsed.ts' },
   { name: 'build:public', summary: '公開用ビルド(dist/。表示範囲=過去・未来12か月・表示対象のみ)。update の後に実行', group: '保守・調査', cli: 'scripts/export-public.ts' },
   { name: 'discord:images', summary: 'Discord 用の週表示の画像4枚(概要・クエスト・キャンペーン・キャラクター・ガチャ)を out/discord/ に作る(送信はしない)。概要の絞り込みは config/display/discord.json', group: '保守・調査', cli: 'scripts/discord-images.ts' },
-  { name: 'discord:post', summary: 'discord:images の画像(最新の期間)を Discord の Webhook へ1枚ずつ新規に投稿(環境変数 DISCORD_WEBHOOK_URL。--dry-run で送らず内容だけ表示)', group: '保守・調査', cli: 'scripts/discord-post.ts' },
+  { name: 'discord:post', summary: 'discord:images の画像(最新の期間)を Discord の Webhook へ1通にまとめて新規に投稿(環境変数 DISCORD_WEBHOOK_URL。--dry-run で送らず内容だけ表示)', group: '保守・調査', cli: 'scripts/discord-post.ts' },
   { name: 'dev', summary: '開発サーバ(http://localhost:5173)。画面の「更新」ボタンで収集できる', group: '開発', cli: null },
   { name: 'build', summary: '型チェックとビルド', group: '開発', cli: null },
   { name: 'preview', summary: 'ビルド結果の確認用サーバ', group: '開発', cli: null },

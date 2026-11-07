@@ -36,18 +36,24 @@ function md(day: string): string {
   return `${Number(day.slice(5, 7))}/${Number(day.slice(8, 10))}`;
 }
 
-/** メッセージの本文(見出し)。例: `**概要** 11/6〜11/12` */
-export function messageContent(f: ShotFile): string {
-  return `**${KIND_LABELS[f.kind]}** ${md(f.start)}〜${md(f.end)}`;
+/** メッセージの本文(見出し)。全画像を1通で送る。例: `**11/6〜11/12** 概要・クエスト・キャンペーン・キャラクター・ガチャ` */
+export function messageContent(files: readonly ShotFile[]): string {
+  const first = files[0];
+  if (!first) throw new Error('送る画像がありません');
+  return `**${md(first.start)}〜${md(first.end)}** ${files.map((f) => KIND_LABELS[f.kind]).join('・')}`;
 }
 
-/** multipart の payload_json。メンションは一切解釈させない。 */
-export function buildPayload(f: ShotFile, silent: boolean): { content: string; flags?: number; allowed_mentions: { parse: [] }; attachments: { id: number; filename: string }[] } {
+/** Discord は1通に最大10添付。 */
+export const MAX_ATTACHMENTS = 10;
+
+/** multipart の payload_json。全画像を1通に添付する。メンションは一切解釈させない。 */
+export function buildPayload(files: readonly ShotFile[], silent: boolean): { content: string; flags?: number; allowed_mentions: { parse: [] }; attachments: { id: number; filename: string }[] } {
+  if (files.length > MAX_ATTACHMENTS) throw new Error(`1通に添付できるのは ${MAX_ATTACHMENTS} 枚まで`);
   return {
-    content: messageContent(f),
+    content: messageContent(files),
     ...(silent ? { flags: FLAG_SILENT } : {}),
     allowed_mentions: { parse: [] },
-    attachments: [{ id: 0, filename: f.file }],
+    attachments: files.map((f, id) => ({ id, filename: f.file })),
   };
 }
 

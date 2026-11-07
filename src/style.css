@@ -37,7 +37,7 @@ button { font: inherit; color: inherit; }
 .g-dates > .g-label, .g-date .dnum, .g-date .dmon, .g-date .dwd { font-size: .8rem; font-weight: 700; }
 .g-dates > .g-label { flex-direction: row; align-items: center; justify-content: flex-start; } /* 年月は数字と字を横に並べる */
 .g-date .dmon { color: var(--muted); }
-.g-date .dnum, .g-dates .num { font-size: .92rem; } /* 日の数字と、年月の数字は同じ大きさ */
+.g-date .dnum { font-size: .92rem; } /* 日の数字だけ少し大きい。年月の数字(.num)は年・月の字と同じ大きさ */
 .g-date.sat { color: #2f6fe0; }
 .g-date.sun { color: #e0393e; }
 :root[data-theme="dark"] .g-date.sat { color: #7aa2ff; }
@@ -144,12 +144,19 @@ body:has(.shot) { padding: 0; background: #fff; }
 .shot .g-row:not(.g-dates) > .g-label { cursor: default; }
 /* 概要の画像だけ、行を詰める(行の高さ・文字の大きさ・バーの高さ。ほかの画像と通常のカレンダーは変えない) */
 .shot[data-shot="summary"] .g-row:not(.g-dates) > .g-label { min-height: 2.1rem; padding-top: .1rem; padding-bottom: .1rem; }
-.shot[data-shot="summary"] .g-l1 { font-size: .8rem; line-height: 1.2; }
-.shot[data-shot="summary"] .g-l2 { font-size: .64rem; line-height: 1.15; }
+.shot[data-shot="summary"] .g-l1 { font-size: .74rem; line-height: 1.2; }
+.shot[data-shot="summary"] .g-l2 { font-size: .59rem; line-height: 1.15; }
 .shot[data-shot="summary"] .bar-ev { height: 1.3rem; margin-top: .4rem; margin-bottom: .4rem; }
 .shot[data-shot="summary"] .bar-ev.has-names { height: auto; min-height: 1.3rem; }
-.shot[data-shot="summary"] .bar-unlock, .shot[data-shot="summary"] .bar-names { font-size: .68rem; }
+.shot[data-shot="summary"] .bar-unlock, .shot[data-shot="summary"] .bar-names { font-size: .63rem; }
 .shot[data-shot="summary"] .bar-names { padding: .12rem .4rem; }
+/* 撮影モードの文字は、通常の表示より全体に少し小さく(概要は下の個別指定でさらに詰めている) */
+.shot .g-label, .shot .g-dates > .g-label, .shot .g-date .dmon, .shot .g-date .dwd, .shot .g-section { font-size: .74rem; }
+.shot .g-date .dnum { font-size: .85rem; }
+.shot .g-l2 { font-size: .66rem; }
+.shot .g-group { font-size: .65rem; }
+.shot .bar-unlock, .shot .bar-names { font-size: .68rem; }
+.shot .bar-new { font-size: .57rem; }
 /* 新限定: 週表示(撮影モード含む)はガチャのバーの中に `NEW！名前・名前`(1人なら「NEW！」も属性色、2人以上は「NEW！」は既定の色で名前だけ属性色)を中央揃えで折り返して書き、バーの高さは中身に合わせて伸びる(行も伸びる)。月表示は「NEW」だけを中央に(名前はツールチップ・詳細)。属性色はバーの面で読める濃さ(ライト=元の色を25%暗く、ダーク=本文色と混ぜる)。 */
 .bar-ev.has-names { height: auto; min-height: 1.7rem; }
 .bar-names { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; padding: .22rem .5rem; font-size: .74rem; font-weight: 800; -webkit-text-stroke: .35px currentColor; line-height: 1.25; pointer-events: none; }

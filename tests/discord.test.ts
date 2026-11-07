@@ -18,18 +18,19 @@ describe('Discord 送信の純関数', () => {
     expect(selectLatest(['x.txt'])).toEqual([]);
   });
 
-  it('見出しは「種類 M/D〜M/D」(0埋めなし)', () => {
-    const f = parseShotFile('2026-11-06_2026-11-12_summary.png');
-    expect(f && messageContent(f)).toBe('**概要** 11/6〜11/12');
-    const g = parseShotFile('2026-12-31_2027-01-06_campaign.png');
-    expect(g && messageContent(g)).toBe('**キャンペーン** 12/31〜1/6');
+  it('見出しは「M/D〜M/D 種類・種類…」(0埋めなし)', () => {
+    expect(messageContent(selectLatest(['2026-11-06_2026-11-12_summary.png', '2026-11-06_2026-11-12_quest.png']))).toBe('**11/6〜11/12** 概要・クエスト');
+    expect(messageContent(selectLatest(['2026-12-31_2027-01-06_campaign.png']))).toBe('**12/31〜1/6** キャンペーン');
   });
 
-  it('payload は添付1つ・メンション無効。silent のときだけ flags=4096', () => {
-    const f = parseShotFile('2026-11-06_2026-11-12_gacha.png');
-    if (!f) throw new Error('parse');
-    expect(buildPayload(f, false)).toEqual({ content: '**キャラクター・ガチャ** 11/6〜11/12', allowed_mentions: { parse: [] }, attachments: [{ id: 0, filename: f.file }] });
-    expect(buildPayload(f, true).flags).toBe(4096);
+  it('payload は全画像を1通に添付・メンション無効。silent のときだけ flags=4096', () => {
+    const fs = selectLatest(week1);
+    expect(buildPayload(fs, false)).toEqual({
+      content: '**11/6〜11/12** 概要・クエスト・キャラクター・ガチャ',
+      allowed_mentions: { parse: [] },
+      attachments: fs.map((f, id) => ({ id, filename: f.file })),
+    });
+    expect(buildPayload(fs, true).flags).toBe(4096);
   });
 
   it('Webhook の URL の形を確かめる(別のホスト・http・パス違いは不可)', () => {
