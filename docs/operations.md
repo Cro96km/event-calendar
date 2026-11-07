@@ -224,7 +224,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 週表示(基準日から7日)のカレンダーを PNG にする。**この節のコマンドはローカルで画像を作るだけ**(Discord への送信は下の「Discord への送信」)。
 1. `npm run update`(または `npm run collect`)→ `npm run build:public` で `dist/` と `dist/data` を作る。
 2. `npm run discord:images` → `out/discord/` に4枚。**ファイル名は画像に写る期間**: `2026-11-06_2026-11-12_summary.png`(概要)・`…_quest.png`・`…_campaign.png`・`…_gacha.png`(キャラクター・ガチャ)。`-- --date YYYY-MM-DD` で基準日を固定、`-- --only quest` で1枚だけ。`out/` は git に含めない。
-- 初回は `npx playwright install chromium`。日本語フォント(Linux は `fonts-noto-cjk` など)が必要。ブラウザのタイムゾーンは Asia/Tokyo、ライト固定。
+- 初回は `npx playwright install chromium`。フォントは画面・画像とも**同梱の Noto Sans JP**(`@fontsource-variable/noto-sans-jp`。`src/main.ts` が読み込む)なので、生成環境の日本語フォントに左右されない(`fonts-noto-cjk` は予備)。ブラウザのタイムゾーンは Asia/Tokyo、ライト固定。
 - 画像は通常のカレンダーと同じ描き方(進化の1行まとめ・4:00 の位置ずらしは無い。進化のバーには `12:00解禁` が入る)。**概要だけ**、行の高さ・文字・バーを少し詰める(`.shot[data-shot="summary"]`)。新限定はガチャのバーの中に名前を属性色で書く。docs/spec.md §4.12。
 - メンテナンスの帯は4枚とも出る。画像にはフッター(注記)を入れない。公式の画像・ロゴは使わない。公式サイト・公開サイトにはアクセスしない(`dist/` をローカルで配信して撮る)。
 - **ダーク**: `npm run discord:images -- --theme dark` は `out/discord-dark/` に出す(URL は `&theme=dark`)。ローカルで送るなら `-- --theme dark --out out/discord` で作ってから `discord:post`。**Actions の discord.yml は既定でダークの画像を送る**。配色の確認は目視。
