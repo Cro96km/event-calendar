@@ -11,8 +11,9 @@ showHelpIfRequested(`npm run manual -- <add|remove|hide|unhide|list> [オプシ�
         add=公式ニュースに無い項目を足す / hide=項目(または記事ごと)を表示から外す(データは消さない)。
   使う場面: 公式に無い常設・臨時の項目を足すとき、中止になった項目などを外すとき。Actions の manual からも同じ処理が動く。
   コマンド:
-    add --name 名前 --category event|campaign --start "YYYY-MM-DD HH:MM" --end "YYYY-MM-DD HH:MM" [--group 小見出し] [--hide-start] [--hide-end] [--color 色] [--edge-color 色] [--note メモ]
+    add --name 名前 --category event|campaign --start "YYYY-MM-DD HH:MM" --end "YYYY-MM-DD HH:MM" [--group 小見出し] [--hide-start] [--hide-end] [--color 色] [--edge-color 色] [--url 公式記事のURL] [--note メモ]
           色: ラベルの文字(--color)とバーの縁(--edge-color。省略時は --color と同じ)。値は ${COLOR_SPEC_HELP}。
+          --url: 公式ニュースの記事(https://www.monster-strike.com/news/…)へのリンク。詳細パネルに出る(例: 初登場の記事)。
           項目を足す(同じ name と start があれば置き換え)。event=クエスト、campaign=キャンペーン。時刻は JST。
     remove --name 名前          add の項目を取り除く
     hide --id ID [--note 理由]  項目ID(例 20261030_3#0)または記事ID(例 20261030_3)を表示から外す
@@ -47,6 +48,7 @@ switch (cmd) {
     const group = arg('--group');
     const color = arg('--color');
     const edge = arg('--edge-color');
+    const url = arg('--url');
     const a: ManualAdd = {
       name: need('--name'),
       category: need('--category') as ManualCategory,
@@ -57,6 +59,7 @@ switch (cmd) {
       ...(process.argv.includes('--hide-end') ? { hide_end: true } : {}),
       ...(color !== undefined && color.trim() !== '' ? { color: color.trim() } : {}),
       ...(edge !== undefined && edge.trim() !== '' ? { edge_color: edge.trim() } : {}),
+      ...(url !== undefined && url.trim() !== '' ? { url: url.trim() } : {}),
       ...(note !== undefined && note.trim() !== '' ? { note: note.trim() } : {}),
     };
     next = addEntry(cfg, a);
