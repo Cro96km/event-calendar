@@ -41,7 +41,7 @@ export interface SummaryBlock {
   keywords?: string[];
   /** 項目名にこの語を含む行を外す */
   hide_keywords?: string[];
-  /** 開催日だけ出す(その週に始まるものを開始日の列1日分に描く。それ以前に始まったものは出さない) */
+  /** 開催日だけ出す(その週に始まるものだけ。開始の翌日までに終わるものは期間そのまま、長いものは開始日の列1日分に縮めて開始時刻を `12:00開始` とバーの中に書く。それ以前に始まったものは出さない) */
   start_day_only?: boolean;
   /** true=新限定キャラの名前をバーの中に持つガチャの行だけ出す(キャラクター・ガチャの新限定)。このセクションの、ほかのブロックには出さない */
   with_new_limited?: boolean;
@@ -121,7 +121,17 @@ export function summaryBlocks(sections: { section: Section; rows: BarSpan[][] }[
   return out;
 }
 
-/** 開催日だけの表示: その表示期間に始まるバーを、開始日の列1日分(罫線から罫線まで。開始時刻は問わない)にする。表示期間より前に始まったものは出さない。 */
+/**
+ * 開催日だけの表示: その表示期間に始まるバーだけを残す(表示期間より前に始まったものは出さない)。
+ * - 開始の翌日までに終わるバー(例: 12:00〜翌11:59の1日限定)は、期間そのまま(開始〜終了の位置。2列にまたがってよい)。
+ * - それより長いバーは、開始日の列1日分(罫線から罫線まで。矢印なし)に縮め、バーの中に開始時刻(`12:00開始`)を書く(startLabel)。
+ */
 export function startDayBars(bars: BarSpan[]): BarSpan[] {
-  return bars.filter((b) => !b.clippedLeft).map((b) => ({ ...b, to: b.from, startFrac: 0, endFrac: 1, clippedRight: false, openEnded: false }));
+  return bars
+    .filter((b) => !b.clippedLeft)
+    .map((b) =>
+      !b.openEnded && !b.clippedRight && b.to <= b.from + 1
+        ? b
+        : { ...b, to: b.from, startFrac: 0, endFrac: 1, clippedRight: false, openEnded: false, startLabel: `${b.event.start.slice(11, 16)}開始` },
+    );
 }

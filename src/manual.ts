@@ -20,6 +20,8 @@ export interface ManualAdd {
   color?: string;
   /** バーの縁の色(同じ書式。省略時は color と同じ) */
   edge_color?: string;
+  /** 公式サイトの記事へのリンク(詳細パネルに出る。例: 初登場の記事)。`https://www.monster-strike.com/news/…` のみ */
+  url?: string;
   note?: string;
 }
 
@@ -35,6 +37,9 @@ export interface ManualConfig {
 }
 
 export const MANUAL: ManualConfig = { add: config.add as ManualAdd[], hide: config.hide as ManualHide[] };
+
+/** 公式サイトの記事の URL の形。 */
+const OFFICIAL_NEWS_URL = /^https:\/\/www\.monster-strike\.com\/news\/[\w./-]+$/;
 
 const TIME = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/;
 
@@ -63,7 +68,7 @@ export function manualEvents(add: readonly ManualAdd[] = MANUAL.add): ExportEven
       start: iso(a.start),
       end: iso(a.end),
       reward_until: null,
-      url: '',
+      url: a.url ?? '',
       item: `manual:${a.name}`,
       ...(a.group !== undefined ? { group: a.group } : {}),
       ...(a.hide_start ? { hide_start: true as const } : {}),
@@ -95,6 +100,7 @@ export function manualProblems(cfg: ManualConfig, knownIds?: ReadonlySet<string>
     if (a.group !== undefined && !groups.includes(a.group)) problems.push(`${where}: group「${a.group}」は ${groups.join(' / ')} のいずれか`);
     for (const k of ['hide_start', 'hide_end'] as const) if (a[k] !== undefined && typeof a[k] !== 'boolean') problems.push(`${where}: ${k} は true か false`);
     for (const k of ['color', 'edge_color'] as const) if (a[k] !== undefined && !validColorSpec(a[k])) problems.push(`${where}: ${k} は ${COLOR_SPEC_HELP} のいずれか: ${a[k]}`);
+    if (a.url !== undefined && !OFFICIAL_NEWS_URL.test(a.url)) problems.push(`${where}: url は公式ニュースの記事(https://www.monster-strike.com/news/…): ${a.url}`);
     const key = `${a.name}\u0000${a.start}`;
     if (seen.has(key)) problems.push(`${where}: 同じ name と start の項目が重複しています`);
     seen.add(key);

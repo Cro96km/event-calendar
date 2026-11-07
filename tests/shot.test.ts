@@ -103,6 +103,15 @@ describe('撮影モードの描画', () => {
       expect(root.querySelectorAll('.g-maint')).toHaveLength(1);
     }
   });
+  it('概要の「開催日だけ」で縮めた長いバーには、開始時刻 `12:00開始` をバーの中に書く(期間そのままのバーには書かない)', () => {
+    const long = ev('t#9', 'event', '期間限定クエスト z', '2026-11-06T12:00:00+09:00', '2026-11-12T11:59:00+09:00', { group: '期間限定クエスト' });
+    const root = document.createElement('div');
+    const state = initialState('2026-11-05', [...EVENTS, long], INDEX);
+    state.shot = 'summary';
+    render(root, state);
+    // 設定の summary.blocks に期間限定クエストの開催日ブロックがあるので、縮めたバーに開始時刻が付く
+    expect([...root.querySelectorAll('.bar-unlock')].map((x) => x.textContent)).toContain('12:00開始');
+  });
   it('概要は、各セクションの大見出しの代わりに「ハイライト」の見出しを先頭に1つだけ出し、操作・詳細・注意書きも出さず、フッター(注記)も出さない', () => {
     const root = draw('summary');
     expect([...root.querySelectorAll('.g-section')].map((x) => x.textContent)).toEqual(['ハイライト']);
@@ -159,11 +168,12 @@ describe('開催日だけの表示(start_day_only)', () => {
   const rows = (events: ExportEvent[]) => ganttSections(events, week).find((s) => s.section.id === 'quest')!.rows;
   const f = (events: ExportEvent[]) => summaryBlocks(ganttSections(events, week), grp, cfg({ section: 'quest', groups: ['期間限定クエスト', '定例クエスト'], start_day_only: true })).flatMap((e) => e.rows);
 
-  it('その週に始まるものは、開始日の列1日分(罫線から罫線まで。開始時刻は問わない)に縮め、矢印も付けない', () => {
+  it('その週に始まる長いものは、開始日の列1日分に縮め、矢印も付けず、開始時刻を書く', () => {
     const e = ev('t#0', 'event', '期間限定クエスト テスト', '2026-11-06T12:00:00+09:00', '2026-11-12T03:59:00+09:00', { group: '期間限定クエスト' });
     const b = f([e])[0]![0]!;
     expect([b.from, b.to, b.endFrac, b.clippedRight, b.openEnded]).toEqual([1, 1, 1, false, false]);
     expect(b.startFrac).toBe(0);
+    expect(b.startLabel).toBe('12:00開始');
   });
   it('その週より前に始まったものは出さない。ブロックの全小見出しに効く', () => {
     const old = ev('t#1', 'event', '期間限定クエスト 古い', '2026-11-01T12:00:00+09:00', '2026-11-12T03:59:00+09:00', { group: '期間限定クエスト' });
@@ -175,6 +185,16 @@ describe('開催日だけの表示(start_day_only)', () => {
   it('startDayBars は開始がその表示期間にあるバーだけを返す', () => {
     const e = ev('t#3', 'event', '期間限定クエスト x', '2026-11-05T12:00:00+09:00', '2026-11-09T12:00:00+09:00', { group: '期間限定クエスト' });
     expect(startDayBars(rows([e])[0]!)).toHaveLength(1);
+  });
+  it('startDayBars は時刻を捨てない: 翌日までに終わる1日限定は期間そのまま(12:00〜翌11:59)、長いものは開始日の列1日分+開始時刻の文字', () => {
+    const one = ev('t#4', 'event', '滅絶 x', '2026-11-08T12:00:00+09:00', '2026-11-09T11:59:00+09:00', { group: '絶級クエスト' });
+    const [b1] = startDayBars(rows([one])[0]!);
+    expect([b1!.from, b1!.to, b1!.startFrac]).toEqual([3, 4, 0.5]);
+    expect(b1!.endFrac).toBeCloseTo(11.983 / 24, 2);
+    const long = ev('t#5', 'event', '期間限定クエスト y', '2026-11-08T12:00:00+09:00', '2026-11-12T11:59:00+09:00', { group: '期間限定クエスト' });
+    const [b2] = startDayBars(rows([long])[0]!);
+    expect([b2!.from, b2!.to, b2!.startFrac, b2!.endFrac, b2!.clippedRight, b2!.startLabel]).toEqual([3, 3, 0, 1, false, '12:00開始']);
+    expect(b1!.startLabel).toBeUndefined();
   });
 });
 

@@ -48,20 +48,22 @@
       "hide_end": false
     },
     {
-      "name": "滅絶 フィロソフィア",
+      "name": "滅絶 フィロソフィア降臨",
       "category": "event",
       "start": "2026-11-08 12:00",
       "end": "2026-11-09 11:59",
       "group": "絶級クエスト",
-      "color": "yellow"
+      "color": "yellow",
+      "url": "https://www.monster-strike.com/news/20261029_5.html"
     },
     {
-      "name": "滅絶 フィロソフィア",
+      "name": "滅絶 フィロソフィア降臨",
       "category": "event",
       "start": "2026-11-14 12:00",
       "end": "2026-11-15 11:59",
       "group": "絶級クエスト",
-      "color": "yellow"
+      "color": "yellow",
+      "url": "https://www.monster-strike.com/news/20261029_5.html"
     }
   ],
   "hide": [
