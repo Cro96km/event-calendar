@@ -15,7 +15,7 @@ import { padDateTime } from './jst';
 import { isQuestNameBlock, questNameColor, withFixedFloors } from './quest-color';
 import { icon } from './icons';
 import { applyTheme, currentTheme, saveTheme } from './theme';
-import { SHOT_4AM_FRAC, compactEvolutionRows, shotEndFrac, shotStartFrac, summaryBlocks, type ShotKind } from './shot';
+import { summaryBlocks, type ShotKind } from './shot';
 
 interface Selection {
   day: string;
@@ -544,11 +544,10 @@ export function render(root: HTMLElement, state: AppState): void {
     sectionId === 'quest' ? questGroup(e) : sectionId === 'gacha' ? gachaGroup(e) : campaignGroup(e);
   const entries: { section: (typeof sections)[number]['section']; rows: BarSpan[][]; header: boolean; headings: boolean }[] =
     state.shot === 'summary'
-      ? summaryBlocks(sections, sectionGroup).map((b) => ({ ...b, header: false }))
+      ? summaryBlocks(sections, sectionGroup).map((b) => ({ ...b, header: false, headings: false })) // 概要は小見出しも出さない
       : sections
           .filter((x) => !state.shot || state.shot === x.section.id)
-          // 撮影モードだけ、進化の行を詰める(種別ごと1行に)
-          .map((x) => ({ section: x.section, rows: state.shot && x.section.id === 'gacha' ? compactEvolutionRows(x.rows) : x.rows, header: true, headings: true }));
+          .map((x) => ({ section: x.section, rows: x.rows, header: true, headings: true }));
   for (const { section, rows, header, headings } of entries) {
     const folded = header && !state.shot && state.collapsed.has(section.id);
     if (header) {
@@ -639,9 +638,7 @@ export function render(root: HTMLElement, state: AppState): void {
       label.tabIndex = 0;
       label.onclick = open;
       // 超究極・絶級のボス名の公式の色(ラベルの文字だけ。バーは既定)
-      // (撮影モードの進化の種別ラベルは、キャラごとに色が違うので色を付けない)
-      const evolutionChips = state.shot !== undefined && event.character !== undefined && event.character.kind !== '新限定';
-      if (event.color && !evolutionChips) paint(label, event.color);
+      if (event.color) paint(label, event.color);
       if (event.pickup) {
         // ピックアップの行: インデント表示。ホバーで `作品｜ピックアップ名`
         label.classList.add('pickup');
@@ -655,30 +652,9 @@ export function render(root: HTMLElement, state: AppState): void {
         }
       };
       const lines = rowLabel(section.id, event);
-      if (evolutionChips) {
-        label.append(el('span', 'g-l1', event.character?.kind ?? ''));
-      } else {
-        label.append(el('span', lines.wrap ? 'g-l1 wrap' : 'g-l1', lines.l1));
-        if (lines.l2) label.append(el('span', 'g-l2', lines.l2));
-      }
+      label.append(el('span', lines.wrap ? 'g-l1 wrap' : 'g-l1', lines.l1));
+      if (lines.l2) label.append(el('span', 'g-l2', lines.l2));
       row.append(label);
-      if (evolutionChips) {
-        // 撮影モードの進化: 種別ごとの1行。解禁日の枠にキャラ名を縦に並べる(属性色)
-        for (let i = 0; i < days.length; i++) {
-          const cell = el('div', i === days.indexOf(state.today) ? 'g-cell today' : 'g-cell');
-          cell.style.gridColumn = String(i + 2);
-          const box = el('div', 'g-chips');
-          for (const bar of rowBars.filter((b) => b.from === i)) {
-            const chip = el('span', 'g-chip', bar.event.name.replace(/（[^（）]*）$/, ''));
-            if (bar.event.color) paint(chip, bar.event.color);
-            box.append(chip);
-          }
-          cell.append(box);
-          row.append(cell);
-        }
-        rowsBox.append(row);
-        continue;
-      }
       for (let i = 0; i < days.length; i++) {
         // 列を明示する。auto だとバーの占める列を避けて暗黙列へはみ出し、罫線が消え行が横に伸びる
         const cell = el('div', i === days.indexOf(state.today) ? 'g-cell today' : 'g-cell');
@@ -689,18 +665,9 @@ export function render(root: HTMLElement, state: AppState): void {
         const ev = bar.event;
         // 列内の開始/終了時刻(ゲーム日4:00基準)に応じて左右を詰める。マージン%は占有する列群の幅が基準
         const n = bar.to - bar.from + 1;
-        // 撮影モードだけ: 4:00 開始・終了のバーを同じ幅だけ伸ばし(矢印が入るように)、0:00 開始・24:00 終了は余白を付けず罫線に接する
-        const startFrac = state.shot ? shotStartFrac(bar.startFrac) : bar.startFrac;
-        const endFrac = state.shot ? shotEndFrac(bar.endFrac) : bar.endFrac;
-        /** 左端の余白(cols=バーの占める列数)。null は既定(CSS)。 */
-        const leftMargin = (cols: number): string | null => {
-          if (!bar.clippedLeft && startFrac > 0) return `calc(${((startFrac / cols) * 100).toFixed(3)}%${state.shot && startFrac === SHOT_4AM_FRAC ? '' : ' + 2px'})`; // 4:00 の位置は開始・終了とも同じ線(余白なし)
-          return state.shot && !bar.clippedLeft ? '0' : null;
-        };
-        const rightMargin = (cols: number): string | null => {
-          if (!bar.clippedRight && !bar.openEnded && endFrac < 1) return `calc(${(((1 - endFrac) / cols) * 100).toFixed(3)}%${state.shot && endFrac === SHOT_4AM_FRAC ? '' : ' + 2px'})`;
-          return state.shot && !bar.clippedRight && !bar.openEnded ? '0' : null;
-        };
+        /** 左端・右端の余白(cols=バーの占める列数)。null は既定(CSS)。 */
+        const leftMargin = (cols: number): string | null => (!bar.clippedLeft && bar.startFrac > 0 ? `calc(${((bar.startFrac / cols) * 100).toFixed(3)}% + 2px)` : null);
+        const rightMargin = (cols: number): string | null => (!bar.clippedRight && !bar.openEnded && bar.endFrac < 1 ? `calc(${(((1 - bar.endFrac) / cols) * 100).toFixed(3)}% + 2px)` : null);
         const newText = ev.new_names?.length ? `新限定: ${ev.new_names.map((x) => (x.attr ? `${x.name}(${x.attr})` : x.name)).join('・')}` : '';
         /** クリックで詳細・ツールチップ・読み上げ(バーでも、日ごとに分けた1つ1つでも同じ) */
         const wire = (btn: HTMLButtonElement): void => {
@@ -789,8 +756,8 @@ export function render(root: HTMLElement, state: AppState): void {
             b.append(names);
           }
         }
-        // 進化: 週表示(撮影モードを除く)だけ、バーの中に `12:00解禁`(属性色)
-        if (ev.character !== undefined && ev.character.kind !== '新限定' && ev.character.at !== undefined && state.view === 'week' && !state.shot) {
+        // 進化: 週表示(撮影モードを含む)だけ、バーの中に `12:00解禁`(属性色)
+        if (ev.character !== undefined && ev.character.kind !== '新限定' && ev.character.at !== undefined && state.view === 'week') {
           const t = el('span', 'bar-unlock', `${ev.character.at.slice(11, 16)}解禁`);
           if (ev.color) paint(t, ev.color);
           b.append(t);

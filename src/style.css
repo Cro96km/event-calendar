@@ -140,16 +140,16 @@ body:has(.shot) { padding: 0; background: #fff; }
 .shot { background: #fff; padding: 12px; width: 760px; }
 .shot .gantt { --label: 12rem; overflow: visible; }
 .shot .g-row:not(.g-dates) > .g-label { cursor: default; }
-/* 行数対策: 行の高さを詰める(1行ラベル 約2.3rem。通常のカレンダーは変えない)。長いラベルは文字を小さくして折り返す(省略記号は使わない) */
-.shot .g-row:not(.g-dates) > .g-label { min-height: 2.3rem; padding-top: .15rem; padding-bottom: .15rem; }
-.shot .g-l1 { font-size: .76rem; line-height: 1.2; }
-.shot .g-l2 { font-size: .66rem; line-height: 1.15; }
-.shot .bar-ev { height: 1.5rem; margin-top: .4rem; margin-bottom: .4rem; }
-.shot .g-section { padding-top: .12rem; padding-bottom: .12rem; }
-.shot .g-group { padding-top: .05rem; padding-bottom: .05rem; }
+/* 概要の画像だけ、行を詰める(行の高さ・文字の大きさ・バーの高さ。ほかの画像と通常のカレンダーは変えない) */
+.shot[data-shot="summary"] .g-row:not(.g-dates) > .g-label { min-height: 2.1rem; padding-top: .1rem; padding-bottom: .1rem; }
+.shot[data-shot="summary"] .g-l1 { font-size: .8rem; line-height: 1.2; }
+.shot[data-shot="summary"] .g-l2 { font-size: .64rem; line-height: 1.15; }
+.shot[data-shot="summary"] .bar-ev { height: 1.3rem; margin-top: .4rem; margin-bottom: .4rem; }
+.shot[data-shot="summary"] .bar-ev.has-names { height: auto; min-height: 1.3rem; }
+.shot[data-shot="summary"] .bar-unlock, .shot[data-shot="summary"] .bar-names { font-size: .68rem; }
+.shot[data-shot="summary"] .bar-names { padding: .12rem .4rem; }
 /* 新限定: 週表示(撮影モード含む)はガチャのバーの中に `NEW！名前・名前`(1人なら「NEW！」も属性色、2人以上は「NEW！」は既定の色で名前だけ属性色)を中央揃えで折り返して書き、バーの高さは中身に合わせて伸びる(行も伸びる)。月表示は「NEW」だけを中央に(名前はツールチップ・詳細)。属性色はバーの面で読める濃さ(ライト=元の色を25%暗く、ダーク=本文色と混ぜる)。 */
 .bar-ev.has-names { height: auto; min-height: 1.7rem; }
-.shot .bar-ev.has-names { height: auto; min-height: 1.5rem; }
 .bar-names { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; padding: .22rem .5rem; font-size: .74rem; font-weight: 800; -webkit-text-stroke: .35px currentColor; line-height: 1.25; pointer-events: none; }
 .bar-names > span { flex: none; }
 .bar-names .g-name.colored, .bar-names .bar-new-label.colored, .bar-new.colored { color: color-mix(in srgb, var(--pc) 75%, #000); }
@@ -164,13 +164,6 @@ body:has(.shot) { padding: 0; background: #fff; }
 .bar-ev .day-stripe { top: 0; bottom: 0; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--dc) 70%, transparent) 0 2px, transparent 2px 8px); }
 .bar-ev .day-under { bottom: 0; height: 5px; background: var(--dc); }
 .bar-ev.edge-split.open { background: repeating-linear-gradient(90deg, var(--c-bar) 0 6px, var(--c-bar-alt) 6px 12px) padding-box, linear-gradient(90deg, var(--e1) 50%, var(--e2) 50%) border-box; }
-/* 進化: 種別ごとの1行。解禁日の枠にキャラ名を縦に並べる(属性色) */
-.g-chips { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: .05rem; padding: .15rem .1rem; height: 100%; }
-.g-chip { font-size: .72rem; font-weight: 700; line-height: 1.2; text-align: center; }
-.g-chip.colored { color: color-mix(in srgb, var(--pc) 78%, var(--text)); }
-/* 端の矢印を線に寄せる(4:00 の位置をずらす幅を小さくできる) */
-.shot .bar-ev.clip-l::before { left: .15rem; }
-.shot .bar-ev.clip-r::after { right: .15rem; }
 /* 日ごとに分けたバー(罫線で区切られた日=セルごとにバー+縁。連続する日の境目は角を丸めない) */
 .bar-days { display: grid; grid-row: 1; align-self: center; }
 .bar-days > .day-cell { display: flex; min-width: 0; }
