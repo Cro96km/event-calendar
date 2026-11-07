@@ -31,6 +31,14 @@ on:
         description: '[add・任意] 小見出し(クエスト: 定例クエスト など。キャンペーンは order.json の groups.campaign の語)'
         type: string
         default: ''
+      color:
+        description: '[add・任意] 文字の色(red / blue / green / yellow / purple または #rrggbb)。縁も同じ色'
+        type: string
+        default: ''
+      edge_color:
+        description: '[add・任意] 縁の色(同じ書式。省略時は文字の色と同じ)'
+        type: string
+        default: ''
       id:
         description: '[hide・unhide] 項目ID(例: 20261030_3#0)または記事ID(例: 20261030_3。その記事の全項目)'
         type: string
@@ -72,6 +80,8 @@ jobs:
           IN_START: ${{ github.event.inputs.start }}
           IN_END: ${{ github.event.inputs.end }}
           IN_GROUP: ${{ github.event.inputs.group }}
+          IN_COLOR: ${{ github.event.inputs.color }}
+          IN_EDGE_COLOR: ${{ github.event.inputs.edge_color }}
           IN_ID: ${{ github.event.inputs.id }}
           IN_NOTE: ${{ github.event.inputs.note }}
         run: |
@@ -79,7 +89,7 @@ jobs:
           args=("$IN_ACTION")
           opt() { if [ -n "$2" ]; then args+=("$1" "$2"); fi; }
           case "$IN_ACTION" in
-            add) opt --name "$IN_NAME"; opt --category "$IN_CATEGORY"; opt --start "$IN_START"; opt --end "$IN_END"; opt --group "$IN_GROUP"; opt --note "$IN_NOTE" ;;
+            add) opt --name "$IN_NAME"; opt --category "$IN_CATEGORY"; opt --start "$IN_START"; opt --end "$IN_END"; opt --group "$IN_GROUP"; opt --color "$IN_COLOR"; opt --edge-color "$IN_EDGE_COLOR"; opt --note "$IN_NOTE" ;;
             remove) opt --name "$IN_NAME" ;;
             hide) opt --id "$IN_ID"; opt --note "$IN_NOTE" ;;
             unhide) opt --id "$IN_ID" ;;

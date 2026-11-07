@@ -23,7 +23,7 @@ function contentOf(e: ExportEvent): string {
   return esc([text, slots, notes].filter((x) => x !== '').join(' ; '));
 }
 
-const FIELD_LABEL: Record<string, string> = { name: '名前', start: '開始', end: '終了', group: '小見出し', section: 'セクション', notes: '注記', hide_blocks: '内容の非表示', add_blocks: '内容の追加' };
+const FIELD_LABEL: Record<string, string> = { name: '名前', start: '開始', end: '終了', group: '小見出し', section: 'セクション', color: '文字の色', edge_color: '縁の色', notes: '注記', hide_blocks: '内容の非表示', add_blocks: '内容の追加' };
 /** 修正の列: `修正: 開始・終了`(overrides.json)。 */
 const fixedOf = (e: ExportEvent): string => (e.fix ? `修正: ${e.fix.fields.map((f) => FIELD_LABEL[f] ?? f).join('・')}` : '');
 

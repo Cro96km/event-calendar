@@ -178,7 +178,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 
 | 設定 | 内容 |
 |---|---|
-| `add` | 公式に無い項目をカレンダーに足す。`name`・`category`(`event`=クエスト / `campaign`=キャンペーン)・`start`・`end`(JST の `"YYYY-MM-DD HH:MM"`)・`group`(小見出し。省略可。クエストは `定例クエスト` など、キャンペーンは `config/display/order.json` の `groups` の小見出しの名前)・`hide_start` / `hide_end`(`true` で開催期間の開始 / 終了を表示しない。片方だけなら `〜 終了` / `開始 〜`、両方なら開催期間の行ごと出さない。期間を仮置きにしている常設クエスト用。CLI は `--hide-start` / `--hide-end`)・`note`(メモ)。**公式由来の項目と同じ扱い**(色や印の区別なし)。表示の判断(選択)の対象外で、常に表示する |
+| `add` | 公式に無い項目をカレンダーに足す。`name`・`category`(`event`=クエスト / `campaign`=キャンペーン)・`start`・`end`(JST の `"YYYY-MM-DD HH:MM"`)・`color`・`edge_color`(省略可。ラベルの文字とバーの縁の色。`red`/`blue`/`green`/`yellow`/`purple` か `#rrggbb`。縁は省略すると文字と同じ。CLI は `--color` / `--edge-color`、Actions は color / edge_color)・`group`(小見出し。省略可。クエストは `定例クエスト` など、キャンペーンは `config/display/order.json` の `groups` の小見出しの名前)・`hide_start` / `hide_end`(`true` で開催期間の開始 / 終了を表示しない。片方だけなら `〜 終了` / `開始 〜`、両方なら開催期間の行ごと出さない。期間を仮置きにしている常設クエスト用。CLI は `--hide-start` / `--hide-end`)・`note`(メモ)。**公式由来の項目と同じ扱い**(色や印の区別なし)。表示の判断(選択)の対象外で、常に表示する |
 | `hide` | 項目を表示から外す。`id` は項目ID(例 `20261030_3#0`)か記事ID(例 `20261030_3`。その記事の全項目)。**データ(`data/articles`)は消さない**。メンテナンスにも効く。この行を消せば元に戻る。`note` に理由 |
 
 項目IDは、更新PR・要対応Issueの記事リンク(`…/news/20261030_3.html` の `20261030_3`)から分かる。記事ID(日付_番号)で指定すれば、項目番号(`#0`)は要らない。
@@ -211,6 +211,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 | 期間を直す | `npm run override -- set --id 20261030_3#0 --start "2026-10-30 12:00" --end "2026-11-10 11:59" --note 理由` |
 | 表示名を直す | `npm run override -- set --id 20261030_3#0 --name 名前` |
 | セクション・小見出しを変える | `npm run override -- set --id ID --section campaign` / `--group 英雄の神殿` |
+| ラベルの文字・バーの縁の色を指定する | `npm run override -- set --id ID --color blue`(縁も同じ色)/ `--edge-color purple`(縁だけ別の色)/ `--color none`(色なしに戻す)。色名は `red`・`blue`・`green`・`yellow`・`purple` か `#rrggbb` |
 | 詳細に注記・ブロックを足す/隠す | `npm run override -- set --id ID --notes "メモ1\|メモ2" --add-block "補足=行1\|行2" --hide-blocks 見出し` |
 | 取り消し・確認 | `unset --id ID`(`--field 項目名` でその項目だけ)/ `list` |
 

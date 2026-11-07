@@ -13,10 +13,11 @@ export function regularGachaColor(e: Pick<ExportEvent, 'category' | 'name' | 'ch
   return word === undefined ? undefined : attributeColor(ATTRS[word] as Attribute);
 }
 
-/** 定例ガチャに属性色を付ける(ラベルは color、バーの縁は edge_color)。すでに color がある項目は変えない。 */
+/** 定例ガチャに属性色を付ける(ラベルは color、バーの縁は edge_color)。すでにある色(公式・手動の指定)は変えない。 */
 export function withRegularGachaColors(events: ExportEvent[]): ExportEvent[] {
   return events.map((e) => {
-    const c = e.color === undefined ? regularGachaColor(e) : undefined;
-    return c === undefined ? e : { ...e, color: c, edge_color: c };
+    if (e.color !== undefined) return e;
+    const c = regularGachaColor(e);
+    return c === undefined ? e : { ...e, color: c, ...(e.edge_color === undefined ? { edge_color: c } : {}) };
   });
 }

@@ -97,3 +97,18 @@ describe('手動の調整: 点検と編集', () => {
     expect(manualProblems(MANUAL).problems).toEqual([]);
   });
 });
+
+describe('手動の調整: 色', () => {
+  it('color は文字と縁、edge_color で縁だけ別にできる。無指定は色なし', () => {
+    const [a, b, c] = manualEvents([flash, { ...flash, name: 'B', color: 'purple' }, { ...flash, name: 'C', color: '#112233', edge_color: 'red' }]) as ExportEvent[];
+    expect(a?.color).toBeUndefined();
+    expect(b).toMatchObject({ color: '#a237c3', edge_color: '#a237c3' });
+    expect(c).toMatchObject({ color: '#112233', edge_color: '#eb0043' });
+  });
+  it('書式の誤りを検出する', () => {
+    const p = (a: object) => manualProblems({ add: [{ ...flash, ...a }], hide: [] }).problems;
+    expect(p({ color: 'red', edge_color: 'blue' })).toEqual([]);
+    expect(p({ color: 'pink' })[0]).toContain('color');
+    expect(p({ edge_color: '#12' })[0]).toContain('edge_color');
+  });
+});
