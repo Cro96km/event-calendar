@@ -1,4 +1,4 @@
-# Discord へ、週表示のカレンダー画像(4枚)を Webhook で新しく投稿する。
+# Discord へ、週表示のカレンダー画像(4枚。ダーク)を Webhook で新しく投稿する。
 # 毎週の更新(update.yml。定例=毎週金曜 0:00 JST)が健全に終わったあとに update.yml が起動する。手動実行も可(臨時の転送・dry-run)。
 # Webhook の URL は Secret DISCORD_WEBHOOK_URL(未登録なら投稿せずに終わる)。docs/operations.md §18。
 name: discord
@@ -15,6 +15,11 @@ on:
         type: choice
         options: [all, summary, quest, campaign, gacha]
         default: all
+      theme:
+        description: '画像の色(定例の転送はダーク)'
+        type: choice
+        options: [dark, light]
+        default: dark
       dry_run:
         description: 'true=送らず、画像を作って内容だけ表示する(画像は Artifacts に残る)'
         type: boolean
@@ -73,8 +78,9 @@ jobs:
         env:
           IN_DATE: ${{ github.event.inputs.date }}
           IN_ONLY: ${{ github.event.inputs.only }}
+          IN_THEME: ${{ github.event.inputs.theme }}
         run: |
-          args=(--date "${IN_DATE:-$(TZ=Asia/Tokyo date +%F)}")
+          args=(--theme "${IN_THEME:-dark}" --out out/discord --date "${IN_DATE:-$(TZ=Asia/Tokyo date +%F)}")
           if [ -n "$IN_ONLY" ] && [ "$IN_ONLY" != "all" ]; then args+=(--only "$IN_ONLY"); fi
           npm run discord:images -- "${args[@]}"
       - name: Post
