@@ -201,7 +201,7 @@ function mergeSlots(a: Slot[] | undefined, b: Slot[] | undefined): Slot[] | unde
  * 代表は開始が最も早いイベント(id・名前・URL)。冪等。
  */
 /** 同じ行にまとめるキー。通常は短縮ラベル。ピックアップは短縮(24字で切れる)で別ピックアップと衝突しないよう全名。 */
-export const rowKey = (e: ExportEvent): string => (e.pickup ? e.name : shortLabel(e.name).replace(/降臨$/, ''));
+export const rowKey = (e: ExportEvent): string => (e.pickup ? e.name : shortLabel(e.name));
 
 export function mergeSameLabel(events: ExportEvent[]): ExportEvent[] {
   const groups = new Map<string, ExportEvent[]>();

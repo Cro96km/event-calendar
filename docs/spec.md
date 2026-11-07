@@ -261,7 +261,7 @@
 
 ### 4.8 表示範囲・手動の調整・不要データの削除
 - **表示範囲**(`config/display/window.json`): 今日を基準に、過去 `past_months`=12 か月・未来 `future_months`=12 か月。公開サイトのデータ(範囲外の項目・月ファイルは出さない)、カレンダーの移動の限界(`src/window.ts` の `clampToWindow`。`<` `>`・ドラッグ・週月切替のすべて)、判断の月別の表(`config/judge/selection/`)、不要データの削除(`npm run prune`)が同じ値を使う。
-- **手動の調整**(`config/schedule/manual.json`、`src/manual.ts`): `add`=公式ニュースに無い項目を足す(`name`・`category`(`event`=クエスト / `campaign`=キャンペーン)・`start`・`end`(JST の `"YYYY-MM-DD HH:MM"`)・`group`(小見出し。省略可)・`color`・`edge_color`(省略可。ラベルの文字とバーの縁の色。書式は §4.11)・`url`(省略可。公式ニュースの記事へのリンク。詳細パネルに出る)・`note`)。行の同一性(`rowKey`)は末尾の `降臨` の有無を無視するので、manual の `滅絶 X` は公式の `滅絶 X降臨` と同じ行になる。公式由来の項目と同じ扱い(色や印の区別なし)で、表示の判断(選択)の対象外=常に表示。`hide`=項目ID(`20261030_3#0`)または記事ID(`20261030_3`)を表示から外す(メンテナンスにも効く。データは消さない)。選択の適用(`applySelection`)のあとに適用する。書式の誤りは `npm run check` が検知する。編集は `npm run manual` か Actions の manual(operations.md §14)。
+- **手動の調整**(`config/schedule/manual.json`、`src/manual.ts`): `add`=公式ニュースに無い項目を足す(`name`・`category`(`event`=クエスト / `campaign`=キャンペーン)・`start`・`end`(JST の `"YYYY-MM-DD HH:MM"`)・`group`(小見出し。省略可)・`color`・`edge_color`(省略可。ラベルの文字とバーの縁の色。書式は §4.11)・`url`(省略可。公式ニュースの記事へのリンク。詳細パネルに出る)・`note`)。行は名前が同じものが1行にまとまるので、公式の項目と同じ行にしたい manual の項目は、名前を公式の表記に合わせる(例: `滅絶 X降臨`)。公式由来の項目と同じ扱い(色や印の区別なし)で、表示の判断(選択)の対象外=常に表示。`hide`=項目ID(`20261030_3#0`)または記事ID(`20261030_3`)を表示から外す(メンテナンスにも効く。データは消さない)。選択の適用(`applySelection`)のあとに適用する。書式の誤りは `npm run check` が検知する。編集は `npm run manual` か Actions の manual(operations.md §14)。
 - **不要データの削除**(`npm run prune`、`src/prune.ts`): 表示範囲の過去の限界より前に終わった記事(最も遅い項目の終了=未定は開始、項目が無い記事は公開日)を `data/articles` から削除する。既定は確認だけ、`--apply` で削除。Actions の prune からも実行できる(operations.md §15)。
 
 ## 5. データ

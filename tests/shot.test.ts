@@ -163,17 +163,6 @@ describe('キャラクター・ガチャの画像と、概要の既定の絞り�
   });
 });
 
-describe('行の同一性: 末尾の「降臨」の有無は無視(初登場の公式と手動の降臨を同じ行に)', () => {
-  it('公式「滅絶 X降臨」と手動「滅絶 X」は同じ行の別々のバーになる', () => {
-    const days = weekDays('2026-11-03');
-    const official = ev('o#0', 'event', '滅絶 フィロソフィア降臨', '2026-11-03T19:00:00+09:00', '2026-11-04T11:59:00+09:00', { group: '絶級クエスト' });
-    const manual = ev('manual:x', 'event', '滅絶 フィロソフィア', '2026-11-08T12:00:00+09:00', '2026-11-09T11:59:00+09:00', { group: '絶級クエスト' });
-    const rows = ganttSections([official, manual], days).find((s) => s.section.id === 'quest')!.rows;
-    expect(rows).toHaveLength(1);
-    expect(rows[0]).toHaveLength(2);
-  });
-});
-
 describe('開催日だけの表示(start_day_only)', () => {
   const week = weekDays('2026-11-05');
   const rows = (events: ExportEvent[]) => ganttSections(events, week).find((s) => s.section.id === 'quest')!.rows;
