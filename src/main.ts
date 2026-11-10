@@ -19,8 +19,9 @@ async function load(): Promise<{ index: IndexFile; events: ExportEvent[]; select
   };
   const index = await get<IndexFile>('data/index.json');
   const months = await Promise.all(index.months.map((m) => get<MonthFile>(`data/events/${m}.json`)));
-  // 表示の判断(public/data/selection.json。判断の記憶とルールから作る)。無い(404/JSONでない応答)ときは全件表示(spec §4.5)
-  const selection = await get<SelectionJson>('data/selection.json').catch(() => null);
+  // 表示の判断(public/data/selection.json。判断の記憶とルールから作る)。無い(404/JSONでない応答)ときは全件表示(spec §4.5)。
+  // 公開ビルドの data/ には selection.json が無い(絞り込み済み)ので、開発時(DEV)だけ取りに行く(本番で404を出さない)
+  const selection = import.meta.env.DEV ? await get<SelectionJson>('data/selection.json').catch(() => null) : null;
   return { index, events: mergeEvents(months.map((m) => m.events)), selection };
 }
 
