@@ -235,7 +235,7 @@
 - 対象: 期間を持ち除外カテゴリでない記事の項目(`none`・除外カテゴリは候補に出さない)。
 - **再生成**: 毎回 `calendar/`(台帳)・`needs-review.md` を作り直す(自由記述は残らない)。collect/exportは判断を書き換えない。
 - **反映**: 選択ファイルが**ある**とき、週ガントは選択済み候補のイベントのみ表示(未登録の新規記事も未選択扱い=非表示)。**無い**とき(`selection.json`も削除)は従来通り全件。
-- 選択状態はCLI(`npm run candidates`)が候補数・新規数・選択済み/未選択数を出力する。UIは `main.ts` が `selection.json` を読み `applySelection` で絞り込む。
+- 選択状態はCLI(`npm run candidates`)が候補数・新規数・選択済み/未選択数を出力する。UIは `main.ts` が(開発時のみ。公開ビルドには `selection.json` が無い)`selection.json` を読み `applySelection` で絞り込む。
 - **置き場所と git**: §4.6 の表を参照。`config/judge/calendar/`(台帳 §4.10)は生成物だが、判断の結果を GitHub 上で月ごとに読めるようgit管理する(毎回現在の状態を作り直し、日時を含まない)。旧 `config/judge/selection/` は台帳に統合して廃止した。
 
 ### 4.6 判断の記憶・4区分・要判断
