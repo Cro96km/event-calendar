@@ -41,13 +41,13 @@ describe('画面の色(ライト/ダーク)', () => {
     const root = draw();
     expect(btn(root).textContent).toBe(''); // 文字ではなく記号
     expect(btn(root).querySelector('.icon-moon')).not.toBeNull(); // ライト中は「ダークにする」月の記号
-    expect(btn(root).getAttribute('aria-label')).toBe('ダーク表示にする');
+    expect(btn(root).getAttribute('aria-label')).toBe('ダークモード');
     btn(root).click();
     expect(currentTheme()).toBe('dark');
     expect(loadTheme()).toBe('dark');
     expect(btn(root).querySelector('.icon-sun')).not.toBeNull(); // ダーク中は「ライトにする」太陽の記号
-    expect(btn(root).getAttribute('aria-label')).toBe('ライト表示にする');
-    expect(btn(root).title).toBe('ライト表示にする');
+    expect(btn(root).getAttribute('aria-label')).toBe('ライトモード');
+    expect(btn(root).title).toBe('ライトモード');
     btn(root).click();
     expect(currentTheme()).toBe('light');
     expect(loadTheme()).toBe('light');
@@ -59,12 +59,12 @@ describe('画面の色(ライト/ダーク)', () => {
     const v = root.querySelector<HTMLButtonElement>('[data-testid="view-toggle"]') as HTMLButtonElement;
     expect(v.textContent).toBe('');
     expect(v.querySelector('.icon-calendar-month')).not.toBeNull();
-    expect(v.getAttribute('aria-label')).toBe('月表示にする');
+    expect(v.getAttribute('aria-label')).toBe('月表示');
     v.click();
     const v2 = root.querySelector<HTMLButtonElement>('[data-testid="view-toggle"]') as HTMLButtonElement;
     expect(v2.querySelector('.icon-calendar-week')).not.toBeNull();
-    expect(v2.getAttribute('aria-label')).toBe('週表示にする');
-    expect(v2.title).toBe('週表示にする');
+    expect(v2.getAttribute('aria-label')).toBe('週表示');
+    expect(v2.title).toBe('週表示');
   });
 
   it('「今日に戻る」の ● は、小さい記号用の dot-btn(ほかのボタンは付かない)', () => {

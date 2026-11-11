@@ -1,187 +1,1046 @@
 :root {
-  --bg: #f3f4f8; --surface: #fff; --surface-2: #f8f9fc; --text: #1c2030; --muted: #667; --border: #e0e3ec;
-  --danger: #d32f2f; --accent: #3b6fd4; --shadow: 0 1px 3px rgb(20 30 60 / .08), 0 4px 12px rgb(20 30 60 / .05);
+  --bg: #f3f4f8;
+  --surface: #fff;
+  --surface-2: #f8f9fc;
+  --text: #1c2030;
+  --muted: #667;
+  --border: #e0e3ec;
+  --danger: #d32f2f;
+  --accent: #3b6fd4;
+  --shadow: 0 1px 3px rgb(20 30 60 / .08), 0 4px 12px rgb(20 30 60 / .05);
   --on-accent: #fff;
-  color-scheme: light; /* 既定はライト。ダークは画面上部の切替(src/theme.ts。:root[data-theme="dark"])で、OSの設定には合わせない */
+  --monst-green: #62b300;
+  color-scheme: light;
+  /* 既定はライト。ダークは画面上部の切替(src/theme.ts。:root[data-theme="dark"])で、OSの設定には合わせない */
 }
-:root[data-theme="dark"] { --bg: #12141b; --surface: #1c1f2a; --surface-2: #242838; --text: #e8eaf2; --muted: #9aa0b4; --border: #333850; --accent: #7aa2ff; --danger: #ff6b6b; --shadow: 0 1px 3px rgb(0 0 0 / .4); --on-accent: #101524; color-scheme: dark; }
-* { box-sizing: border-box; }
+
+:root[data-theme="dark"] {
+  --bg: #12141b;
+  --surface: #1c1f2a;
+  --surface-2: #242838;
+  --text: #e8eaf2;
+  --muted: #9aa0b4;
+  --border: #333850;
+  --accent: #7aa2ff;
+  --danger: #ff6b6b;
+  --shadow: 0 1px 3px rgb(0 0 0 / .4);
+  --on-accent: #101524;
+  --monst-green: #62b300;
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+
 /* 詳細パネル表示で縦スクロールバーが出入りして画面が横ずれするのを防ぐ(spec §4.3.3) */
-html { overflow-y: scroll; scrollbar-gutter: stable; }
-body { font-family: "Noto Sans JP Variable", "Noto Sans JP", system-ui, "Hiragino Sans", sans-serif; margin: 0; padding: 16px; background: var(--bg); color: var(--text); line-height: 1.5; }
-button { font: inherit; color: inherit; }
-.bar { display: flex; gap: .5rem; align-items: center; flex-wrap: wrap; margin-bottom: .75rem; }
-.bar h1 { font-size: 1.25rem; margin: 0 1rem 0 0; }
-.bar > button { background: var(--surface); border: 1px solid var(--border); border-radius: 999px; padding: .35rem .9rem; cursor: pointer; box-shadow: var(--shadow); }
-.bar > button:hover { border-color: var(--accent); color: var(--accent); }
-.stamp { margin-left: auto; font-size: .8rem; color: var(--muted); }
-.gantt > * { min-width: calc(var(--label) + var(--cols, 7) * var(--colw, 2.5rem)); }
-.gantt { --label: 14rem; background: var(--surface); border: 1px solid var(--border); border-radius: 10px; box-shadow: var(--shadow); overflow-x: auto; }
-.g-row { display: grid; grid-template-columns: var(--label) repeat(var(--cols, 7), minmax(var(--colw, 2.5rem), 1fr)); align-items: stretch; border-top: 1px solid var(--border); position: relative; }
-.g-label { grid-row: 1; grid-column: 1; position: sticky; left: 0; z-index: 3; background: var(--surface); padding: .3rem .5rem; font-size: .8rem; display: flex; flex-direction: column; justify-content: center; overflow-wrap: anywhere; line-height: 1.3; }
-.g-row:not(.g-dates) > .g-label { min-height: 2.7rem; cursor: pointer; } /* 行の高さ = バー1.7rem + 上下の余白.5rem×2 = 2.7rem(スマホのタップ対象 約40px 以上) */
-.g-row:not(.g-dates) > .g-label:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-/* ラベルは省略(…)しない。長ければ折り返して行が高くなる */
-.g-l1 { font-weight: 700; white-space: normal; }
-.g-l2 { font-size: .72rem; color: var(--muted); }
-.g-cell { border-left: 1px solid var(--border); grid-row: 1; background: var(--surface); }
-.g-rows { position: relative; }
-.g-maint-layer { position: absolute; top: 0; bottom: 0; left: var(--label); right: 0; display: grid; grid-template-columns: repeat(var(--cols, 7), minmax(var(--colw, 2.5rem), 1fr)); pointer-events: none; z-index: 2; }
-.g-maint { grid-row: 1; min-width: 6px; padding: 0; border: 0; border-left: 2px solid #c0392b; border-right: 2px solid #c0392b; background: repeating-linear-gradient(135deg, #f3b8b0 0 6px, #f8d3cd 6px 12px); cursor: pointer; pointer-events: auto; }
-.g-maint:hover, .g-maint.on { background: repeating-linear-gradient(135deg, #e8998f 0 6px, #f3b8b0 6px 12px); }
-:root[data-theme="dark"] .g-maint { background: repeating-linear-gradient(135deg, #6b2a24 0 6px, #52201b 6px 12px); }
-:root[data-theme="dark"] .g-maint:hover, :root[data-theme="dark"] .g-maint.on { background: repeating-linear-gradient(135deg, #8a3a32 0 6px, #6b2a24 6px 12px); }
-.g-dates { border-top: 0; }
-.g-date { display: flex; flex-direction: column; align-items: center; border: 0; border-left: 1px solid var(--border); background: transparent; padding: .25rem 0; cursor: pointer; line-height: 1.2; }
-/* 年月(左端)・月(1日の列)・日・曜日は、同じフォントサイズ・太さにそろえる。数字は日本語の字より小さく見えるので、日の数字だけ少し大きくする */
-.g-dates > .g-label, .g-date .dnum, .g-date .dmon, .g-date .dwd { font-size: .8rem; font-weight: 700; }
-.g-dates > .g-label { flex-direction: row; align-items: center; justify-content: flex-start; } /* 年月は数字と字を横に並べる */
-.g-date .dmon { color: var(--muted); }
-.g-date .dnum { font-size: .92rem; } /* 日の数字だけ少し大きい。年月の数字(.num)は年・月の字と同じ大きさ */
-.g-date.sat { color: #2f6fe0; }
-.g-date.sun { color: #e0393e; }
-:root[data-theme="dark"] .g-date.sat { color: #7aa2ff; }
-:root[data-theme="dark"] .g-date.sun { color: #ff7b80; }
-.g-date.today .dnum { background: var(--accent); color: var(--on-accent); border-radius: 999px; padding: 0 .45rem; }
-/* セクションの色(色相 --hue と明るさの補正 --lit は order.json の sections。docs/spec.md §4.3.8)。見出し・バー・小見出し・線で共通 */
-.g-section, .g-group, .g-row { --sat: 16%; --c-head: hsl(var(--hue) var(--sat) calc(55% + var(--lit, 0%))); --c-hd-bg: hsl(var(--hue) var(--sat) 96%); --c-hd-fg: hsl(var(--hue) var(--sat) 26%); --c-bar: hsl(var(--hue) var(--sat) 86%); --c-bar-alt: hsl(var(--hue) var(--sat) 80%); --c-bar-edge: hsl(var(--hue) var(--sat) calc(22% + var(--lit, 0%))); --c-arrow: hsl(var(--hue) var(--sat) 28%); --c-text: hsl(var(--hue) var(--sat) 30%); --c-dot: hsl(var(--hue) var(--sat) calc(55% + var(--lit, 0%))); }
-:root[data-theme="dark"] .g-section, :root[data-theme="dark"] .g-group, :root[data-theme="dark"] .g-row { --c-hd-bg: hsl(var(--hue) var(--sat) 21%); --c-hd-fg: hsl(var(--hue) var(--sat) 84%); --c-bar: hsl(var(--hue) var(--sat) 27%); --c-bar-alt: hsl(var(--hue) var(--sat) 33%); --c-bar-edge: hsl(var(--hue) var(--sat) calc(62% + var(--lit, 0%))); --c-arrow: hsl(var(--hue) var(--sat) 86%); --c-text: hsl(var(--hue) var(--sat) 80%); }
-.g-section { cursor: pointer; padding: .2rem .5rem .2rem calc(.5rem - 4px); font-size: .8rem; font-weight: 700; color: var(--c-hd-fg); background: var(--c-hd-bg); border-top: 1px solid var(--border); border-left: 4px solid var(--c-head); }
-:root { --ep: 85%; --ek: #000; } /* 属性色の縁の濃さ(ライト: 属性色85%+黒) */
-:root[data-theme="dark"] { --ep: 60%; --ek: #fff; } /* ダーク: 属性色60%+白 */
-.bar-ev { grid-row: 1; align-self: center; height: 1.7rem; margin: .5rem 2px; --edge: var(--c-bar-edge); border: 3px solid var(--edge); border-radius: .4rem; position: relative; background: var(--c-bar); color: var(--c-hd-fg); padding: 0; overflow: hidden; cursor: pointer; }
-.bar-ev:hover { filter: brightness(.96); outline: 2px solid var(--edge); } /* 輪郭は、そのバーの縁と同じ色 */
-.bar-ev.clip-l { border-top-left-radius: 0; border-bottom-left-radius: 0; margin-left: 0; }
-.bar-ev.clip-r { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: 0; }
-.bar-ev.clip-l::before, .bar-ev.clip-r::after { content: ''; position: absolute; top: 50%; transform: translateY(-50%); width: 0; height: 0; border: .25rem solid transparent; }
-.bar-ev.clip-l::before { left: .4rem; border-left-width: 0; border-right: .4rem solid var(--c-arrow); }
-.bar-ev.clip-r::after { right: .4rem; border-right-width: 0; border-left: .4rem solid var(--c-arrow); }
-.bar-ev.open { border-top-right-radius: 0; border-bottom-right-radius: 0; margin-right: 0; background: repeating-linear-gradient(90deg, var(--c-bar) 0 6px, var(--c-bar-alt) 6px 12px); }
-.empty { padding: 1rem; color: var(--muted); }
-.detail:not(:empty) { margin-top: 1rem; background: var(--surface); border: 1px solid var(--border); box-shadow: var(--shadow); border-radius: 10px; padding: 1rem; }
-.detail .close { float: right; background: var(--surface-2); color: var(--danger); border: 1px solid var(--danger); border-radius: 6px; cursor: pointer; position: relative; width: 2rem; height: 2rem; padding: 0; font-size: 0; }
-/* ×は文字だとフォントで下にずれるため、線2本で描いて正確に中央へ置く(文字は読み上げ用に残す) */
-.detail .close::before, .detail .close::after { content: ''; position: absolute; left: 50%; top: 50%; width: 1.1rem; height: 2px; border-radius: 1px; background: currentColor; transform: translate(-50%, -50%) rotate(45deg); }
-.detail .close::after { transform: translate(-50%, -50%) rotate(-45deg); }
-.detail a { color: var(--accent); }
-.detail-item { background: var(--surface-2); border: 1px solid var(--border); border-radius: 12px; padding: 1rem 1.25rem; margin-top: .75rem; }
-.detail-item > h3 { margin-top: 0; }
-@media (max-width: 800px) {
-  .gantt { --label: 8rem; }
-  .stamp { margin-left: 0; width: 100%; }
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
 }
+
+body {
+  font-family: "Noto Sans JP Variable", "Noto Sans JP", system-ui, "Hiragino Sans", sans-serif;
+  margin: 0;
+  padding: 16px;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.5;
+}
+
+button {
+  font: inherit;
+  color: inherit;
+}
+
+.bar {
+  display: flex;
+  gap: .5rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin-bottom: .75rem;
+}
+
+.bar h1 {
+  font-size: 1.25rem;
+  margin: 0 1rem 0 0;
+}
+
+.bar>button {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: .35rem .9rem;
+  cursor: pointer;
+  box-shadow: var(--shadow);
+}
+
+.bar>button:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.stamp {
+  margin-left: auto;
+  font-size: .8rem;
+  color: var(--muted);
+}
+
+.gantt>* {
+  min-width: calc(var(--label) + var(--cols, 7) * var(--colw, 2.5rem));
+}
+
+.gantt {
+  --label: 14rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  box-shadow: var(--shadow);
+  overflow-x: auto;
+}
+
+.g-row {
+  display: grid;
+  grid-template-columns: var(--label) repeat(var(--cols, 7), minmax(var(--colw, 2.5rem), 1fr));
+  align-items: stretch;
+  border-top: 1px solid var(--border);
+  position: relative;
+}
+
+.g-label {
+  grid-row: 1;
+  grid-column: 1;
+  position: sticky;
+  left: 0;
+  z-index: 3;
+  background: var(--surface);
+  padding: .3rem .5rem;
+  font-size: .8rem;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  overflow-wrap: anywhere;
+  line-height: 1.3;
+}
+
+.g-row:not(.g-dates)>.g-label {
+  min-height: 2.7rem;
+  cursor: pointer;
+}
+
+/* 行の高さ = バー1.7rem + 上下の余白.5rem×2 = 2.7rem(スマホのタップ対象 約40px 以上) */
+.g-row:not(.g-dates)>.g-label:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+/* ラベルは省略(…)しない。長ければ折り返して行が高くなる */
+.g-l1 {
+  font-weight: 700;
+  white-space: normal;
+}
+
+.g-l2 {
+  font-size: .72rem;
+  color: var(--muted);
+}
+
+.g-cell {
+  border-left: 1px solid var(--border);
+  grid-row: 1;
+  background: var(--surface);
+}
+
+.g-rows {
+  position: relative;
+}
+
+.g-maint-layer {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: var(--label);
+  right: 0;
+  display: grid;
+  grid-template-columns: repeat(var(--cols, 7), minmax(var(--colw, 2.5rem), 1fr));
+  pointer-events: none;
+  z-index: 2;
+}
+
+.g-maint {
+  grid-row: 1;
+  min-width: 6px;
+  padding: 0;
+  border: 0;
+  border-left: 2px solid #c0392b;
+  border-right: 2px solid #c0392b;
+  border-top: 2px solid #c0392b;
+  border-bottom: 2px solid #c0392b;
+  background: repeating-linear-gradient(135deg, #f3b8b0 0 6px, #f8d3cd 6px 12px);
+  cursor: pointer;
+  pointer-events: auto;
+}
+
+.g-maint:hover,
+.g-maint.on {
+  background: repeating-linear-gradient(135deg, #e8998f 0 6px, #f3b8b0 6px 12px);
+}
+
+:root[data-theme="dark"] .g-maint {
+  background: repeating-linear-gradient(135deg, #6b2a24 0 6px, #52201b 6px 12px);
+}
+
+:root[data-theme="dark"] .g-maint:hover,
+:root[data-theme="dark"] .g-maint.on {
+  background: repeating-linear-gradient(135deg, #8a3a32 0 6px, #6b2a24 6px 12px);
+}
+
+.g-dates {
+  border-top: 0;
+}
+
+.g-date {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  border: 0;
+  border-left: 1px solid var(--border);
+  background: transparent;
+  padding: .25rem 0;
+  cursor: pointer;
+  line-height: 1.2;
+}
+
+/* 年月(左端)・月(1日の列)・日・曜日は、同じフォントサイズ・太さにそろえる。数字は日本語の字より小さく見えるので、日の数字だけ少し大きくする */
+.g-dates>.g-label,
+.g-date .dnum,
+.g-date .dmon,
+.g-date .dwd {
+  font-size: .8rem;
+  font-weight: 700;
+}
+
+.g-dates>.g-label {
+  flex-direction: row;
+  align-items: center;
+  justify-content: flex-start;
+}
+
+/* 年月は数字と字を横に並べる */
+.g-date .dmon {
+  color: var(--muted);
+}
+
+.g-date .dnum {
+  font-size: .92rem;
+}
+
+/* 日の数字だけ少し大きい。年月の数字(.num)は年・月の字と同じ大きさ */
+.g-date.sat {
+  color: #2f6fe0;
+}
+
+.g-date.sun {
+  color: #e0393e;
+}
+
+:root[data-theme="dark"] .g-date.sat {
+  color: #7aa2ff;
+}
+
+:root[data-theme="dark"] .g-date.sun {
+  color: #ff7b80;
+}
+
+.g-date.today .dnum {
+  background: var(--accent);
+  color: var(--on-accent);
+  border-radius: 999px;
+  padding: 0 .45rem;
+}
+
+/* セクションの色(色相 --hue と明るさの補正 --lit は order.json の sections。docs/spec.md §4.3.8)。見出し・バー・小見出し・線で共通 */
+.g-section,
+.g-group,
+.g-row {
+  --sat: 16%;
+  --c-head: hsl(var(--hue) var(--sat) calc(55% + var(--lit, 0%)));
+  --c-hd-bg: hsl(var(--hue) var(--sat) 96%);
+  --c-hd-fg: hsl(var(--hue) var(--sat) 26%);
+  --c-bar: hsl(var(--hue) var(--sat) 86%);
+  --c-bar-alt: hsl(var(--hue) var(--sat) 80%);
+  --c-bar-edge: hsl(var(--hue) var(--sat) calc(22% + var(--lit, 0%)));
+  --c-arrow: hsl(var(--hue) var(--sat) 28%);
+  --c-text: hsl(var(--hue) var(--sat) 30%);
+  --c-dot: hsl(var(--hue) var(--sat) calc(55% + var(--lit, 0%)));
+}
+
+:root[data-theme="dark"] .g-section,
+:root[data-theme="dark"] .g-group,
+:root[data-theme="dark"] .g-row {
+  --c-hd-bg: hsl(var(--hue) var(--sat) 21%);
+  --c-hd-fg: hsl(var(--hue) var(--sat) 84%);
+  --c-bar: hsl(var(--hue) var(--sat) 27%);
+  --c-bar-alt: hsl(var(--hue) var(--sat) 33%);
+  --c-bar-edge: hsl(var(--hue) var(--sat) calc(62% + var(--lit, 0%)));
+  --c-arrow: hsl(var(--hue) var(--sat) 86%);
+  --c-text: hsl(var(--hue) var(--sat) 80%);
+}
+
+.g-section {
+  cursor: pointer;
+  padding: .2rem .5rem .2rem calc(.5rem - 4px);
+  font-size: .8rem;
+  font-weight: 700;
+  color: var(--c-hd-fg);
+  background: var(--c-hd-bg);
+  border-top: 1px solid var(--border);
+  border-left: 4px solid var(--c-head);
+}
+
+:root {
+  --ep: 85%;
+  --ek: #000;
+}
+
+/* 属性色の縁の濃さ(ライト: 属性色85%+黒) */
+:root[data-theme="dark"] {
+  --ep: 60%;
+  --ek: #fff;
+}
+
+/* ダーク: 属性色60%+白 */
+.bar-ev {
+  grid-row: 1;
+  align-self: center;
+  height: 1.7rem;
+  margin: .5rem 2px;
+  --edge: var(--c-bar-edge);
+  border: 3px solid var(--edge);
+  border-radius: .4rem;
+  position: relative;
+  background: var(--c-bar);
+  color: var(--c-hd-fg);
+  padding: 0;
+  overflow: hidden;
+  cursor: pointer;
+}
+
+.bar-ev:hover {
+  filter: brightness(.96);
+  outline: 2px solid var(--edge);
+}
+
+/* 輪郭は、そのバーの縁と同じ色 */
+.bar-ev.clip-l {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+  margin-left: 0;
+}
+
+.bar-ev.clip-r {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-right: 0;
+}
+
+.bar-ev.clip-l::before,
+.bar-ev.clip-r::after {
+  content: '';
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border: .25rem solid transparent;
+}
+
+.bar-ev.clip-l::before {
+  left: .4rem;
+  border-left-width: 0;
+  border-right: .4rem solid var(--c-arrow);
+}
+
+.bar-ev.clip-r::after {
+  right: .4rem;
+  border-right-width: 0;
+  border-left: .4rem solid var(--c-arrow);
+}
+
+.bar-ev.open {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+  margin-right: 0;
+  background: repeating-linear-gradient(90deg, var(--c-bar) 0 6px, var(--c-bar-alt) 6px 12px);
+}
+
+.empty {
+  padding: 1rem;
+  color: var(--muted);
+}
+
+.detail:not(:empty) {
+  margin-top: 1rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow);
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.detail .close {
+  float: right;
+  background: var(--surface-2);
+  color: var(--danger);
+  border: 1px solid var(--danger);
+  border-radius: 6px;
+  cursor: pointer;
+  position: relative;
+  width: 2rem;
+  height: 2rem;
+  padding: 0;
+  font-size: 0;
+}
+
+/* ×は文字だとフォントで下にずれるため、線2本で描いて正確に中央へ置く(文字は読み上げ用に残す) */
+.detail .close::before,
+.detail .close::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: 1.1rem;
+  height: 2px;
+  border-radius: 1px;
+  background: currentColor;
+  transform: translate(-50%, -50%) rotate(45deg);
+}
+
+.detail .close::after {
+  transform: translate(-50%, -50%) rotate(-45deg);
+}
+
+.detail a {
+  color: var(--accent);
+}
+
+.detail-item {
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 1rem 1.25rem;
+  margin-top: .75rem;
+}
+
+.detail-item>h3 {
+  margin-top: 0;
+}
+
+@media (max-width: 800px) {
+  .gantt {
+    --label: 8rem;
+  }
+
+  .stamp {
+    margin-left: 0;
+    width: 100%;
+  }
+}
+
 /* スマホ(縦): 余白と行ラベルを詰めて、週表示の7日が横スクロールなしで収まるようにする。タップ対象は約40px以上 */
 @media (max-width: 600px) {
-  body { padding: 8px; }
-  .bar h1 { font-size: 1.1rem; margin-right: 0; width: 100%; }
-  .gantt { --label: 5.5rem; --colw: 2.4rem; }
-  .gantt.month { --colw: 1.7rem; }
-  .g-label { padding: .3rem .35rem; font-size: .75rem; }
-  .g-label.pickup { padding-left: .7rem; }
-  .bar > button, .vbtn { min-height: 2.5rem; min-width: 2.5rem; }
-  .g-date { padding: .4rem 0; }
-  .detail:not(:empty) { padding: .75rem; }
-  .detail-item { padding: .75rem; }
-  .detail-table { display: block; overflow-x: auto; max-width: 100%; }
-  .detail-table th, .detail-table td { padding: .5rem .6rem; }
-  .detail .close { width: 2.5rem; height: 2.5rem; }
-}
-.detail-block h4 { margin: .5rem 0 .2rem; font-size: .85rem; }
-.detail-block ul { margin: 0; padding-left: 1.2rem; font-size: .9rem; line-height: 1.8; }
-.detail-table { border-collapse: separate; border-spacing: 0; font-size: .9rem; margin: .4rem 0 .75rem; background: var(--surface); border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-.detail-table th, .detail-table td { padding: .55rem 1.25rem; text-align: left; border-bottom: 1px solid var(--border); }
-.detail-table tr:last-child td { border-bottom: 0; }
-.detail-table th { background: var(--surface-2); font-weight: 600; }
-.detail-table tr.sat td:nth-child(-n+2) { color: #2b6cb0; }
-.detail-table tr.sun td:nth-child(-n+2) { color: #c53030; }
+  body {
+    padding: 8px;
+  }
 
-.view-nav { display: flex; align-items: center; gap: 0.4rem; flex-wrap: wrap; margin-top: 0.5rem; }
-.vbtn { padding: 0.25rem 0.8rem; border: 1px solid var(--border); border-radius: 999px; background: var(--surface); color: inherit; cursor: pointer; font: inherit; }
-.vbtn.icon-btn { display: inline-flex; align-items: center; justify-content: center; padding: 0.25rem 0.55rem; }
-.vbtn.icon-btn .icon { display: block; }
-.vbtn.dot-btn { font-size: .7em; } /* 「今日に戻る」の ● は少し小さく(ボタンの大きさは他と同じ) */
-.vbtn.active { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
-.gantt.month .g-date.today .dnum { padding: 0 .25rem; }
-.gantt { cursor: grab; user-select: none; }
-.gantt.dragging { cursor: grabbing; user-select: none; }
-.gantt:not(.month) { touch-action: pan-y; }
-.vbtn:disabled { opacity: .45; cursor: default; }
-.g-group { cursor: pointer; padding: .1rem .5rem .1rem 1rem; font-size: .7rem; font-weight: 700; color: var(--c-text); background: var(--surface-2); border-top: 1px solid var(--border); border-left: 4px solid var(--c-head); }
-.g-group::before { content: '▾ ' / ''; }
-.g-group[aria-expanded="false"]::before { content: '▸ ' / ''; }
-.g-group:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.shot .g-group { cursor: default; }
-.g-group:not([role])::before { content: none; }
-.g-section::before { content: '▾ ' / ''; }
-.g-section[aria-expanded="false"]::before { content: '▸ ' / ''; }
-.g-section:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
-.update-msg { font-size: .8rem; color: var(--muted, inherit); margin-left: .4rem; }
-.site-footer { margin-top: 1.5rem; padding-top: .75rem; border-top: 1px solid var(--border); font-size: .8rem; color: var(--muted); }
-.site-footer p { margin: .2rem 0; }
-.detail-table td.sched-name { vertical-align: middle; font-weight: 600; border-right: 1px solid var(--border); }
-.g-label.pickup { padding-left: 1.1rem; }
-.g-label.pickup .g-l1 { font-size: .92em; color: var(--muted); display: flex; align-items: center; gap: .45rem; }
-.g-label.pickup .g-l1::before { content: ''; flex: none; width: .4rem; height: .4rem; border-radius: 50%; background: var(--c-dot); opacity: .85; }
+  .bar h1 {
+    font-size: 1.1rem;
+    margin-right: 0;
+    width: 100%;
+  }
+
+  .gantt {
+    --label: 5.5rem;
+    --colw: 2.4rem;
+  }
+
+  .gantt.month {
+    --colw: 1.7rem;
+  }
+
+  .g-label {
+    padding: .3rem .35rem;
+    font-size: .75rem;
+  }
+
+  .g-label.pickup {
+    padding-left: .7rem;
+  }
+
+  .bar>button,
+  .vbtn {
+    min-height: 2.5rem;
+    min-width: 2.5rem;
+  }
+
+  .g-date {
+    padding: .4rem 0;
+  }
+
+  .detail:not(:empty) {
+    padding: .75rem;
+  }
+
+  .detail-item {
+    padding: .75rem;
+  }
+
+  .detail-table {
+    display: block;
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  .detail-table th,
+  .detail-table td {
+    padding: .5rem .6rem;
+  }
+
+  .detail .close {
+    width: 2.5rem;
+    height: 2.5rem;
+  }
+}
+
+.detail-block h4 {
+  margin: .5rem 0 .2rem;
+  font-size: .85rem;
+}
+
+.detail-block ul {
+  margin: 0;
+  padding-left: 1.2rem;
+  font-size: .9rem;
+  line-height: 1.8;
+}
+
+.detail-table {
+  border-collapse: separate;
+  border-spacing: 0;
+  font-size: .9rem;
+  margin: .4rem 0 .75rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.detail-table th,
+.detail-table td {
+  padding: .55rem 1.25rem;
+  text-align: left;
+  border-bottom: 1px solid var(--border);
+}
+
+.detail-table tr:last-child td {
+  border-bottom: 0;
+}
+
+.detail-table th {
+  background: var(--surface-2);
+  font-weight: 600;
+}
+
+.detail-table tr.sat td:nth-child(-n+2) {
+  color: #2b6cb0;
+}
+
+.detail-table tr.sun td:nth-child(-n+2) {
+  color: #c53030;
+}
+
+.view-nav {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+  margin-top: 0.5rem;
+}
+
+/* 輪郭は普通は出さず、カーソルを合わせたときだけ出す */
+.vbtn {
+  padding: 0.25rem 0.8rem;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: inherit;
+  cursor: pointer;
+  font: inherit;
+}
+
+.vbtn:hover:not(:disabled) {
+  border-color: var(--border);
+  background: var(--surface);
+}
+
+.vbtn.icon-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0.25rem 0.55rem;
+}
+
+.vbtn.icon-btn .icon {
+  display: block;
+}
+
+/* ◀ ● ▶ は間隔を詰める(◀ ● の間・● ▶ の間) */
+.vbtn.dot-btn,
+.vbtn.larrow-btn,
+.vbtn.rarrow-btn {
+  font-size: .7em;
+  padding: 0.25rem 0.4rem;
+}
+
+.view-nav .vbtn.larrow-btn {
+  margin-right: -0.25rem;
+}
+
+.view-nav .vbtn.rarrow-btn {
+  margin-left: -0.25rem;
+}
+
+/* モンストの日: 日付セルの縁(日付ヘッダ)・バーの枠を黄緑寄りの緑に */
+.g-date.monst-day {
+  box-shadow: inset 0 0 0 2px var(--monst-green);
+  border-radius: 4px;
+}
+
+.bar-ev.monst-day {
+  border-color: var(--monst-green);
+  --edge: var(--monst-green);
+}
+
+.vbtn.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--on-accent);
+}
+
+.gantt.month .g-date.today .dnum {
+  padding: 0 .25rem;
+}
+
+.gantt {
+  cursor: grab;
+  user-select: none;
+}
+
+.gantt.dragging {
+  cursor: grabbing;
+  user-select: none;
+}
+
+.gantt:not(.month) {
+  touch-action: pan-y;
+}
+
+.vbtn:disabled {
+  opacity: .45;
+  cursor: default;
+}
+
+.g-group {
+  cursor: pointer;
+  padding: .1rem .5rem .1rem 1rem;
+  font-size: .7rem;
+  font-weight: 700;
+  color: var(--c-text);
+  background: var(--surface-2);
+  border-top: 1px solid var(--border);
+  border-left: 4px solid var(--c-head);
+}
+
+.g-group::before {
+  content: '▾ ' / '';
+}
+
+.g-group[aria-expanded="false"]::before {
+  content: '▸ ' / '';
+}
+
+.g-group:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.shot .g-group {
+  cursor: default;
+}
+
+.g-group:not([role])::before {
+  content: none;
+}
+
+.g-section::before {
+  content: '▾ ' / '';
+}
+
+.g-section[aria-expanded="false"]::before {
+  content: '▸ ' / '';
+}
+
+.g-section:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+}
+
+.update-msg {
+  font-size: .8rem;
+  color: var(--muted, inherit);
+  margin-left: .4rem;
+}
+
+.site-footer {
+  margin-top: 1.5rem;
+  padding-top: .75rem;
+  border-top: 1px solid var(--border);
+  font-size: .8rem;
+  color: var(--muted);
+}
+
+.site-footer p {
+  margin: .2rem 0;
+}
+
+.detail-table td.sched-name {
+  vertical-align: middle;
+  font-weight: 600;
+  border-right: 1px solid var(--border);
+}
+
+.g-label.pickup {
+  padding-left: 1.1rem;
+}
+
+.g-label.pickup .g-l1 {
+  font-size: .92em;
+  color: var(--muted);
+  display: flex;
+  align-items: center;
+  gap: .45rem;
+}
+
+.g-label.pickup .g-l1::before {
+  content: '';
+  flex: none;
+  width: .4rem;
+  height: .4rem;
+  border-radius: 50%;
+  background: var(--c-dot);
+  opacity: .85;
+}
+
 /* 公式サイトの色(ピックアップ名)。ダークでも読めるよう、文字は本文色と混ぜる */
-.g-label.pickup.colored .g-l1 { color: color-mix(in srgb, var(--pc) 78%, var(--text)); }
-.g-label.pickup.colored .g-l1::before { background: var(--pc); opacity: 1; }
-:root[data-theme="dark"] .g-label.pickup.colored .g-l1, :root[data-theme="dark"] .detail-table td.sched-name.colored { color: color-mix(in srgb, var(--pc) 52%, var(--text)); }
-.detail-table td.sched-name.colored { color: color-mix(in srgb, var(--pc) 78%, var(--text)); }
-.detail-table tr.cur td { background: color-mix(in srgb, var(--accent) 14%, transparent); font-weight: 600; }
+.g-label.pickup.colored .g-l1 {
+  color: color-mix(in srgb, var(--pc) 78%, var(--text));
+}
+
+.g-label.pickup.colored .g-l1::before {
+  background: var(--pc);
+  opacity: 1;
+}
+
+:root[data-theme="dark"] .g-label.pickup.colored .g-l1,
+:root[data-theme="dark"] .detail-table td.sched-name.colored {
+  color: color-mix(in srgb, var(--pc) 52%, var(--text));
+}
+
+.detail-table td.sched-name.colored {
+  color: color-mix(in srgb, var(--pc) 78%, var(--text));
+}
+
+.detail-table tr.cur td {
+  background: color-mix(in srgb, var(--accent) 14%, transparent);
+  font-weight: 600;
+}
+
 /* 対象ステージ/階層クエストの名前の属性色(config/display/quest-colors.json) */
-.qname.colored { color: color-mix(in srgb, var(--pc) 78%, var(--text)); font-weight: 600; }
-:root[data-theme="dark"] .qname.colored { color: color-mix(in srgb, var(--pc) 52%, var(--text)); }
+.qname.colored {
+  color: color-mix(in srgb, var(--pc) 78%, var(--text));
+  font-weight: 600;
+}
+
+:root[data-theme="dark"] .qname.colored {
+  color: color-mix(in srgb, var(--pc) 52%, var(--text));
+}
+
 /* 超究極・絶級のボス名の公式の色(行ラベルの文字だけ) */
-.g-label.colored:not(.pickup) .g-l1 { color: color-mix(in srgb, var(--pc) 78%, var(--text)); }
-:root[data-theme="dark"] .g-label.colored:not(.pickup) .g-l1 { color: color-mix(in srgb, var(--pc) 52%, var(--text)); }
-.detail-note { margin: .3rem 0; font-size: .9rem; white-space: pre-wrap; }
+.g-label.colored:not(.pickup) .g-l1 {
+  color: color-mix(in srgb, var(--pc) 78%, var(--text));
+}
+
+:root[data-theme="dark"] .g-label.colored:not(.pickup) .g-l1 {
+  color: color-mix(in srgb, var(--pc) 52%, var(--text));
+}
+
+.detail-note {
+  margin: .3rem 0;
+  font-size: .9rem;
+  white-space: pre-wrap;
+}
+
 /* 撮影モード(?shot=…。Discord 用の画像。spec §4.12)。ライト固定・操作なし。撮影の対象は .shot */
-body:has(.shot) { padding: 0; background: #fff; }
-:root[data-theme="dark"] body:has(.shot) { background: var(--bg); }
-.shot { background: #fff; padding: 12px; width: 760px; }
-:root[data-theme="dark"] .shot { background: var(--bg); }
-.shot .gantt { --label: 12rem; overflow: visible; }
-.shot .g-row:not(.g-dates) > .g-label { cursor: default; }
+body:has(.shot) {
+  padding: 0;
+  background: #fff;
+}
+
+:root[data-theme="dark"] body:has(.shot) {
+  background: var(--bg);
+}
+
+.shot {
+  background: #fff;
+  padding: 12px;
+  width: 760px;
+}
+
+:root[data-theme="dark"] .shot {
+  background: var(--bg);
+}
+
+.shot .gantt {
+  --label: 12rem;
+  overflow: visible;
+}
+
+.shot .g-row:not(.g-dates)>.g-label {
+  cursor: default;
+}
+
 /* 概要の画像だけ、行を詰める(行の高さ・文字の大きさ・バーの高さ。ほかの画像と通常のカレンダーは変えない) */
-.shot[data-shot="summary"] .g-row:not(.g-dates) > .g-label { min-height: 2.1rem; padding-top: .1rem; padding-bottom: .1rem; }
-.shot[data-shot="summary"] .g-l1 { font-size: .74rem; line-height: 1.2; }
-.shot[data-shot="summary"] .g-l2 { font-size: .59rem; line-height: 1.15; }
-.shot[data-shot="summary"] .bar-ev { height: 1.3rem; margin-top: .4rem; margin-bottom: .4rem; }
-.shot[data-shot="summary"] .bar-ev.has-names { height: auto; min-height: 1.3rem; }
-.shot[data-shot="summary"] .bar-unlock, .shot[data-shot="summary"] .bar-names { font-size: .63rem; }
-.shot[data-shot="summary"] .bar-names { padding: .12rem .4rem; }
+.shot[data-shot="summary"] .g-row:not(.g-dates)>.g-label {
+  min-height: 2.1rem;
+  padding-top: .1rem;
+  padding-bottom: .1rem;
+}
+
+.shot[data-shot="summary"] .g-l1 {
+  font-size: .74rem;
+  line-height: 1.2;
+}
+
+.shot[data-shot="summary"] .g-l2 {
+  font-size: .59rem;
+  line-height: 1.15;
+}
+
+.shot[data-shot="summary"] .bar-ev {
+  height: 1.3rem;
+  margin-top: .4rem;
+  margin-bottom: .4rem;
+}
+
+.shot[data-shot="summary"] .bar-ev.has-names {
+  height: auto;
+  min-height: 1.3rem;
+}
+
+.shot[data-shot="summary"] .bar-unlock,
+.shot[data-shot="summary"] .bar-names {
+  font-size: .63rem;
+}
+
+.shot[data-shot="summary"] .bar-names {
+  padding: .12rem .4rem;
+}
+
 /* 撮影モードの文字は、通常の表示より全体に少し小さく(概要は下の個別指定でさらに詰めている) */
-.shot .g-label, .shot .g-dates > .g-label, .shot .g-date .dmon, .shot .g-date .dwd, .shot .g-section { font-size: .74rem; }
-.shot .g-date .dnum { font-size: .85rem; }
-.shot .g-l2 { font-size: .66rem; }
-.shot .g-group { font-size: .65rem; }
-.shot .bar-unlock, .shot .bar-names { font-size: .68rem; }
-.shot .bar-new { font-size: .57rem; }
+.shot .g-label,
+.shot .g-dates>.g-label,
+.shot .g-date .dmon,
+.shot .g-date .dwd,
+.shot .g-section {
+  font-size: .74rem;
+}
+
+.shot .g-date .dnum {
+  font-size: .85rem;
+}
+
+.shot .g-l2 {
+  font-size: .66rem;
+}
+
+.shot .g-group {
+  font-size: .65rem;
+}
+
+.shot .bar-unlock,
+.shot .bar-names {
+  font-size: .68rem;
+}
+
+.shot .bar-new {
+  font-size: .57rem;
+}
+
 /* 新限定: 週表示(撮影モード含む)はガチャのバーの中に `NEW！名前・名前`(1人なら「NEW！」も属性色、2人以上は「NEW！」は既定の色で名前だけ属性色)を中央揃えで折り返して書き、バーの高さは中身に合わせて伸びる(行も伸びる)。月表示は「NEW」だけを中央に(名前はツールチップ・詳細)。属性色はバーの面で読める濃さ(ライト=元の色を25%暗く、ダーク=本文色と混ぜる)。 */
-.bar-ev.has-names { height: auto; min-height: 1.7rem; }
-.bar-names { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; padding: .22rem .5rem; font-size: .74rem; font-weight: 800; -webkit-text-stroke: .35px currentColor; line-height: 1.25; pointer-events: none; }
-.bar-names > span { flex: none; }
-.bar-names .g-name.colored, .bar-names .bar-new-label.colored, .bar-new.colored { color: color-mix(in srgb, var(--pc) 75%, #000); }
-:root[data-theme="dark"] .bar-names .g-name.colored, :root[data-theme="dark"] .bar-names .bar-new-label.colored, :root[data-theme="dark"] .bar-new.colored { color: color-mix(in srgb, var(--pc) 32%, var(--text)); }
-.bar-new { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: .62rem; font-weight: 800; -webkit-text-stroke: .3px currentColor; line-height: 1; letter-spacing: .03em; white-space: nowrap; overflow: hidden; color: var(--c-hd-fg); pointer-events: none; }
+.bar-ev.has-names {
+  height: auto;
+  min-height: 1.7rem;
+}
+
+.bar-names {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  padding: .22rem .5rem;
+  font-size: .74rem;
+  font-weight: 800;
+  -webkit-text-stroke: .35px currentColor;
+  line-height: 1.25;
+  pointer-events: none;
+}
+
+.bar-names>span {
+  flex: none;
+}
+
+.bar-names .g-name.colored,
+.bar-names .bar-new-label.colored,
+.bar-new.colored {
+  color: color-mix(in srgb, var(--pc) 75%, #000);
+}
+
+:root[data-theme="dark"] .bar-names .g-name.colored,
+:root[data-theme="dark"] .bar-names .bar-new-label.colored,
+:root[data-theme="dark"] .bar-new.colored {
+  color: color-mix(in srgb, var(--pc) 32%, var(--text));
+}
+
+.bar-new {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .62rem;
+  font-weight: 800;
+  -webkit-text-stroke: .3px currentColor;
+  line-height: 1;
+  letter-spacing: .03em;
+  white-space: nowrap;
+  overflow: hidden;
+  color: var(--c-hd-fg);
+  pointer-events: none;
+}
+
 /* 縁(輪郭)の属性色: 新限定・ピックアップ・進化。面は青灰のまま。ライトは元の色を15%暗く、ダークは明るく。2人は左右半分ずつ(左=最初の名前) */
-.bar-ev.edge-attr { --edge: color-mix(in srgb, var(--pc) 85%, #000); }
-:root[data-theme="dark"] .bar-ev.edge-attr { --edge: color-mix(in srgb, var(--pc) 60%, #fff); }
-.bar-ev.edge-split { --edge: color-mix(in srgb, var(--e1) 50%, var(--e2)); --e1: color-mix(in srgb, var(--pc1) 85%, #000); --e2: color-mix(in srgb, var(--pc2) 85%, #000); border-color: transparent; background: linear-gradient(var(--c-bar), var(--c-bar)) padding-box, linear-gradient(90deg, var(--e1) 50%, var(--e2) 50%) border-box; }
-:root[data-theme="dark"] .bar-ev.edge-split { --e1: color-mix(in srgb, var(--pc1) 60%, #fff); --e2: color-mix(in srgb, var(--pc2) 60%, #fff); }
-.bar-ev .day-stripe, .bar-ev .day-under { position: absolute; pointer-events: none; }
-.bar-ev .day-stripe { top: 0; bottom: 0; background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--dc) 70%, transparent) 0 2px, transparent 2px 8px); }
-.bar-ev .day-under { bottom: 0; height: 5px; background: var(--dc); }
-.bar-ev.edge-split.open { background: repeating-linear-gradient(90deg, var(--c-bar) 0 6px, var(--c-bar-alt) 6px 12px) padding-box, linear-gradient(90deg, var(--e1) 50%, var(--e2) 50%) border-box; }
+.bar-ev.edge-attr {
+  --edge: color-mix(in srgb, var(--pc) 85%, #000);
+}
+
+:root[data-theme="dark"] .bar-ev.edge-attr {
+  --edge: color-mix(in srgb, var(--pc) 60%, #fff);
+}
+
+.bar-ev.edge-split {
+  --edge: color-mix(in srgb, var(--e1) 50%, var(--e2));
+  --e1: color-mix(in srgb, var(--pc1) 85%, #000);
+  --e2: color-mix(in srgb, var(--pc2) 85%, #000);
+  border-color: transparent;
+  background: linear-gradient(var(--c-bar), var(--c-bar)) padding-box, linear-gradient(90deg, var(--e1) 50%, var(--e2) 50%) border-box;
+}
+
+:root[data-theme="dark"] .bar-ev.edge-split {
+  --e1: color-mix(in srgb, var(--pc1) 60%, #fff);
+  --e2: color-mix(in srgb, var(--pc2) 60%, #fff);
+}
+
+.bar-ev .day-stripe,
+.bar-ev .day-under {
+  position: absolute;
+  pointer-events: none;
+}
+
+.bar-ev .day-stripe {
+  top: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(135deg, color-mix(in srgb, var(--dc) 70%, transparent) 0 2px, transparent 2px 8px);
+}
+
+.bar-ev .day-under {
+  bottom: 0;
+  height: 5px;
+  background: var(--dc);
+}
+
+.bar-ev.edge-split.open {
+  background: repeating-linear-gradient(90deg, var(--c-bar) 0 6px, var(--c-bar-alt) 6px 12px) padding-box, linear-gradient(90deg, var(--e1) 50%, var(--e2) 50%) border-box;
+}
+
 /* 日ごとに分けたバー(罫線で区切られた日=セルごとにバー+縁。連続する日の境目は角を丸めない) */
-.bar-days { display: grid; grid-row: 1; align-self: center; }
-.bar-days > .day-cell { display: flex; min-width: 0; }
-.bar-days .bar-ev { flex: 1 1 0; min-width: 0; align-self: center; }
-.bar-ev.cont-l { border-top-left-radius: 0; border-bottom-left-radius: 0; }
-.bar-ev.cont-r { border-top-right-radius: 0; border-bottom-right-radius: 0; }
-.bar-days:hover .bar-ev { filter: brightness(.96); outline: 2px solid var(--edge); }
-.bar-days.underline .bar-ev.cont-l { border-left-width: 0; } /* underline: 境目の縁は1本 */
+.bar-days {
+  display: grid;
+  grid-row: 1;
+  align-self: center;
+}
+
+.bar-days>.day-cell {
+  display: flex;
+  min-width: 0;
+}
+
+.bar-days .bar-ev {
+  flex: 1 1 0;
+  min-width: 0;
+  align-self: center;
+}
+
+.bar-ev.cont-l {
+  border-top-left-radius: 0;
+  border-bottom-left-radius: 0;
+}
+
+.bar-ev.cont-r {
+  border-top-right-radius: 0;
+  border-bottom-right-radius: 0;
+}
+
+.bar-days:hover .bar-ev {
+  filter: brightness(.96);
+  outline: 2px solid var(--edge);
+}
+
+.bar-days.underline .bar-ev.cont-l {
+  border-left-width: 0;
+}
+
+/* underline: 境目の縁は1本 */
 /* 進化のバーの `12:00解禁`(週表示のみ。属性色) */
-.bar-unlock { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; font-size: .74rem; font-weight: 800; -webkit-text-stroke: .35px currentColor; line-height: 1; white-space: nowrap; overflow: hidden; pointer-events: none; color: var(--c-hd-fg); }
-.bar-unlock.colored { color: color-mix(in srgb, var(--pc) 75%, #000); }
-:root[data-theme="dark"] .bar-unlock.colored { color: color-mix(in srgb, var(--pc) 32%, var(--text)); }
+.bar-unlock {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: .74rem;
+  font-weight: 800;
+  -webkit-text-stroke: .35px currentColor;
+  line-height: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  pointer-events: none;
+  color: var(--c-hd-fg);
+}
+
+.bar-unlock.colored {
+  color: color-mix(in srgb, var(--pc) 75%, #000);
+}
+
+:root[data-theme="dark"] .bar-unlock.colored {
+  color: color-mix(in srgb, var(--pc) 32%, var(--text));
+}

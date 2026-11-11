@@ -6,7 +6,7 @@ const read = (p: string): string => readFileSync(new URL(p, import.meta.url), 'u
 describe('フォント(画面と Discord の画像で同じ字形にする)', () => {
   it('同梱の Noto Sans JP を読み込み、body の font-family の先頭にする', () => {
     expect(read('../src/main.ts')).toContain("import '@fontsource-variable/noto-sans-jp/wght.css'");
-    expect(read('../src/style.css')).toMatch(/body \{ font-family: "Noto Sans JP Variable",/);
+    expect(read('../src/style.css')).toMatch(/body \{\s*font-family: "Noto Sans JP Variable",/);
   });
   it('フォントのバージョンは固定(^ や ~ を付けない)', () => {
     const pkg = JSON.parse(read('../package.json')) as { devDependencies: Record<string, string> };

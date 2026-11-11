@@ -1,9 +1,9 @@
 import '@fontsource-variable/noto-sans-jp/wght.css'; // 画面も Discord の画像も同じ字形にするため、フォントを同梱する(docs/spec.md §4.3)
 import type { ExportEvent, IndexFile, MonthFile } from './data/export';
-import { initialState, render, type AppState } from './ui';
+import { initialState, render } from './ui';
 import { todayJstDay } from './gameday';
 import { applySelection, type SelectionJson } from './selection';
-import { mergeEvents, mergeSameLabel } from './week';
+import { mergeEvents } from './week';
 import { applyManual } from './manual';
 import { applyOverrides } from './overrides';
 import { MONTHLY } from './monthly';
@@ -19,21 +19,10 @@ async function load(): Promise<{ index: IndexFile; events: ExportEvent[]; select
   };
   const index = await get<IndexFile>('data/index.json');
   const months = await Promise.all(index.months.map((m) => get<MonthFile>(`data/events/${m}.json`)));
-  // 表示の判断(public/data/selection.json。判断の記憶とルールから作る)。無い(404/JSONでない応答)ときは全件表示(spec §4.5)
-  const selection = await get<SelectionJson>('data/selection.json').catch(() => null);
+  // 表示の判断(public/data/selection.json。判断の記憶とルールから作る)。無い(404/JSONでない応答)ときは全件表示(spec §4.5)。
+  // 公開ビルドの data/ には selection.json が無い(絞り込み済み)ので、開発時(DEV)だけ取りに行く(本番で404を出さない)
+  const selection = import.meta.env.DEV ? await get<SelectionJson>('data/selection.json').catch(() => null) : null;
   return { index, events: mergeEvents(months.map((m) => m.events)), selection };
-}
-
-/** 開発サーバの `POST /api/collect`(scripts/collect-api.ts)で収集→再読込。本番ビルドには無いのでボタンも出さない */
-async function refreshData(state: AppState): Promise<{ ok: boolean; message: string }> {
-  const res = await fetch('/api/collect', { method: 'POST', headers: { 'X-Requested-With': 'update-button' } });
-  const body = (await res.json().catch(() => null)) as { ok?: boolean; log?: string; error?: string } | null;
-  if (!body) return { ok: false, message: `更新に失敗しました: 更新APIに接続できません (${res.status})` };
-  if (!res.ok || !body.ok) return { ok: false, message: `更新に失敗しました: ${body.error ?? body.log ?? res.status}` };
-  const { index, events, selection } = await load();
-  state.events = mergeSameLabel(applyManual(applyOverrides(applySelection(events, selection))));
-  state.collectedAt = index.collected_at ?? null;
-  return { ok: true, message: '更新しました' };
 }
 
 // 画面の色(ライト/ダーク)。撮影モードは常にライト。読み込み前に適用して、色のちらつきを防ぐ
@@ -51,7 +40,7 @@ if (root) {
       if (shot) {
         state.shot = shot.kind;
         state.collapsed = new Set();
-      } else if (import.meta.env.DEV) state.refresh = () => refreshData(state);
+      }
       render(root, state);
     })
     .catch((e: unknown) => {
