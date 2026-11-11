@@ -154,7 +154,7 @@ describe('gantt week view', () => {
   });
 
   it('shows the last collection time in JST (not the generation time)', () => {
-    expect(q('collected-at')?.textContent).toContain('公式サイト収集: 10/26(月) 18:00');
+    expect(q('collected-at')?.textContent).toContain('最終更新: 10/26(月) 18:00');
   });
 
   it('footer: 自動収集の注意書きを出し、リポジトリURLが無ければIssueリンクは出さない', () => {
@@ -1067,27 +1067,8 @@ describe('日別の時間帯', () => {
 });
 
 describe('update button', () => {
-  it('is hidden unless refresh is provided', () => {
+  it('is never shown', () => {
     expect(q('update')).toBeNull();
-  });
-  it('disables while running, then shows the result message', async () => {
-    let done!: () => void;
-    state.refresh = () => new Promise((r) => (done = () => r({ ok: true, message: '更新しました' })));
-    render(root, state);
-    click(q('update'));
-    expect((q('update') as HTMLButtonElement).disabled).toBe(true);
-    expect(q('update')?.textContent).toBe('更新中…');
-    done();
-    await vi.waitFor(() => expect(q('update-msg')?.textContent).toBe('更新しました'));
-    expect((q('update') as HTMLButtonElement).disabled).toBe(false);
-    expect(q('update-msg')?.textContent).toBe('更新しました');
-  });
-  it('shows an error when refresh rejects', async () => {
-    state.refresh = () => Promise.reject(new Error('boom'));
-    render(root, state);
-    click(q('update'));
-    await vi.waitFor(() => expect(q('update-msg')?.textContent).toContain('boom'));
-    expect((q('update') as HTMLButtonElement).disabled).toBe(false);
   });
 });
 

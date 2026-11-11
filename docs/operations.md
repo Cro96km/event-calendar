@@ -22,7 +22,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 | 要判断のレビュー依頼(ドライラン) | `npm run candidates -- --review-issue`(発行は `--publish` 明示時のみ) |
 | 手動の調整(公式に無い項目の追加・項目の非表示) | `npm run manual -- add` / `hide` など(§14。Actions の manual からも) |
 | 不要データの削除 | `npm run prune`(確認だけ)/ `-- --apply`(§15。Actions の prune からも) |
-| 画面確認 | `npm run dev`(ヘッダの「更新」ボタンで collect+candidates。5分間隔制限) |
+| 画面確認 | `npm run dev` |
 - 想定頻度: 週1回。収集後に `data/articles/` の差分を確認する。
 
 ### 2.1 表示候補の運用手順(収集→candidates→要判断→反映)
@@ -37,7 +37,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 - `config/judge/decisions.json`・`config/judge/rules.json` はgit管理。`calendar/`(台帳。読む用)もgit管理(更新PRに含まれる)。`needs-review.md`は管理外。
 
 ## 3. データ管理
-- 正本: `data/articles/<YYYY>/<MM>/<id>.json`(月は記事IDの日付から)（git管理）。生HTML: `data/raw/`（git管理外、消えても再取得可）。最後に公式サイトを収集した時刻: `data/collected.json`（git管理。収集が最後まで終わったときだけ `collect` が書く。429等で中断したら更新しない。画面上部の「公式サイト収集」の元。手で直さない）。
+- 正本: `data/articles/<YYYY>/<MM>/<id>.json`(月は記事IDの日付から)（git管理）。生HTML: `data/raw/`（git管理外、消えても再取得可）。最後に公式サイトを収集した時刻: `data/collected.json`（git管理。収集が最後まで終わったときだけ `collect` が書く。429等で中断したら更新しない。画面上部の「最終更新」の元。手で直さない）。
 - バックアップ: git履歴が正本のバックアップ。`data/raw/`は再取得可能なため許容(消えた場合はreparse不可→再取得)。誤削除は `git restore data/articles`。
 - 全再構築: `data/raw/` が残っていれば `reparse`、無ければ `collect --since` で再取得（間隔2秒のため時間がかかる）。
 - 保持: 正本は全件(増えすぎたら §15 の prune で、表示範囲より前に終わった記事を削除する)。公開用exportは表示範囲(過去12か月・未来12か月。`config/display/window.json`)に絞る。

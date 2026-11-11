@@ -39,10 +39,6 @@ export interface AppState {
   monthStart: string;
   /** 畳んだセクションID(localStorage に保存) */
   collapsed: Set<string>;
-  /** 更新ボタン(開発サーバのみ。未設定ならボタンを出さない)。成功/失敗とメッセージを返す */
-  refresh?: () => Promise<{ ok: boolean; message: string }>;
-  updating: boolean;
-  updateMessage: string;
   /** 詳細パネルへスクロール済みの選択(`日|項目ID`)。同じ選択のまま再描画(セクションの開閉など)してもスクロールしない */
   scrolledSelection?: string | null;
   /** 撮影モード(?shot=…。Discord 用の画像。spec §4.12)。指定時は操作・詳細・注意書きを出さず、種類のセクションだけを週表示で描く */
@@ -78,8 +74,6 @@ export function initialState(today: string, events: ExportEvent[], index: IndexF
     weekStart: today,
     monthStart: today,
     collapsed: loadCollapsed(),
-    updating: false,
-    updateMessage: '',
   };
 }
 
@@ -400,7 +394,7 @@ export function render(root: HTMLElement, state: AppState): void {
   root.replaceChildren();
 
   const header = el('header', 'bar');
-  const stamp = el('span', 'stamp', `公式サイト収集: ${state.collectedAt ? `${formatJst(state.collectedAt)} (JST)` : '不明'}`);
+  const stamp = el('span', 'stamp', `最終更新: ${state.collectedAt ? `${formatJst(state.collectedAt)} (JST)` : '--'}`);
   stamp.dataset.testid = 'collected-at';
   header.append(el('h1', undefined, appTitle()), stamp);
 
@@ -433,67 +427,37 @@ export function render(root: HTMLElement, state: AppState): void {
     }
   };
   // 週⇄月の切替は、切替先のカレンダーの記号(押すとどうなるかは aria-label・title)
-  const viewBtn = btn('', 'view-toggle', toggleView, undefined, state.view === 'week' ? '月表示にする' : '週表示にする');
+  const viewBtn = btn('', 'view-toggle', toggleView, undefined, state.view === 'week' ? '月表示' : '週表示');
   viewBtn.classList.add('icon-btn');
   viewBtn.append(icon(state.view === 'week' ? 'calendar-month' : 'calendar-week'));
-  nav.append(viewBtn);
   const month = state.view === 'month';
   nav.append(
-    btn('<', 'nav-prev', () => (month ? (state.monthStart = clampToWindow(addMonthsToDay(state.monthStart, -1), state.today)) : (state.weekStart = clampToWindow(addDays(state.weekStart, -7), state.today))), undefined, month ? '前の月' : '前の週'),
+    btn('◀', 'nav-prev', () => (month ? (state.monthStart = clampToWindow(addMonthsToDay(state.monthStart, -1), state.today)) : (state.weekStart = clampToWindow(addDays(state.weekStart, -7), state.today))), undefined, month ? '前月' : '前週'),
     btn('●', 'nav-today', () => {
       state.weekStart = state.today;
       state.monthStart = state.today;
-    }, undefined, month ? '今月に戻る' : '今日に戻る'),
-    btn('>', 'nav-next', () => (month ? (state.monthStart = clampToWindow(addMonthsToDay(state.monthStart, 1), state.today)) : (state.weekStart = clampToWindow(addDays(state.weekStart, 7), state.today))), undefined, month ? '次の月' : '次の週'),
+    }, undefined, '今日'),
+    btn('▶', 'nav-next', () => (month ? (state.monthStart = clampToWindow(addMonthsToDay(state.monthStart, 1), state.today)) : (state.weekStart = clampToWindow(addDays(state.weekStart, 7), state.today))), undefined, month ? '次月' : '次週'),
   );
   const atBase = month ? state.monthStart === state.today : state.weekStart === state.today;
   (nav.querySelector('[data-testid="nav-today"]') as HTMLButtonElement).disabled = atBase;
   (nav.querySelector('[data-testid="nav-today"]') as HTMLButtonElement).classList.add('dot-btn'); // ● を少し小さく
+  (nav.querySelector('[data-testid="nav-prev"]') as HTMLButtonElement).classList.add('larrow-btn');
+  (nav.querySelector('[data-testid="nav-next"]') as HTMLButtonElement).classList.add('rarrow-btn');
+  nav.append(viewBtn);
   // 表示範囲(過去・未来それぞれ config/display/window.json の月数)を超えて移動できない
   const range = windowRange(state.today);
   const cur = month ? state.monthStart : state.weekStart;
   (nav.querySelector('[data-testid="nav-prev"]') as HTMLButtonElement).disabled = cur <= range.from;
   (nav.querySelector('[data-testid="nav-next"]') as HTMLButtonElement).disabled = cur >= range.to;
-  if (state.refresh) {
-    const refresh = state.refresh;
-    const ub = el('button', 'vbtn', state.updating ? '更新中…' : '更新');
-    ub.dataset.testid = 'update';
-    ub.disabled = state.updating;
-    ub.title = '最新のニュースを取り込む(数十秒かかります)';
-    ub.onclick = () => {
-      state.updating = true;
-      state.updateMessage = '';
-      rerender();
-      void refresh().then(
-        (r) => {
-          state.updateMessage = r.message;
-          state.updating = false;
-          state.selection = null;
-          rerender();
-        },
-        (e: unknown) => {
-          state.updateMessage = `更新に失敗しました: ${String(e)}`;
-          state.updating = false;
-          rerender();
-        },
-      );
-    };
-    nav.append(ub);
-    if (state.updateMessage) {
-      const m = el('span', 'update-msg', state.updateMessage);
-      m.dataset.testid = 'update-msg';
-      m.setAttribute('role', 'status');
-      nav.append(m);
-    }
-  }
   // 画面の色(ライト/ダーク)の切替(既定はライト。選んだ色は保存する)
   const dark = currentTheme() === 'dark';
   // 切替先の記号(ライト中は月=ダークにする、ダーク中は太陽=ライトにする)
   const themeBtn = el('button', 'vbtn icon-btn theme-toggle');
   themeBtn.append(icon(dark ? 'sun' : 'moon'));
   themeBtn.dataset.testid = 'theme-toggle';
-  themeBtn.setAttribute('aria-label', dark ? 'ライト表示にする' : 'ダーク表示にする');
-  themeBtn.title = dark ? 'ライト表示にする' : 'ダーク表示にする';
+  themeBtn.setAttribute('aria-label', dark ? 'ライトモード' : 'ダークモード');
+  themeBtn.title = dark ? 'ライトモード' : 'ダークモード';
   themeBtn.onclick = () => {
     const next = dark ? 'light' : 'dark';
     applyTheme(next);
@@ -520,9 +484,15 @@ export function render(root: HTMLElement, state: AppState): void {
   const ymLabel = el('div', 'g-label');
   ymLabel.append(...numSpans(((d: string) => `${d.slice(0, 4)}年${Number(d.slice(5, 7))}月`)(state.view === 'week' ? state.weekStart : state.monthStart)));
   dateRow.append(ymLabel);
+  // モンストの日(毎月10・20・30日。設定の定例日程と、記事由来の「モンストの日」)の日付セルは緑の縁にする
+  const monstDays = new Set<string>();
+  for (const e of [...state.events, ...monthlyEvents(days[0] as string, days[days.length - 1] as string, state.monthly)]) {
+    if (!e.name.includes('モンストの日')) continue;
+    for (const d of days) if (isOnCalendarDay(e, d)) monstDays.add(d);
+  }
   for (const day of days) {
     const wd = weekdayOf(day);
-    const cls = ['day', 'g-date', wd === '土' ? 'sat' : wd === '日' ? 'sun' : '', day === state.today ? 'today' : ''].filter(Boolean).join(' ');
+    const cls = ['day', 'g-date', wd === '土' ? 'sat' : wd === '日' ? 'sun' : '', day === state.today ? 'today' : '', monstDays.has(day) ? 'monst-day' : ''].filter(Boolean).join(' ');
     const head = el('button', cls);
     head.dataset.day = day;
     if (day.endsWith('-01') && day !== state.today) {
@@ -548,8 +518,8 @@ export function render(root: HTMLElement, state: AppState): void {
     state.shot === 'summary'
       ? summaryBlocks(sections, sectionGroup).map((b) => ({ ...b, header: false, headings: false })) // 概要は小見出しも出さない
       : sections
-          .filter((x) => !state.shot || state.shot === x.section.id)
-          .map((x) => ({ section: x.section, rows: x.rows, header: true, headings: true }));
+        .filter((x) => !state.shot || state.shot === x.section.id)
+        .map((x) => ({ section: x.section, rows: x.rows, header: true, headings: true }));
   if (state.shot === 'summary' && entries.length > 0) {
     // 概要は各セクションの大見出しを出さない代わりに、ほかの画像のセクション名と同じ見た目の見出しを先頭に1つ付ける(無彩色)
     const h = el('div', 'g-section', SUMMARY.label);
@@ -681,6 +651,7 @@ export function render(root: HTMLElement, state: AppState): void {
         /** クリックで詳細・ツールチップ・読み上げ(バーでも、日ごとに分けた1つ1つでも同じ) */
         const wire = (btn: HTMLButtonElement): void => {
           btn.dataset.eventId = ev.id;
+          if (ev.name.includes('モンストの日')) btn.classList.add('monst-day');
           btn.title = [ev.name, newText, whenText(ev)].filter(Boolean).join('\n');
           btn.setAttribute('aria-label', [ev.pickup ? ev.name : shortLabel(ev.name), newText, whenText(ev)].filter(Boolean).join(' '));
           btn.onclick = () => {
