@@ -68,7 +68,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 新機能・UI変更はブランチ→PR(main へ直接 push しない。自動更新のPRだけ、健全なら自動マージ)。`npm run help` でコマンド一覧、`npm run lint` `npm run typecheck` `npm test` `npm run build` が通ること(CIも同じ)。仕様は docs/spec.md。
 
 ## 7. 自動更新の全体像
-更新は **ブランチ→PR→(健全なら自動マージ)→反映** で行う。毎週金曜 00:00 JST に自動実行し、Actions → update → Run workflow で手動実行もできる。健全でなければ PR に『要確認』を付けて待機し、公開サイトは前回のまま。要対応(要判断など)があれば Issue ができる。手順・ワークフロー・必要な設定は §13、コマンドは §10〜§12。
+更新は **ブランチ→PR→(健全なら自動マージ)→反映** で行う。毎週木曜 19:00 JST に自動実行し、Actions → update → Run workflow で手動実行もできる。健全でなければ PR に『要確認』を付けて待機し、公開サイトは前回のまま。要対応(要判断など)があれば Issue ができる。手順・ワークフロー・必要な設定は §13、コマンドは §10〜§12。
 
 ## 8. 破界の星墓の更新手順
 破界の星墓は新しいクエストが増え続け、6階層以降などニュースから分からない情報がある。設定は **`config/schedule/hakai.json` の1ファイル**(クエストの属性色と、記事に載らない固定の階層)。属性色の色名は `config/display/quest-colors.json` の `palette`(red=火・blue=水・green=木・yellow=光・purple=闇)。
@@ -148,7 +148,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 ## 13. ワークフローと必要なリポジトリ設定
 | ワークフロー | きっかけ | 内容 |
 |---|---|---|
-| `update.yml` | 毎週金曜 00:00 JST、手動実行 | `npm run update`(収集→判定→差分レポート)→ lint・テスト・公開データ生成 + `npm run check`(健全性) →ブランチ `update/<日時>` と PR(本文=差分レポート)。健全ならラベル『自動マージ』を付けて**マージし、`deploy.yml` を起動**。健全でなければラベル『要確認』+理由で待機。要対応があれば Issue。収集時刻(`data/collected.json`)は収集のたびに変わるので、新着が無い週でも PR ができる(健全なら自動マージ)。例外で落ちたら Issue「更新の失敗」 |
+| `update.yml` | 毎週木曜 19:00 JST、手動実行 | `npm run update`(収集→判定→差分レポート)→ lint・テスト・公開データ生成 + `npm run check`(健全性) →ブランチ `update/<日時>` と PR(本文=差分レポート)。健全ならラベル『自動マージ』を付けて**マージし、`deploy.yml` を起動**。健全でなければラベル『要確認』+理由で待機。要対応があれば Issue。収集時刻(`data/collected.json`)は収集のたびに変わるので、新着が無い週でも PR ができる(健全なら自動マージ)。例外で落ちたら Issue「更新の失敗」 |
 | `deploy.yml` | main への push(`data/articles`・`config`・`src`・`public`・設定ファイルの変更)、手動実行、`update.yml`・`apply.yml` の起動 | 正本と設定から表示用データを作り直し(`npm run update -- --no-collect`。収集しない)、公開サイトをビルドして GitHub Pages に公開 |
 | `apply.yml` | 要対応Issue(タイトルが「要対応」)に `/apply` とコメント(所有者・メンバー・共同作業者のみ。Issueの作者も更新ワークフローのbotか所有者のものだけ) | Issue本文のチェックを `npm run judge` で判断の記憶に取り込み、検証して PR→自動マージ→`deploy.yml` 起動→Issue を閉じる。検証が通らなければ『要確認』で待機 |
 | `manual.yml` | 手動実行のみ(Actions → manual → Run workflow) | 入力(操作・項目名・期間など)で `npm run manual` を実行 → 検証(lint・テスト・ビルド・`npm run check`) → `config/schedule/manual.json` を更新する PR → 健全なら自動マージして `deploy.yml` を起動。検証が通らなければ『要確認』で待機。手順は §14 |
@@ -159,7 +159,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 **手動実行の入力(update.yml)**: `discord`(true なら健全に終わったあと Discord へ転送。既定 false)、`collect`(false にすると収集せず、設定の変更だけを反映して判定とレポートを作り直す)、`pages`(既定2)、`since`(初回・過去分用。公式サイトへの負荷が大きい)。
 
 **日常の使い方**
-- 金曜の朝: PR が『自動マージ』ならそのまま反映済み(PR の本文で何が増えたかを見られる)。『要確認』なら理由を見て対応する。
+- 木曜の夜: PR が『自動マージ』ならそのまま反映済み(PR の本文で何が増えたかを見られる)。『要確認』なら理由を見て対応する。
 - 要対応の Issue が立っていたら: チェックを付けて `/apply`(§11)。星墓・ラベルは設定ファイルを PR で直す(§8)。
 - 設定だけ直したとき: PR をマージすれば `deploy.yml` が反映する(収集は不要)。収集もしたければ update.yml を手動実行する。
 - 反映だけやり直したいとき: Actions → deploy → Run workflow。
@@ -234,7 +234,7 @@ main への直接 push は GitHub のルールセットで禁止している(§1
 
 ### Discord への送信(`npm run discord:post` / `.github/workflows/discord.yml`)
 - **方式**: Webhook で、画像を**1通のメッセージにまとめて毎回新しく投稿**する(本文は `2026/11/06 ~ 2026/11/12 ｜ [カレンダー全体はこちら](Webページの URL)` + 添付。リンクの埋め込みプレビューは `SUPPRESS_EMBEDS` で出さない。過去の投稿は書き換えない=履歴が残る)。メンション・`@` は解釈させない。通知を鳴らさないのは `--silent`(Actions では `silent` 入力)。
-- **毎週の自動転送**: 定例の `update.yml`(金曜 0:00 JST)が**健全に終わった**(自動マージ済み、または変更なし)あとに `discord.yml` を起動する。`要確認` の週(main が古い)は送らない。画像はリポジトリのデータからその場で作るので、deploy の完了は待たない。`update.yml` の手動実行は、入力 `discord=true` のときだけ転送する(既定は送らない)。
+- **毎週の自動転送**: 定例の `update.yml`(木曜 19:00 JST)が**健全に終わった**(自動マージ済み、または変更なし)あとに `discord.yml` を起動する。`要確認` の週(main が古い)は送らない。画像はリポジトリのデータからその場で作るので、deploy の完了は待たない。`update.yml` の手動実行は、入力 `discord=true` のときだけ転送する(既定は送らない)。
 - **臨時の転送**: Actions → discord → Run workflow。入力: `date`(基準日。空=今日〈JST〉)・`only`(all か1枚)・`theme`(dark〈既定。定例の転送もダーク〉か light)・`dry_run`(true=送らず、内容を表示し、画像を Artifacts〈7日〉に残す)・`silent`。重複投稿になるので、本番では先に `dry_run=true` で確かめる。
 - **Webhook の URL は Secret `DISCORD_WEBHOOK_URL`**。**複数の送り先は、改行(またはカンマ)区切りで並べる**(空行・重複は無視)。1つずつ送り、どれかが失敗しても残りには送って、最後に失敗があればジョブを失敗にする。ログには何件目かだけ出す(Secret の値の差し替え・追加でも URL を変える。Settings → Secrets and variables → Actions。登録はリポジトリ所有者が行う)。未登録なら警告を出して**何も投稿せずに成功で終わる**(dry-run は Secret 不要)。URL はログに出さない(形が違えば値を伏せて失敗)。URL が漏れたら Discord 側でウェブフックを削除して作り直す。
 - **ローカルで試す**: `npm run update && npm run build:public && npm run discord:images` のあと `npm run discord:post -- --dry-run`。実際に送るなら、リポジトリの外のファイルに URL を置き(例 `~/.config/monst/discord-test-webhook`。`chmod 600`)、`DISCORD_WEBHOOK_URL="$(cat ~/.config/monst/discord-test-webhook)" npm run discord:post`(テスト用チャンネルで)。`out/discord/` に複数の期間の画像があれば、最新の期間だけ送る。
