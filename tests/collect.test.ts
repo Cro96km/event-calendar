@@ -68,7 +68,14 @@ describe('buildRecord', () => {
   it('内容が同じなら前回レコードを返す(fetched_atだけの差分を作らない)', () => {
     const a = buildRecord({ item, html, fetchedAtMs: 1_000_000_000_000 });
     expect(buildRecord({ item, html, fetchedAtMs: 1_100_000_000_000, prev: a })).toBe(a);
-    expect(buildRecord({ item, html: html + ' ', fetchedAtMs: 1_100_000_000_000, prev: a })).not.toBe(a);
+    // 本文の外(ヘッダ・フッタ・関連記事など)が取得のたびに変わっても、本文が同じなら同じレコード(ハッシュを変えない)
+    const chrome = html.replace('<body', '<body data-build="' + Math.random() + '"').replace('</body>', '<aside>関連記事 ' + Math.random() + '</aside></body>');
+    expect(chrome).not.toBe(html);
+    expect(buildRecord({ item, html: chrome, fetchedAtMs: 1_100_000_000_000, prev: a })).toBe(a);
+    // 本文が変われば別のレコード
+    const edited = html.replace(/(<div[^>]*news-detail__body[^>]*>)/, '$1<p>追記</p>');
+    expect(edited).not.toBe(html);
+    expect(buildRecord({ item, html: edited, fetchedAtMs: 1_100_000_000_000, prev: a })).not.toBe(a);
   });
   it('詳細を解釈できなければ none', () => {
     expect(buildRecord({ item, html: '<html></html>', fetchedAtMs: 0 }).parse_status).toBe('none');

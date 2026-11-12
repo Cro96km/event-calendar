@@ -1,6 +1,6 @@
 // 正本JSON（記事1件1ファイル）の型と生成。spec §5.1。本文・画像は保存しない。
 import { createHash } from 'node:crypto';
-import { parseDetail } from '../scraper/detail';
+import { contentKey, parseDetail } from '../scraper/detail';
 import type { ListItem } from '../scraper/list';
 import { parseArticle, type ParseStatus, type PeriodEvent } from '../period';
 import { JST_OFFSET_MS } from '../jst';
@@ -58,7 +58,7 @@ export function buildRecord({ item, html, fetchedAtMs, lastmod, prev }: BuildInp
     published: item.published,
     fetched_at: toJst(fetchedAtMs),
     lastmod: lastmod ? toJst(lastmod) : (prev?.lastmod ?? null),
-    content_hash: `sha256:${createHash('sha256').update(html).digest('hex')}`,
+    content_hash: `sha256:${createHash('sha256').update(contentKey(html)).digest('hex')}`,
     parse_status: parsed?.parse_status ?? 'none',
     events: parsed?.events ?? [],
     reward_until: parsed?.reward_until ?? null,
