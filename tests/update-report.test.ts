@@ -66,6 +66,11 @@ describe('buildUpdateReport(収集前後の差分)', () => {
     expect(run([base, none], [base, none]).unparsed).toEqual([]);
   });
 
+  it('獣神化・改/真獣神化の解禁告知は定例なので、期間が取れなくても要対応にしない', () => {
+    const evo = rec('Z_2', 'event', [], { parse_status: 'none', title: '「ウボ＝サスラ」の獣神化・改が11/17に解禁！' });
+    expect(run([base], [base, evo]).unparsed).toEqual([]);
+  });
+
   it('1行に収まらない新規の表示ラベル(クエスト・キャンペーン)は要対応。ガチャは対象外', () => {
     const longName = '表示する企画の説明がとても長くて一行にはまったく収まらない名前の項目です';
     const n = rec('L_1', 'campaign', [ev('L_1#0', longName, T0, T1)]);

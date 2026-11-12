@@ -100,8 +100,16 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
   // バーは暦日の列に描くので、バーを押したときは暦日で判定する(翌4:00終了などでも「イベントなし」にしない)
   // イベントクエスト行のバーは、ガチャ由来の写し(id末尾 ~event)。詳細は元のガチャイベントを、タイトルは行ラベル(「ガチャ」なし)で出す
   const baseId = sel.eventId?.endsWith(EVENT_QUEST_SUFFIX) ? sel.eventId.slice(0, -EVENT_QUEST_SUFFIX.length) : sel.eventId;
+  // クエスト(イベントクエスト)の詳細にはガチャの情報(排出対象・ピックアップ・新限定キャラ・日別の時間帯)を出さない
+  const questCopy = (e: ExportEvent): ExportEvent => {
+    const copy: ExportEvent = { ...e, name: rowLabel('gacha', e).l1 };
+    delete copy.details;
+    delete copy.new_names;
+    delete copy.slots;
+    return copy;
+  };
   const entries = sel.eventId
-    ? pool.filter((e) => e.id === baseId && sectionOf(e.category) !== null && isOnCalendarDay(e, sel.day)).map((e) => ({ event: baseId === sel.eventId ? e : { ...e, name: rowLabel('gacha', e).l1 } }))
+    ? pool.filter((e) => e.id === baseId && sectionOf(e.category) !== null && isOnCalendarDay(e, sel.day)).map((e) => ({ event: baseId === sel.eventId ? e : questCopy(e) }))
     : eventsForDay(pool, sel.day);
   // メンテナンス(帯)も、帯を選んだとき/日付を選んだときに出す
   const maint = state.events.filter((e) => (sel.eventId ? e.id === sel.eventId : true) && maintenanceOnDay(e, sel.day));
