@@ -11,7 +11,7 @@
 
 ## 1. 目的(確定)
 - カレンダーの週表示の画像を、**1つの Discord サーバーのチャンネルへ、Webhook で送る**。サーバー代ゼロ(GitHub Actions のみ)。常駐プロセス・スラッシュコマンド・ボタンは作らない(こちらから Discord へ送るだけ。Discord から呼ばれない)。
-- **毎週、自動で転送する**: データの更新(`update.yml`。毎週金曜 0:00 JST = 木曜 15:00 UTC の cron)→ 公開サイト(GitHub Pages)の反映(`deploy.yml`)に合わせて、その週の画像を送る。
+- **毎週、自動で転送する**: データの更新(`update.yml`。毎週木曜 19:00 JST = 木曜 10:00 UTC の cron)→ 公開サイト(GitHub Pages)の反映(`deploy.yml`)に合わせて、その週の画像を送る。
 - **臨時の転送**も Actions の画面(`workflow_dispatch`)からできるようにする。入力は、基準日(YYYY-MM-DD。既定=今日〈JST〉)・種類(全部/1枚)・**dry-run**(送らず、内容だけ表示)など。
 - 旧計画(毎日4:30 JST に同じメッセージを書き換える)は**やめた**。毎週に変えた。
 
@@ -24,7 +24,7 @@
 ## 3. これから作るもの(段階3)
 1. **送信スクリプト**(`scripts/` に。例 `discord-post.ts`): 画像を Webhook へ POST。**dry-run を必ず用意**。Webhook の URL は環境変数(`DISCORD_WEBHOOK_URL`)から読み、ログに出さない。
 2. **ワークフロー**(`.github/workflows/discord.yml`。`workflow_dispatch` + update 後の自動起動)。`tests/workflows.test.ts` の不変条件を守る: **アクションは SHA 固定・`permissions` 明示・入力は env 経由**。既存の `deploy.yml`・`update.yml` を壊さない。
-3. **Actions 上の準備**: Playwright の Chromium(`npx playwright install --with-deps chromium`)と日本語フォント(`fonts-noto-cjk`)。ブラウザの時刻は Asia/Tokyo(スクリプトで固定済み)。基準日は **JST で計算**する(UTC の cron は木曜 15:00 のため。`TZ=Asia/Tokyo date +%F`)。
+3. **Actions 上の準備**: Playwright の Chromium(`npx playwright install --with-deps chromium`)と日本語フォント(`fonts-noto-cjk`)。ブラウザの時刻は Asia/Tokyo(スクリプトで固定済み)。基準日は **JST で計算**する(UTC の cron は木曜 10:00 のため。`TZ=Asia/Tokyo date +%F`)。
 4. **docs 更新**: operations.md(§18 に送信と cron の運用を追記)・spec.md・`npm run help`(`src/commands.ts`)。
 
 ## 4. 連携の設計(update → deploy → Discord)
