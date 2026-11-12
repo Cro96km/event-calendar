@@ -74,6 +74,12 @@ describe('GitHub Actions ワークフローの不変条件', () => {
     expect(t).toContain('npm run check -- --summary update-report.json');
   });
 
+  it('update.yml: 更新PRの失敗した ci の実行を消す(ブランチ名は step の出力から env 経由)', () => {
+    const t = text('update.yml');
+    expect(t).toContain('gh run delete');
+    expect(t).toContain('BRANCH: ${{ steps.pr.outputs.branch }}');
+  });
+
   it('update.yml / apply.yml: GITHUB_TOKEN のマージは push を起こさないので、deploy.yml を明示的に起動する', () => {
     expect(text('update.yml')).toContain('gh workflow run deploy.yml');
     expect(text('apply.yml')).toContain('gh workflow run deploy.yml');

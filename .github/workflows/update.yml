@@ -1,4 +1,4 @@
-# 更新: 収集 → 差分レポート → ブランチ+PR →(健全なら自動マージ → 反映)。毎週金曜 00:00 JST(木曜 15:00 UTC)+手動実行。
+# 更新: 収集 → 差分レポート → ブランチ+PR →(健全なら自動マージ → 反映)。毎週木曜 19:00 JST(木曜 10:00 UTC)+手動実行。
 # 手動実行(Actions → update → Run workflow)の入力: collect=false なら収集せず、設定の変更だけ反映して判定とレポートを作り直す。
 # 健全でなければ PR にラベル『要確認』と理由を付けて待機(公開サイトは前回のまま)。要対応(要判断など)があれば Issue を作る。
 # 必要なリポジトリ設定: Settings → Actions → General →『Allow GitHub Actions to create and approve pull requests』。手順は docs/operations.md §13。
@@ -94,6 +94,7 @@ jobs:
           echo "changed=true" >> "$GITHUB_OUTPUT"
           day=$(date -u +%Y-%m-%d-%H%M)
           branch="update/$day"
+          echo "branch=$branch" >> "$GITHUB_OUTPUT"
           git switch -c "$branch"
           git add data config
           git commit -m "data: update $day"
@@ -121,6 +122,21 @@ jobs:
           else
             gh pr edit "$url" --add-label "要確認"
           fi
+
+      # 更新PRは作った直後にマージするため、PR を契機に起動する ci.yml が「workflow file issue」(ジョブ0件)で失敗扱いの履歴を残す。
+      # 検証は上の Verify で済んでいるので、そのブランチの失敗した ci の実行だけを消す(失敗しても止めない)。
+      - name: Remove stale ci runs of the update branch
+        if: steps.pr.outputs.changed == 'true'
+        continue-on-error: true
+        env:
+          BRANCH: ${{ steps.pr.outputs.branch }}
+        run: |
+          for _ in 1 2 3 4; do
+            sleep 10
+            for id in $(gh run list --workflow ci.yml --branch "$BRANCH" --status failure --json databaseId --jq '.[].databaseId'); do
+              gh run delete "$id" || true
+            done
+          done
 
       # 毎週の転送: 健全(自動マージ済み、または変更なし)なら Discord へ画像を送る。要確認の週は送らない(main が古いため)。
       # 画像はリポジトリのデータからその場で作るので、deploy の完了は待たない。手動実行は discord=true のときだけ。
