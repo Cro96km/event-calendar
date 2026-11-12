@@ -65,9 +65,9 @@ describe('GitHub Actions ワークフローの不変条件', () => {
     for (const blk of runs) expect(blk).not.toMatch(/\$\{\{\s*github\.event\.inputs\./);
   });
 
-  it('update.yml: 毎週金曜0:00 JST(木曜15:00 UTC)と手動実行、手動入力(collect/pages/since)。収集はnpm run update 経由', () => {
+  it('update.yml: 毎週木曜19:00 JST(木曜10:00 UTC)と手動実行、手動入力(collect/pages/since)。収集はnpm run update 経由', () => {
     const t = text('update.yml');
-    expect(t).toContain("cron: '0 15 * * 4'");
+    expect(t).toContain("cron: '0 10 * * 4'");
     expect(t).toMatch(/workflow_dispatch:/);
     for (const k of ['collect:', 'pages:', 'since:']) expect(t).toContain(k);
     expect(t).toContain('npm run update --');
