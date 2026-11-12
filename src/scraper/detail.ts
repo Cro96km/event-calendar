@@ -111,3 +111,17 @@ export function parseDetail(id: string, html: string): ArticleInput | null {
     bossColors: attributeColors(body),
   };
 }
+
+/**
+ * 変更検知用の内容(content_hash の元)。本文(`.news-detail__body`)・タイトル・公開日だけ。
+ * ページ全体のHTMLはヘッダ・フッタ・関連記事など本文と無関係な部分が取得のたびに変わり、記事が変わっていなくてもハッシュが毎回変わって差分が出るため。
+ * 本文が見つからないページだけ、HTML全体にする。
+ */
+export function contentKey(html: string): string {
+  const root = parse(html);
+  const body = root.querySelector('.news-detail__body');
+  if (!body) return html;
+  const title = (root.querySelector('h1.news-detail__title')?.text ?? '').replace(/\s+/g, ' ').trim();
+  const published = root.querySelector('.news-detail time')?.getAttribute('datetime') ?? '';
+  return JSON.stringify([title, published, body.innerHTML]);
+}

@@ -8,6 +8,7 @@ import { checkHakai, type HakaiUnknown } from './hakai-check';
 import { labelWidth, MAX_LABEL_WIDTH } from './label-override';
 import { applySelection, buildCandidates } from './selection';
 import { MAINTENANCE_CATEGORY, sectionOfEvent } from './sections';
+import { classifyUnparsed } from './unparsed-report';
 import { mergeEvents, periodText, rowLabel } from './week';
 
 /** レポートの1項目。 */
@@ -149,7 +150,8 @@ export function buildUpdateReport({ prev, cur, decisions, rules }: ReportInput):
 
   const unparsed = newIds
     .map((id) => cur.find((r) => r.id === id) as ArticleRecord)
-    .filter((r) => r.parse_status === 'none')
+    // 獣神化・改/真獣神化の解禁告知は定例で、期間ではなく解禁日(キャラクターの項目で扱う)。毎回の要対応にしない
+    .filter((r) => r.parse_status === 'none' && classifyUnparsed(r) !== 'evolution')
     .map((r) => ({ id: r.id, title: r.title, url: r.url }));
 
   return { newArticles: newIds.length, changedArticles, newEvents, changedEvents, visibleAdded, visibleRemoved, pending, carriedPending, newQuests, longLabels, unparsed };
