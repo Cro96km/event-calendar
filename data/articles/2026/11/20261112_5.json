@@ -1,0 +1,26 @@
+{
+  "id": "20261112_5",
+  "url": "https://www.monster-strike.com/news/20261112_5.html",
+  "title": "「ウボ＝サスラ」の獣神化・改が11/17に解禁！",
+  "category": "update",
+  "categories": [
+    "update"
+  ],
+  "published": "2026-11-12",
+  "fetched_at": "2026-11-12T21:56:26+09:00",
+  "lastmod": "2026-11-12T17:06:59+09:00",
+  "content_hash": "sha256:f3c667660b8b651a85191fd47143690f3505b4dcc43047743740520500a3637c",
+  "parse_status": "none",
+  "events": [],
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "ウボ＝サスラ",
+      "kind": "獣神化・改",
+      "start": "2026-11-17T00:00:00+09:00",
+      "end": "2026-11-18T00:00:00+09:00",
+      "at": "2026-11-17T12:00:00+09:00",
+      "attr": "水"
+    }
+  ]
+}
