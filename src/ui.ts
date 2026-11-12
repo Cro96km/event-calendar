@@ -193,7 +193,16 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
               owner.rowSpan += 1;
               return;
             }
-            const td = el('td', undefined, c);
+            const td = el('td', undefined, i === 2 && t.head[0] === '弾' ? '' : c);
+            // 超UP期間の表(激・獣神祭): キャラクターは名前ごとに属性色で、1体ずつ改行
+            if (i === 2 && t.head[0] === '弾') {
+              c.split('、').forEach((n) => {
+                const line = el('div', undefined, n);
+                const nc = block.colors && Object.hasOwn(block.colors, n) ? block.colors[n] : undefined;
+                if (nc && paint(line, nc)) line.classList.add('qname');
+                td.append(line);
+              });
+            }
             // 対象キャラクターの表: 名前(1列目)と属性(3列目)を属性色で
             if (t.head[0] === 'キャラクター' && (i === 0 || i === 2)) {
               const ac = attrColorInText(r[2] ?? '');
@@ -230,6 +239,9 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
           // 対象ステージ(禁忌の獄)の名前に属性色。`N階層：` の接頭辞は除いて判定
           const qc = isQuestNameBlock(block.label) ? questNameColor(line.replace(/^\d+階層\s*[：:]\s*/, '')) : undefined;
           if (qc && paint(li, qc)) li.classList.add('qname');
+          // キャラクター名の一覧(モンコレ・ジェネレーションの対象キャラなど)は属性色
+          const cc = block.colors && Object.hasOwn(block.colors, line) ? block.colors[line] : undefined;
+          if (cc && paint(li, cc)) li.classList.add('qname');
           ul.append(li);
         }
         box.append(ul);

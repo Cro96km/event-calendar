@@ -262,6 +262,83 @@ function volBlocks(lines: string[], published: string, warnings: string[]): VolB
   return out;
 }
 
+/** 激・獣神祭の `・第N弾` / `期間：…` / `対象キャラクター：…` の1件。 */
+interface BatchBlock {
+  n: number;
+  raw: string;
+  chars: string[];
+}
+
+/** 特定キャラクターの排出確率が超UPする期間(第1弾〜)。`期間` と `対象キャラクター` が揃った弾だけ返す。 */
+function batchBlocks(lines: string[], published: string, warnings: string[]): BatchBlock[] {
+  const out: BatchBlock[] = [];
+  let cur: { n: number; raw?: string; chars: string[] } | null = null;
+  const flush = (): void => {
+    if (cur !== null && cur.raw !== undefined && cur.chars.length > 0) out.push({ n: cur.n, raw: cur.raw, chars: cur.chars });
+    cur = null;
+  };
+  for (const rawLine of lines) {
+    const line = normalizeText(rawLine);
+    const v = /^[・･]?\s*第(\d+)弾$/.exec(line);
+    if (v) {
+      flush();
+      cur = { n: Number(v[1]), chars: [] };
+      continue;
+    }
+    if (cur === null) continue;
+    const p = /^期間\s*:\s*(.+)$/.exec(line);
+    const c = /^対象キャラクター?\s*:\s*(.+)$/.exec(line);
+    if (p) {
+      const m = RANGE_RE.exec(p[1] as string);
+      const r = m ? resolveRange(m, published, warnings) : null;
+      if (r) cur.raw = r.raw;
+    } else if (c) {
+      cur.chars = (c[1] as string).split('、').map((x) => x.trim()).filter((x) => x !== '');
+    } else {
+      flush();
+    }
+  }
+  flush();
+  return out;
+}
+
+/** 超UP期間の表のブロックの見出し。 */
+export const BATCH_LABEL = '排出確率が超UPする期間';
+/** キャラクター名の一覧のブロック(名前だけの行)。属性色を付ける対象。 */
+const CHARA_NAME_LABELS = ['排出対象の限定キャラクター', '対象キャラ', BATCH_LABEL];
+
+/** 激・獣神祭の超UP期間の表を、ガチャ「」の項目(無ければ主期間)に付ける。行は `第N弾 | 期間 | 名前、名前、…`。 */
+function addBatchBlock(input: ArticleInput, events: PeriodEvent[], main: PeriodEvent | undefined, warnings: string[]): void {
+  const batches = batchBlocks(input.lines, input.published, warnings);
+  if (batches.length === 0) return;
+  const host = events.find((e) => e.name.startsWith('ガチャ「')) ?? main;
+  if (!host) return;
+  (host.details ??= []).push({ label: BATCH_LABEL, lines: batches.map((b) => `第${b.n}弾 | ${b.raw} | ${b.chars.join('、')}`) });
+}
+
+/**
+ * キャラクター名の一覧(排出対象・日替わりピックアップ・超UP期間)に、本文の属性色(赤・青・緑・黄・紫。色付き span)を名前→色で付ける。
+ * 色の無い名前は載せない。本文は持たない。
+ */
+function addCharaColors(input: ArticleInput, events: PeriodEvent[]): void {
+  const spans = input.bossColors ?? [];
+  if (spans.length === 0) return;
+  const color = new Map<string, string>();
+  for (const [text, hex] of spans) if (!color.has(normalizeText(text))) color.set(normalizeText(text), hex);
+  for (const e of events) {
+    for (const d of e.details ?? []) {
+      if (!CHARA_NAME_LABELS.includes(d.label)) continue;
+      const names = d.label === BATCH_LABEL ? d.lines.flatMap((l) => (l.split(' | ')[2] ?? '').split('、')) : d.lines;
+      const colors: Record<string, string> = {};
+      for (const n of names) {
+        const c = color.get(normalizeText(n.trim()));
+        if (c !== undefined) Object.defineProperty(colors, n.trim(), { value: c, enumerable: true, writable: true, configurable: true });
+      }
+      if (Object.keys(colors).length > 0) d.colors = colors;
+    }
+  }
+}
+
 interface HeadingSection {
   label: string;
   first: PeriodEvent | null;
@@ -594,6 +671,8 @@ function parseWith(input: ArticleInput, bareLabels: boolean): ParsedArticle {
 
   // 全体期間の行を置き換えたときは、ステージ等のブロックの付け先(主期間)も取り直す
   attachDetails(input.lines, events, events.find((e) => e.label !== RAID_LABEL));
+  addBatchBlock(input, events, events.find((e) => e.label !== RAID_LABEL), warnings);
+  addCharaColors(input, events);
   addPickups(input, events, warnings);
   addBossColors(input, events);
 
