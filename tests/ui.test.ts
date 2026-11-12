@@ -1342,6 +1342,22 @@ describe('ガチャセクション', () => {
     expect(q('detail')?.querySelector('h3')?.textContent).toBe('ギャラクシーアドベンチャー II'); // 行ラベルと同じ。「ガチャ」は付けない
   });
 
+  it('イベントクエスト行の詳細にはガチャの情報(排出対象・新限定キャラ)を出さない。ガチャ行の詳細には出す', () => {
+    const g = ev('g#0', 'event', '2026-10-27T12:00:00+09:00', '2026-10-29T04:00:00+09:00', {
+      name: 'ガチャ「ギャラクシーアドベンチャー II」開催!',
+      title: '新イベント「ギャラクシーアドベンチャー II」より開催！',
+      details: [{ label: '排出対象の限定キャラクター', lines: ['アグナムート'] }],
+    });
+    state = initialState('2026-10-27', [g], INDEX);
+    state.collapsed = new Set();
+    render(root, state);
+    click(bar('g#0~event'));
+    expect(q('detail')?.textContent).not.toContain('排出対象');
+    expect(q('detail')?.textContent).toContain('開催期間');
+    click(bar('g#0'));
+    expect(q('detail')?.textContent).toContain('排出対象');
+  });
+
   it('periodText: 年をまたぐ場合だけ年を付ける。hide_start / hide_end', () => {
     expect(periodText({ start: '2026-10-27T12:00:00+09:00', end: '2026-10-29T11:59:00+09:00' })).toBe('10/27(火) 12:00 〜 10/29(木) 11:59');
     expect(periodText({ start: '2026-12-31T12:00:00+09:00', end: '2027-01-05T11:59:00+09:00' })).toBe('2026/12/31(木) 12:00 〜 2027/01/05(火) 11:59');
