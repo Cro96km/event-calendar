@@ -1,0 +1,26 @@
+{
+  "id": "20261112_1",
+  "url": "https://www.monster-strike.com/news/20261112_1.html",
+  "title": "ガチャ「ミッドナイト・パーティー」11/13より開催！",
+  "category": "event",
+  "categories": [
+    "event"
+  ],
+  "published": "2026-11-12",
+  "fetched_at": "2026-11-12T21:56:31+09:00",
+  "lastmod": "2026-11-12T12:33:12+09:00",
+  "content_hash": "sha256:b8ff55213f3cdd370c65b673f0044d79fd0699939aca5e3d0dfff98fd96c8a32",
+  "parse_status": "ok",
+  "events": [
+    {
+      "id": "20261112_1#0",
+      "name": "ガチャ「ミッドナイト・パーティー」11/13より開催！ #1",
+      "label": "開催期間",
+      "start": "2026-11-13T12:00:00+09:00",
+      "end": "2026-11-15T11:59:00+09:00",
+      "raw": "2026年11月13日(金)12:00〜11月15日(日)11:59",
+      "title_named": true
+    }
+  ],
+  "reward_until": null
+}
