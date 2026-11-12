@@ -1358,6 +1358,31 @@ describe('ガチャセクション', () => {
     expect(q('detail')?.textContent).toContain('排出対象');
   });
 
+  it('詳細: 対象キャラの名前に属性色、超UP期間(激・獣神祭)は表で名前ごとに属性色', () => {
+    const g = ev('g#0', 'event', '2026-10-10T12:00:00+09:00', '2026-10-13T11:59:00+09:00', {
+      name: 'ガチャ「激・獣神祭」開催!',
+      title: 'ガチャ「激・獣神祭」10/10より開催！',
+      details: [
+        { label: '排出対象の限定キャラクター', lines: ['アグナムート', '色なし'], colors: { アグナムート: '#eb0043' } },
+        { label: '排出確率が超UPする期間', lines: ['第1弾 | 10/10 12:00〜10/11 11:59 | サクリファイス、ミライ'], colors: { サクリファイス: '#3154ef' } },
+      ],
+    });
+    state = initialState('2026-10-10', [g], INDEX);
+    state.collapsed = new Set();
+    render(root, state);
+    click(bar('g#0'));
+    const d = q('detail');
+    const lis = [...(d?.querySelectorAll('li') ?? [])];
+    expect(lis.find((x) => x.textContent === 'アグナムート')?.classList.contains('qname')).toBe(true);
+    expect(lis.find((x) => x.textContent === '色なし')?.classList.contains('qname')).toBe(false);
+    const cells = [...(d?.querySelectorAll('td') ?? [])];
+    expect(cells.map((c) => c.textContent)).toEqual(['第1弾', '10/10 12:00〜10/11 11:59', 'サクリファイスミライ']);
+    const names = [...(cells[2]?.querySelectorAll('div') ?? [])];
+    expect(names.map((x) => x.textContent)).toEqual(['サクリファイス', 'ミライ']);
+    expect(names[0]?.classList.contains('qname')).toBe(true);
+    expect(names[1]?.classList.contains('qname')).toBe(false);
+  });
+
   it('periodText: 年をまたぐ場合だけ年を付ける。hide_start / hide_end', () => {
     expect(periodText({ start: '2026-10-27T12:00:00+09:00', end: '2026-10-29T11:59:00+09:00' })).toBe('10/27(火) 12:00 〜 10/29(木) 11:59');
     expect(periodText({ start: '2026-12-31T12:00:00+09:00', end: '2027-01-05T11:59:00+09:00' })).toBe('2026/12/31(木) 12:00 〜 2027/01/05(火) 11:59');

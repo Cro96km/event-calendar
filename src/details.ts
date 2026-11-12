@@ -247,6 +247,9 @@ export function tableOf(lines: readonly string[]): DetailTable | null {
   // 対象キャラクター: `名前 | レアリティ | 属性`
   const chara = lines.map((l) => /^(.+) \| (★[^|]+) \| (.*)$/.exec(l));
   if (chara.every((m) => m)) return { head: ['キャラクター', 'レアリティ', '属性'], rows: chara.map((m) => [m?.[1] as string, m?.[2] as string, m?.[3] as string]) };
+  // 激・獣神祭の超UP期間: `第N弾 | 期間 | 名前、名前、…`
+  const batch = lines.map((l) => /^(第\d+弾) \| (.+) \| (.+)$/.exec(l));
+  if (batch.every((m) => m)) return { head: ['弾', '期間', 'キャラクター'], rows: batch.map((m) => [m?.[1] as string, padDateTime(m?.[2] as string), m?.[3] as string]) };
   // ガチャ開催スケジュール: `対象 | 期間`。対象が前の行と同じなら空欄(表の縦結合の見た目)
   const sched = lines.map((l) => /^(.*) \| (.*\d{1,2}:\d{2}〜.+)$/.exec(l));
   if (sched.every((m) => m)) {
