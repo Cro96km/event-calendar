@@ -1,4 +1,4 @@
-# 更新: 収集 → 差分レポート → ブランチ+PR →(健全なら自動マージ → 反映)。毎週木曜 19:00 JST(木曜 10:00 UTC)+手動実行。
+# 更新: 収集 → 差分レポート → ブランチ+PR →(健全なら自動マージ → 反映)。毎週木曜 18:00 JST(木曜 9:00 UTC)+手動実行。
 # 手動実行(Actions → update → Run workflow)の入力: collect=false なら収集せず、設定の変更だけ反映して判定とレポートを作り直す。
 # 健全でなければ PR にラベル『要確認』と理由を付けて待機(公開サイトは前回のまま)。要対応(要判断など)があれば Issue を作る。
 # 必要なリポジトリ設定: Settings → Actions → General →『Allow GitHub Actions to create and approve pull requests』。手順は docs/operations.md §13。
@@ -24,7 +24,7 @@ on:
         type: boolean
         default: false
   schedule:
-    - cron: '0 10 * * 4'
+    - cron: '0 9 * * 4'
 
 permissions:
   contents: write
