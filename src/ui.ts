@@ -10,7 +10,7 @@ import { attributeColor, type Attribute } from './characters';
 import { dayAttrColors, dayEdgeSegments, edgeColorCss } from './day-edge';
 import { dayStyleOf, type DayStyle } from './bar-style';
 import { fullLabel, shortLabel } from './label';
-import { HAKAI_GROUPS_LABEL, PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
+import { HAKAI_GROUPS_LABEL, NEW_CHARA_TABLE_LABEL, PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
 import { isQuestNameBlock, questNameColor, withFixedFloors } from './quest-color';
 import { icon } from './icons';
@@ -172,7 +172,9 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
       const block = withFixedFloors(event.name, block0, event.start);
       const box = el('div', 'detail-block');
       box.append(el('h4', undefined, block.label));
-      const t = tableOf(block.lines);
+      const t0 = tableOf(block.lines);
+      // 新キャラクターの表(非コラボのイベントガチャ)は、レアリティの列を出さない(キャラクター・属性だけ)
+      const t = t0 && block.label === NEW_CHARA_TABLE_LABEL && t0.head[1] === 'レアリティ' ? { head: t0.head.filter((_, i) => i !== 1), rows: t0.rows.map((r) => r.filter((_, i) => i !== 1)) } : t0;
       if (t) {
         const table = el('table', 'detail-table');
         const tr = el('tr');
@@ -207,9 +209,9 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
                 td.append(line);
               });
             }
-            // 対象キャラクターの表: 名前(1列目)と属性(3列目)を属性色で
-            if (t.head[0] === 'キャラクター' && (i === 0 || i === 2)) {
-              const ac = attrColorInText(r[2] ?? '');
+            // 対象キャラクターの表: 名前(1列目)と属性(最後の列)を属性色で
+            if (t.head[0] === 'キャラクター' && (i === 0 || i === r.length - 1)) {
+              const ac = attrColorInText(r[r.length - 1] ?? '');
               if (ac && paint(td, ac)) td.classList.add('qname');
             }
             // キャンペーンの対象属性の表: 火・水・木・光・闇の字をそれぞれ属性色で

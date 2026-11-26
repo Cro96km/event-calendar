@@ -1257,7 +1257,9 @@ describe('ガチャセクション', () => {
     render(root, state);
     click(bar('n#0'));
     const tds = [...(q('detail')?.querySelectorAll('.detail-table tbody tr') ?? [])].map((r) => [...r.querySelectorAll('td')].map((td) => [td.textContent, (td as HTMLElement).style.getPropertyValue('--pc')]));
-    expect(tds[0]).toEqual([['アルファ', '#3154ef'], ['★6（獣神化前）', ''], ['水', '#3154ef']]);
+    // レアリティの列は出さない(キャラクター・属性だけ)
+    expect([...(q('detail')?.querySelectorAll('.detail-table th') ?? [])].map((t) => t.textContent)).toEqual(['キャラクター', '属性']);
+    expect(tds[0]).toEqual([['アルファ', '#3154ef'], ['水', '#3154ef']]);
     expect(tds[1]?.[0]).toEqual(['ベータ', '#007d32']);
   });
 
