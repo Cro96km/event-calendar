@@ -1,7 +1,11 @@
 // 破界の星墓の設定(config/schedule/hakai.json)の点検(DOMなし)。新クエスト(色の対応が無い階層名)と設定の矛盾を見つける。運用は docs/operations.md。
 import hakai from '../config/schedule/hakai.json';
 import cfg from '../config/display/quest-colors.json';
+import { HAKAI_GROUPS_LABEL } from './details';
 import { fixedFloors, norm, questNameColor } from './quest-color';
+
+/** 1〜5階層がグループA/Bに分かれる最初の開催の開始日。これ以降の星墓の開催の記事には『本開催の登場ステージ』の表がある(読めなければ形式の変更を疑う)。 */
+export const GROUPS_SINCE = '2026-12-01';
 
 /** 設定(config/schedule/hakai.json)の形。 */
 export interface HakaiConfig {
@@ -11,6 +15,7 @@ export interface HakaiConfig {
 
 interface RecordLike {
   id: string;
+  title?: string;
   events: { name: string; start: string; details?: { label: string; lines: string[] }[] }[];
 }
 
@@ -27,6 +32,8 @@ export interface HakaiCheck {
   unknown: HakaiUnknown[];
   /** 設定の矛盾(未定義のクエストの参照・階層番号の重複・sinceの形式/順序・色の未定義・名前の重複) */
   problems: string[];
+  /** 『本開催の登場ステージ』の表を読めなかった星墓の記事(公式の書式が変わった可能性。パーサ src/details.ts の対応が必要) */
+  groupsUnread: { id: string; title: string; start: string }[];
   /** 記事に載っている最大の階層番号(固定の階層は、これより後の番号。ぶつかれば problems に出す) */
   maxArticleFloor: number;
 }
@@ -63,26 +70,36 @@ export function configProblems(h: HakaiConfig = hakai, palette: Record<string, s
 /** 収集済みの記事の破界の星墓の階層クエスト名を調べ、色の対応が無い名前(新クエスト)を返す。 */
 export function checkHakai(records: readonly RecordLike[]): HakaiCheck {
   const seen = new Map<string, HakaiUnknown>();
+  const groupsUnread: HakaiCheck['groupsUnread'] = [];
   let maxArticleFloor = 0;
   for (const r of records) {
-    for (const e of r.events) {
-      if (!e.name.includes('破界の星墓')) continue;
+    const mains = r.events.filter((e) => e.name.includes('破界の星墓'));
+    for (const e of mains) {
       for (const d of e.details ?? []) {
-        if (!/階層.*クエスト/.test(d.label)) continue;
+        const grouped = d.label === HAKAI_GROUPS_LABEL;
+        if (!grouped && !/階層.*クエスト/.test(d.label)) continue;
         for (const line of d.lines) {
-          const m = /^(\d+)階層\s*[：:]\s*(.+)$/.exec(line);
+          // 階層クエスト: `N階層：名` / 本開催の登場ステージ: `N階層 | 名 | 名`(グループA/B)
+          const m = grouped ? /^(\d+)階層 \| (.+)$/.exec(line) : /^(\d+)階層\s*[：:]\s*(.+)$/.exec(line);
           if (!m) continue;
-          maxArticleFloor = Math.max(maxArticleFloor, Number(m[1]));
-          const name = (m[2] as string).trim();
-          const key = norm(name);
-          if (questNameColor(name) === undefined && !seen.has(key)) seen.set(key, { name, article: r.id, start: e.start.slice(0, 10) });
+          if (!grouped) maxArticleFloor = Math.max(maxArticleFloor, Number(m[1]));
+          for (const name of (grouped ? (m[2] as string).split(' | ') : [m[2] as string]).map((x) => x.trim())) {
+            const key = norm(name);
+            if (questNameColor(name) === undefined && !seen.has(key)) seen.set(key, { name, article: r.id, start: e.start.slice(0, 10) });
+          }
         }
       }
     }
+    // グループA/Bの開催の告知記事(タイトルに「破界の星墓」と「登場」)で、表を読めなかった
+    const start = mains[0]?.start.slice(0, 10);
+    if (start !== undefined && start >= GROUPS_SINCE && /破界の星墓/.test(r.title ?? '') && /登場/.test(r.title ?? '') && !mains.some((e) => e.details?.some((d) => d.label === HAKAI_GROUPS_LABEL))) {
+      groupsUnread.push({ id: r.id, title: r.title as string, start });
+    }
   }
   const problems = configProblems();
+
   // 記事が固定の階層と同じ番号まで載せるようになったら、固定の階層の見直しが必要(記事の階層が優先され、固定の階層は追加されない)
   const clash = fixedFloors().filter((f) => f.floor <= maxArticleFloor);
   if (clash.length > 0) problems.push(`記事が ${maxArticleFloor}階層まで載せています。固定の階層(${clash.map((f) => `${f.floor}階層`).join('・')})を見直してください(config/schedule/hakai.json の schedules に新しい版を足す)`);
-  return { unknown: [...seen.values()], problems, maxArticleFloor };
+  return { unknown: [...seen.values()], problems, groupsUnread, maxArticleFloor };
 }

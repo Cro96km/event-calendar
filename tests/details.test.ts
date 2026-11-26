@@ -484,7 +484,7 @@ describe('破界の星墓の6〜10階層(固定)', () => {
   it('withFixedFloors: 破界の星墓の階層クエストに6〜10階層を固定で追加し、ラベルの上限を10階層に直す', async () => {
     const { withFixedFloors } = await import('../src/quest-color');
     const block = { label: '本開催の1階層～5階層までのクエスト', lines: ['1階層：パライソの星墓', '2階層：黄泉の星墓', '3階層：アアルの星墓', '4階層：ラブの星墓', '5階層：パラノヴィアの星墓'] };
-    const r = withFixedFloors('「破界の星墓」が10/27より期間限定で登場！ #1', block);
+    const r = withFixedFloors('「破界の星墓」が10/27より期間限定で登場！ #1', block, '2026-10-27T12:00:00+09:00');
     expect(r.label).toBe('本開催の1階層～10階層までのクエスト');
     expect(r.lines.slice(5)).toEqual(['6階層：ニギミタマの星墓', '7階層：桃源郷の星墓', '8階層：コキュートスの星墓', '9階層：ラルガメンテの星墓', '10階層：メラン&コリンの星墓']);
     expect(r.lines.slice(0, 5)).toEqual(block.lines);
@@ -495,7 +495,7 @@ describe('破界の星墓の6〜10階層(固定)', () => {
   it('記事に同じ階層番号があれば追加しない。破界の星墓以外の項目・階層クエスト以外のブロックはそのまま', async () => {
     const { withFixedFloors } = await import('../src/quest-color');
     const own = { label: '本開催の1階層～7階層までのクエスト', lines: ['1階層：A', '6階層：独自の星墓', '7階層：B'] };
-    const r = withFixedFloors('「破界の星墓」', own);
+    const r = withFixedFloors('「破界の星墓」', own, '2026-10-27T12:00:00+09:00');
     expect(r.lines).toEqual(['1階層：A', '6階層：独自の星墓', '7階層：B', '8階層：コキュートスの星墓', '9階層：ラルガメンテの星墓', '10階層：メラン&コリンの星墓']);
     expect(r.label).toBe('本開催の1階層～10階層までのクエスト');
     const other = { label: '本開催の1階層～5階層までのクエスト', lines: ['1階層：A'] };
@@ -605,5 +605,17 @@ describe('キャラクター名の属性色と超UP期間の表', () => {
     const r = parseArticle({ id: 'G_2', title: 'ガチャ「モンストジェネレーション」', published: '2026-10-20', lines, bossColors: [['アグナムート', '#eb0043'], ['織田信長X', '#3154ef']] });
     expect(r.events[0]?.details?.[0]?.colors).toEqual({ アグナムート: '#eb0043', 織田信長X: '#3154ef' });
     expect(parseArticle({ id: 'G_3', title: 'ガチャ「モンストジェネレーション」', published: '2026-10-20', lines }).events[0]?.details?.[0]?.colors).toBeUndefined();
+  });
+});
+
+describe('非コラボのイベントガチャの「排出される新キャラクター」表', () => {
+  it('同じ表の形で `名前 | レアリティ | 属性` にし、ラベルは「新キャラクター」。属性が次の行でも合わせる', () => {
+    const b = extractBlocks(['▼排出される新キャラクター', 'キャラクター  レアリティ  属性', 'アルファ  ★6（獣神化前）  水', 'ベータ  ★6（獣神化前）', '木', '・ガチャ期間中、上記2体の排出確率が超UP。'])[0];
+    expect(b?.label).toBe('新キャラクター');
+    expect(b?.lines).toEqual(['アルファ | ★6（獣神化前） | 水', 'ベータ | ★6（獣神化前） | 木']);
+  });
+  it('parseArticle: ガチャ「」の項目に付く', () => {
+    const r = parseArticle({ id: 'N_1', title: 'ガチャ「サンプル」3/4より開催！', published: '2026-03-03', lines: ['▼開催期間', '2026年3月4日（水）12:00～3月6日（金）11:59', '▼排出される新キャラクター', 'アルファ  ★6（獣神化前）  水'] });
+    expect(r.events[0]?.details?.map((d) => d.label)).toEqual(['新キャラクター']);
   });
 });

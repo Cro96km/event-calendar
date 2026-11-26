@@ -1,5 +1,5 @@
 // 期間抽出（純関数）。spec §4.2。入力はテキスト化済みの行（h2/h3 見出しは行頭 `# `）。
-import { CHARA_TABLE_LABEL, extractBlocks, isScheduleHeading, PICKUP_SCHEDULE_LABEL, SCHEDULE_LABEL, type DetailBlock } from './details';
+import { CHARA_TABLE_LABEL, NEW_CHARA_TABLE_LABEL, extractBlocks, isScheduleHeading, PICKUP_SCHEDULE_LABEL, SCHEDULE_LABEL, type DetailBlock } from './details';
 import { WEEKDAYS } from './jst';
 import { superUltimateParts } from './label';
 
@@ -367,7 +367,7 @@ function attachDetails(lines: string[], events: PeriodEvent[], main: PeriodEvent
     const owners = heading === null ? [] : events.filter((e) => normalizeText(e.name) === normalizeText(heading));
     // ガチャ開催スケジュール・対象キャラクターの表は、見出しが項目名と一致しなければ、記事の ガチャ「」 の項目(無ければ主期間)へ
     const gacha = events.find((e) => e.name.startsWith('ガチャ「')) ?? main;
-    const gachaTable = block.label === SCHEDULE_LABEL || block.label === CHARA_TABLE_LABEL;
+    const gachaTable = block.label === SCHEDULE_LABEL || block.label === CHARA_TABLE_LABEL || block.label === NEW_CHARA_TABLE_LABEL;
     const targets = owners.length > 0 ? owners : gachaTable && gacha ? [gacha] : /ステージ|階層|メンテナンス内容/.test(block.label) && main ? [main] : [];
     for (const e of targets) (e.details ??= []).push(block);
   }

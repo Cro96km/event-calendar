@@ -24,7 +24,7 @@ describe('buildUpdateReport(収集前後の差分)', () => {
 
   it('変更なしなら空(要対応もなし)', () => {
     const r = run([base], [base]);
-    expect(r).toMatchObject({ newArticles: 0, changedArticles: 0, newEvents: [], changedEvents: [], visibleAdded: [], visibleRemoved: [], pending: [], carriedPending: 0, newQuests: [], longLabels: [], unparsed: [] });
+    expect(r).toMatchObject({ newArticles: 0, changedArticles: 0, newEvents: [], changedEvents: [], visibleAdded: [], visibleRemoved: [], pending: [], carriedPending: 0, newQuests: [], groupsUnread: [], longLabels: [], unparsed: [] });
     expect(needsAttention(r)).toBe(false);
   });
 

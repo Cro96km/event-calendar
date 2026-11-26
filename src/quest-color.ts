@@ -28,7 +28,7 @@ export function questNameColor(name: string): string | undefined {
 }
 
 /** 色を付ける対象のブロックか(対象ステージ/階層のクエスト)。他のブロックの文は色付けしない。 */
-export const isQuestNameBlock = (label: string): boolean => /対象ステージ|階層.*クエスト/.test(label);
+export const isQuestNameBlock = (label: string): boolean => /対象ステージ|登場ステージ|階層.*クエスト/.test(label);
 
 interface Schedule {
   since: string;

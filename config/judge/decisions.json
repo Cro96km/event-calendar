@@ -224,6 +224,11 @@
       "decision": "on",
       "example": "「イベントクエスト」を使用回数100回以上のキャラでクリアすると宝箱「+1」!"
     },
+    "event::「」を倒して魂気をゲット!": {
+      "decision": "off",
+      "example": "「こんきつね」を倒して魂気をゲット!",
+      "confirmed": true
+    },
     "event::「」を編成するとBGMが変更!": {
       "decision": "off",
       "example": "「リンネ」を編成するとBGMが変更!",
