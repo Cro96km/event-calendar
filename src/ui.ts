@@ -10,9 +10,9 @@ import { attributeColor, type Attribute } from './characters';
 import { dayAttrColors, dayEdgeSegments, edgeColorCss } from './day-edge';
 import { dayStyleOf, type DayStyle } from './bar-style';
 import { fullLabel, shortLabel } from './label';
-import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
+import { HAKAI_GROUPS_LABEL, PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
-import { hakaiGroupsBlock, isQuestNameBlock, questNameColor, withFixedFloors } from './quest-color';
+import { isQuestNameBlock, questNameColor, withFixedFloors } from './quest-color';
 import { icon } from './icons';
 import { applyTheme, currentTheme, saveTheme } from './theme';
 import { SUMMARY, summaryBlocks, type ShotKind } from './shot';
@@ -165,9 +165,9 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
     const derived = normalQuestBlock(event);
     // 手動の修正(overrides.json): 注記を出し、指定のブロックは出さない
     for (const note of event.fix?.notes ?? []) item.append(el('p', 'detail-note', note));
-    // 星墓がグループA/Bに分かれる開催は、設定の表(本開催の登場ステージ)を出し、記事の階層クエストのブロックは出さない
-    const groupsBlock = hakaiGroupsBlock(event.name, event.start);
-    const blocks: DetailBlock[] = [...(event.details ?? []).filter((b) => !(groupsBlock && /階層.*クエスト/.test(b.label))), ...(groupsBlock ? [groupsBlock] : []), ...(derived ? [derived] : [])].filter((b) => !event.fix?.hide_blocks?.includes(b.label));
+    // 星墓がグループA/Bに分かれる開催は、記事の表(本開催の登場ステージ)を出し、階層クエストのブロックは出さない
+    const hasGroups = event.details?.some((b) => b.label === HAKAI_GROUPS_LABEL) ?? false;
+    const blocks: DetailBlock[] = [...(event.details ?? []).filter((b) => !(hasGroups && /階層.*クエスト/.test(b.label))), ...(derived ? [derived] : [])].filter((b) => !event.fix?.hide_blocks?.includes(b.label));
     for (const block0 of blocks) {
       const block = withFixedFloors(event.name, block0, event.start);
       const box = el('div', 'detail-block');

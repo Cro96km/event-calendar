@@ -94,6 +94,31 @@ export const CHARA_TABLE_LABEL = '対象キャラクター';
 const CHARA_TABLE_RE = /^▼\s*対象キャラクター\s*$/;
 /** 非コラボのイベントガチャ記事の「▼排出される新キャラクター」(同じ表の形)。 */
 export const NEW_CHARA_TABLE_LABEL = '新キャラクター';
+/** 破界の星墓の「本開催の登場ステージ」(1〜5階層がグループA/Bに分かれる開催の表。公式記事の見出し)。 */
+export const HAKAI_GROUPS_LABEL = '本開催の登場ステージ';
+
+/**
+ * 見出し直後の表を `N階層 | グループA | グループB`(6〜10階層は `N階層 | クエスト`)にする。
+ * セルが行をまたぐ(`7階層` / `カリ・ユガの星墓`)ので、空白区切りの語にして、`N階層` ごとに区切る。見出し行(階層・クエスト名・グループA グループB)は読み飛ばし、見出し(#)・文章(。)で終わる。
+ * 階層ごとの名前が1〜2個でない/階層が無ければ表を信用せず空を返す(読めなかったことを点検が検知する)。
+ */
+function hakaiGroupRows(lines: string[], from: number): { rows: string[]; next: number } {
+  const floors: { floor: string; names: string[] }[] = [];
+  let j = from;
+  for (; j < lines.length; j++) {
+    const l = clean(lines[j] as string);
+    if (lines[j]!.startsWith('# ') || l.includes('。') || /^[▼※◎]/.test(l)) break;
+    if (/^階層\s+クエスト名/.test(l) || /^グループA\s+グループB$/.test(l)) continue;
+    for (const w of l.split(' ')) {
+      if (/^\d+階層$/.test(w)) floors.push({ floor: w, names: [] });
+      else if (floors.length > 0 && w.length <= MAX_ITEM) floors[floors.length - 1]?.names.push(w);
+      else return { rows: [], next: j };
+    }
+  }
+  if (floors.length === 0 || floors.some((f) => f.names.length < 1 || f.names.length > 2) || !floors.some((f) => f.names.length === 2)) return { rows: [], next: j };
+  return { rows: floors.map((f) => `${f.floor} | ${f.names.join(' | ')}`), next: j };
+}
+
 const NEW_CHARA_TABLE_RE = /^▼\s*排出される新キャラクター\s*$/;
 const CHARA_ROW_RE = /^(.+?)\s+(★\d\S*)(?:\s+([火水木光闇無]))?$/;
 const ATTR_ONLY_RE = /^[火水木光闇無]$/;
@@ -171,6 +196,11 @@ export function extractBlocks(lines: string[]): RawBlock[] {
     }
     if (line.startsWith('# ')) {
       heading = clean(line.slice(2));
+      if (heading === HAKAI_GROUPS_LABEL) {
+        const r = hakaiGroupRows(lines, i + 1);
+        if (r.rows.length > 0) out.push({ label: HAKAI_GROUPS_LABEL, heading, lines: r.rows });
+        i = r.next - 1;
+      }
       continue;
     }
     const isNewChara = NEW_CHARA_TABLE_RE.test(clean(line));

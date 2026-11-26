@@ -18,7 +18,7 @@ const oneLine = (s: string): string => s.replace(/\s+/g, ' ').replace(/<!--|-->/
 
 /** 要対応が無ければ null。公式の本文は含めず、種類・件数・例示の項目名・リンクのみ。 */
 export function renderJudgeIssue(r: UpdateReport, date: string): { title: string; body: string } | null {
-  if (r.pending.length === 0 && r.newQuests.length === 0 && r.longLabels.length === 0 && r.unparsed.length === 0) return null;
+  if (r.pending.length === 0 && r.newQuests.length === 0 && r.groupsUnread.length === 0 && r.longLabels.length === 0 && r.unparsed.length === 0) return null;
   const L: string[] = [`自動更新(${date})で、人の確認が必要な項目が見つかりました。公開サイトは更新済みで、未判断の項目は非表示のままです。`, ''];
   if (r.pending.length > 0) {
     L.push(
@@ -40,6 +40,11 @@ export function renderJudgeIssue(r: UpdateReport, date: string): { title: string
   if (r.newQuests.length > 0) {
     L.push('## 新しい星墓クエスト', '', '`config/schedule/hakai.json` の `quests` に追加してください(色は red=火 / blue=水 / green=木 / yellow=光 / purple=闇)。', '');
     for (const q of r.newQuests) L.push(`- 「${oneLine(q.name)}」(記事 ${q.article}、開催 ${q.start})`, '  ```json', `  { "name": "${oneLine(q.name).replace(/の星墓$/, '').replace(/"/g, '')}", "color": "red" }`, '  ```');
+    L.push('');
+  }
+  if (r.groupsUnread.length > 0) {
+    L.push('## 星墓の「本開催の登場ステージ」の表を読み取れませんでした', '', '公式の記事の書式が変わった可能性があります。詳細パネルのグループA/Bの表が出ていません。`src/details.ts` の読み取り(`hakaiGroupRows`)の対応が必要です(Claude Code に「この Issue の星墓の表を読めるように直して」と依頼できます)。', '');
+    for (const u of r.groupsUnread) L.push(`- [${oneLine(u.title)}](https://www.monster-strike.com/news/${u.id}.html)(開催 ${u.start})`);
     L.push('');
   }
   if (r.longLabels.length > 0) {

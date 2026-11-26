@@ -4,7 +4,7 @@ import type { Rule } from './classify';
 import { buildExport, type ExportEvent } from './data/export';
 import type { ArticleRecord } from './data/record';
 import { judgeAll, reviewGroups, selectedKeys, type Decisions, type ReviewGroup } from './decisions';
-import { checkHakai, type HakaiUnknown } from './hakai-check';
+import { checkHakai, type HakaiCheck, type HakaiUnknown } from './hakai-check';
 import { labelWidth, MAX_LABEL_WIDTH } from './label-override';
 import { applySelection, buildCandidates } from './selection';
 import { MAINTENANCE_CATEGORY, sectionOfEvent } from './sections';
@@ -51,6 +51,8 @@ export interface UpdateReport {
   carriedPending: number;
   /** 設定の要対応 */
   newQuests: HakaiUnknown[];
+  /** 星墓の『本開催の登場ステージ』の表を読めなかった新規の記事(公式の書式の変更) */
+  groupsUnread: HakaiCheck['groupsUnread'];
   longLabels: LongLabel[];
   /** 期間が取れなかった新規の記事 */
   unparsed: { id: string; title: string; url: string }[];
@@ -138,6 +140,9 @@ export function buildUpdateReport({ prev, cur, decisions, rules }: ReportInput):
   const prevQuests = new Set(checkHakai(prev).unknown.map((u) => u.name));
   const newQuests = checkHakai(cur).unknown.filter((u) => !prevQuests.has(u.name));
 
+  const prevUnread = new Set(checkHakai(prev).groupsUnread.map((u) => u.id));
+  const groupsUnread = checkHakai(cur).groupsUnread.filter((u) => !prevUnread.has(u.id));
+
   const longLabels: LongLabel[] = [];
   for (const e of [...visibleAdded, ...changedEvents.filter((c) => after.visible.has(c.after.id)).map((c) => c.after)]) {
     const x = after.exported.get(e.id);
@@ -154,11 +159,11 @@ export function buildUpdateReport({ prev, cur, decisions, rules }: ReportInput):
     .filter((r) => r.parse_status === 'none' && classifyUnparsed(r) !== 'evolution')
     .map((r) => ({ id: r.id, title: r.title, url: r.url }));
 
-  return { newArticles: newIds.length, changedArticles, newEvents, changedEvents, visibleAdded, visibleRemoved, pending, carriedPending, newQuests, longLabels, unparsed };
+  return { newArticles: newIds.length, changedArticles, newEvents, changedEvents, visibleAdded, visibleRemoved, pending, carriedPending, newQuests, groupsUnread, longLabels, unparsed };
 }
 
 /** 要対応(人が見る必要がある)があるか。 */
-export const needsAttention = (r: UpdateReport): boolean => r.pending.length > 0 || r.newQuests.length > 0 || r.longLabels.length > 0 || r.unparsed.length > 0;
+export const needsAttention = (r: UpdateReport): boolean => r.pending.length > 0 || r.newQuests.length > 0 || r.groupsUnread.length > 0 || r.longLabels.length > 0 || r.unparsed.length > 0;
 
 const MAX_ROWS = 60;
 const day = (iso: string): string => iso.slice(0, 10);
@@ -180,7 +185,7 @@ export function renderUpdateReport(r: UpdateReport, meta: { generatedAt: string 
   L.push(`- 新規の記事 ${r.newArticles} 件 / 内容が変わった記事 ${r.changedArticles} 件`);
   L.push(`- 新規の項目 ${r.newEvents.length} 件 / 変更された項目 ${r.changedEvents.length} 件`);
   L.push(`- 公開サイトに新しく出る項目 ${r.visibleAdded.length} 件 / 見えなくなる項目 ${r.visibleRemoved.length} 件`);
-  L.push(`- 要対応: 新規の要判断 ${r.pending.length} 種類 / 新しい星墓クエスト ${r.newQuests.length} 件 / 1行に収まらないラベル ${r.longLabels.length} 件 / 期間が取れない新規の記事 ${r.unparsed.length} 件`);
+  L.push(`- 要対応: 新規の要判断 ${r.pending.length} 種類 / 新しい星墓クエスト ${r.newQuests.length} 件 / 星墓の表を読めない記事 ${r.groupsUnread.length} 件 / 1行に収まらないラベル ${r.longLabels.length} 件 / 期間が取れない新規の記事 ${r.unparsed.length} 件`);
   if (r.carriedPending > 0) L.push(`- 前回からの未判断(非表示のまま) ${r.carriedPending} 件`);
   L.push('');
 
@@ -197,6 +202,7 @@ export function renderUpdateReport(r: UpdateReport, meta: { generatedAt: string 
   const todo: string[] = [];
   for (const g of r.pending) todo.push(`- 要判断: ${esc(g.examples[0] ?? g.id)} (${g.category} / 同種${g.count}件) ${g.url}`);
   for (const q of r.newQuests) todo.push(`- 新しい星墓クエスト: 「${q.name}」(記事 ${q.article}、開催 ${q.start}) → \`config/schedule/hakai.json\` の quests に追加`);
+  for (const u of r.groupsUnread) todo.push(`- 星墓の『本開催の登場ステージ』の表を読めない記事: [${esc(u.title)}](https://www.monster-strike.com/news/${u.id}.html)(開催 ${u.start}) → 公式の書式の変更。\`src/details.ts\` の対応が必要`);
   for (const l of r.longLabels) todo.push(`- 1行に収まらないラベル: 「${l.label}」(約${l.width.toFixed(1)}文字) → \`config/display/label-overrides.json\` に短い表記を追加`);
   for (const u of r.unparsed) todo.push(`- 期間が取れない記事: [${esc(u.title)}](${u.url})`);
   L.push('### 要対応', '', todo.length > 0 ? todo.join('\n') : '要対応はありません。', '');

@@ -1,5 +1,5 @@
 {
-  "_doc": "破界の星墓の設定(spec §4.7、運用は docs/operations.md の『破界の星墓の更新手順』)。quests=クエスト名→属性色(名前は記事の階層クエスト名に含まれる語。`ティル・ナ・ノーグ` の中黒や `＆` は照合で吸収。上から最初の一致)。schedules=記事に載らない階層を固定で追加する版。since(開催の開始日 YYYY-MM-DD)以降の開催に、最後に since が当てはまる版を使う(階層が変わったら新しい版を末尾に足す。過去の開催は古い版のまま)。floors の quest は quests の name で、表示は `<quest>の星墓`。記事に同じ階層番号があればその階層は追加しない。色は config/display/quest-colors.json の palette(red/blue/green/yellow/purple)。groups=1〜5階層がグループA/Bに分かれる開催(2026-12開催から)の本開催の登場ステージ。**開催ごとに変わるので、毎回、公式記事の『本開催の登場ステージ』の表を見て、その開催の開始日(start=YYYY-MM-DD。開催の出現期間の開始日)の版を末尾に足す**(floors の a/b は quests の name)。6〜10階層は schedules の版(since)から表に出る。確認は `npm run check`(足し忘れも警告)。",
+  "_doc": "破界の星墓の設定(spec §4.7、運用は docs/operations.md の『破界の星墓の更新手順』)。quests=クエスト名→属性色(名前は記事の階層クエスト名に含まれる語。`ティル・ナ・ノーグ` の中黒や `＆` は照合で吸収。上から最初の一致)。schedules=記事に載らない階層を固定で追加する版。since(開催の開始日 YYYY-MM-DD)以降の開催に、最後に since が当てはまる版を使う(階層が変わったら新しい版を末尾に足す。過去の開催は古い版のまま)。floors の quest は quests の name で、表示は `<quest>の星墓`。記事に同じ階層番号があればその階層は追加しない。色は config/display/quest-colors.json の palette(red/blue/green/yellow/purple)。星墓の1〜5階層のグループA/Bと6〜10階層は、記事の『本開催の登場ステージ』の表から自動で読む(設定は不要)。確認は `npm run check`。",
   "quests": [
     {"name": "パライソ", "color": "green"},
     {"name": "黄泉", "color": "purple"},
@@ -31,28 +31,6 @@
         {"floor": 8, "quest": "コキュートス"},
         {"floor": 9, "quest": "ラルガメンテ"},
         {"floor": 10, "quest": "メラン&コリン"}
-      ]
-    },
-    {
-      "since": "2026-12-01",
-      "floors": [
-        {"floor": 6, "quest": "エリュシオン"},
-        {"floor": 7, "quest": "カリユガ"},
-        {"floor": 8, "quest": "ディエスイレ"},
-        {"floor": 9, "quest": "アガルタ"},
-        {"floor": 10, "quest": "ドーヴァーオーズ"}
-      ]
-    }
-  ],
-  "groups": [
-    {
-      "start": "2026-12-01",
-      "floors": [
-        {"floor": 1, "a": "アポカリプス", "b": "ティルナノーグ"},
-        {"floor": 2, "a": "ラブ", "b": "シャンバラ"},
-        {"floor": 3, "a": "パラノヴィア", "b": "アラミタマ"},
-        {"floor": 4, "a": "桃源郷", "b": "ニギミタマ"},
-        {"floor": 5, "a": "コキュートス", "b": "メラン&コリン"}
       ]
     }
   ]
