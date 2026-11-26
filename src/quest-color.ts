@@ -28,7 +28,7 @@ export function questNameColor(name: string): string | undefined {
 }
 
 /** 色を付ける対象のブロックか(対象ステージ/階層のクエスト)。他のブロックの文は色付けしない。 */
-export const isQuestNameBlock = (label: string): boolean => /対象ステージ|階層.*クエスト/.test(label);
+export const isQuestNameBlock = (label: string): boolean => /対象ステージ|登場ステージ|階層.*クエスト/.test(label);
 
 interface Schedule {
   since: string;
@@ -59,4 +59,30 @@ export function withFixedFloors(eventName: string, block: DetailBlock, eventStar
   if (extra.length === 0) return block;
   const max = Math.max(...fixed.map((f) => f.floor));
   return { ...block, label: block.label.replace(/～\s*\d+階層/, `～${max}階層`), lines: [...block.lines, ...extra] };
+}
+
+/** 1〜5階層がグループA/Bに分かれる開催の表のラベル(公式記事の見出しに合わせる)。 */
+export const HAKAI_GROUPS_LABEL = '本開催の登場ステージ';
+
+interface GroupVersion {
+  start: string;
+  floors: { floor: number; a: string; b: string }[];
+}
+
+/**
+ * 破界の星墓の本開催の登場ステージ(公式記事の表: 階層 | グループA | グループB。6〜10階層はグループなしで1つ)。
+ * 設定(config/schedule/hakai.json の groups)に、開催の開始日(YYYY-MM-DD)と同じ start の版があるときだけ返す。
+ * 行は `N階層 | A | B` と `N階層 | クエスト`(6〜10階層。schedules の固定の階層)。
+ */
+export function hakaiGroupsBlock(eventName: string, eventStart: string, groups: readonly GroupVersion[] = hakai.groups, schedules: readonly Schedule[] = hakai.schedules): DetailBlock | null {
+  if (!eventName.includes('破界の星墓')) return null;
+  const v = groups.find((g) => g.start === eventStart.slice(0, 10));
+  if (!v) return null;
+  const label = (q: string): string => `${q}の星墓`;
+  const grouped = [...v.floors].sort((x, y) => x.floor - y.floor).map((f) => `${f.floor}階層 | ${label(f.a)} | ${label(f.b)}`);
+  const have = new Set(v.floors.map((f) => f.floor));
+  const fixed = pickFloors(schedules, eventStart)
+    .filter((f) => !have.has(f.floor))
+    .map((f) => `${f.floor}階層 | ${f.name}`);
+  return { label: HAKAI_GROUPS_LABEL, lines: [...grouped, ...fixed] };
 }

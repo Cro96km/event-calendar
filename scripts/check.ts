@@ -49,6 +49,7 @@ const records = await readAllRecords('data/articles');
 const hk = checkHakai(records);
 for (const p of hk.problems) fails.push(`星墓の設定の矛盾: ${p}`);
 for (const u of hk.unknown) warns.push(`新しい星墓クエスト: 「${u.name}」(記事 ${u.article}、開催 ${u.start}) → config/schedule/hakai.json の quests に追加`);
+for (const d of hk.missingGroups) warns.push(`星墓の開催 ${d} のグループA/Bの表が未設定 → 公式記事の『本開催の登場ステージ』を見て config/schedule/hakai.json の groups に start: "${d}" の版を追加`);
 
 try {
   await readRules('config/judge/rules.json');

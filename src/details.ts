@@ -92,6 +92,9 @@ const CHARA_LABEL_RE = /^▼\s*(排出対象の限定キャラクター)\s*$/;
 /** ガチャ記事の「▼対象キャラクター」(キャラクター・レアリティ・属性の表)。 */
 export const CHARA_TABLE_LABEL = '対象キャラクター';
 const CHARA_TABLE_RE = /^▼\s*対象キャラクター\s*$/;
+/** 非コラボのイベントガチャ記事の「▼排出される新キャラクター」(同じ表の形)。 */
+export const NEW_CHARA_TABLE_LABEL = '新キャラクター';
+const NEW_CHARA_TABLE_RE = /^▼\s*排出される新キャラクター\s*$/;
 const CHARA_ROW_RE = /^(.+?)\s+(★\d\S*)(?:\s+([火水木光闇無]))?$/;
 const ATTR_ONLY_RE = /^[火水木光闇無]$/;
 
@@ -170,9 +173,10 @@ export function extractBlocks(lines: string[]): RawBlock[] {
       heading = clean(line.slice(2));
       continue;
     }
-    if (CHARA_TABLE_RE.test(clean(line))) {
+    const isNewChara = NEW_CHARA_TABLE_RE.test(clean(line));
+    if (isNewChara || CHARA_TABLE_RE.test(clean(line))) {
       const r = charaTableRows(lines, i + 1);
-      if (r.rows.length > 0) out.push({ label: CHARA_TABLE_LABEL, heading, lines: r.rows });
+      if (r.rows.length > 0) out.push({ label: isNewChara ? NEW_CHARA_TABLE_LABEL : CHARA_TABLE_LABEL, heading, lines: r.rows });
       i = r.next - 1;
       continue;
     }
@@ -266,6 +270,11 @@ export function tableOf(lines: readonly string[]): DetailTable | null {
   }
   const dates = lines.map((l) => /^(\d{1,2}\/\d{1,2})\(([月火水木金土日])\)\s+(.+)$/.exec(l));
   if (dates.every((m) => m)) return { head: ['日付', '曜日', '対象属性'], rows: dates.map((m) => [padMonthDay(m?.[1] as string), m?.[2] as string, (m?.[3] as string).replace(/クエスト$/, '')]) };
+  // 破界の星墓の本開催の登場ステージ: `N階層 | グループA | グループB`(6〜10階層は `N階層 | クエスト` の1つだけ)
+  const groups = lines.map((l) => /^(\d+階層) \| ([^|]+?)(?: \| ([^|]+))?$/.exec(l));
+  if (groups.every((m) => m) && groups.some((m) => m?.[3] !== undefined)) {
+    return { head: ['階層', 'グループA', 'グループB'], rows: groups.map((m) => (m?.[3] === undefined ? [m?.[1] as string, m?.[2] as string] : [m[1] as string, m[2] as string, m[3]])) };
+  }
   const floors = lines.map((l) => /^(\d+階層)\s*[：:]\s*(.+)$/.exec(l));
   if (floors.every((m) => m)) return { head: ['階層', 'クエスト'], rows: floors.map((m) => [m?.[1] as string, m?.[2] as string]) };
   return null;

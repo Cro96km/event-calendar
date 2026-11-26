@@ -12,7 +12,7 @@ import { dayStyleOf, type DayStyle } from './bar-style';
 import { fullLabel, shortLabel } from './label';
 import { PICKUP_SCHEDULE_LABEL, normalQuestBlock, tableOf, type DetailBlock } from './details';
 import { padDateTime } from './jst';
-import { isQuestNameBlock, questNameColor, withFixedFloors } from './quest-color';
+import { hakaiGroupsBlock, isQuestNameBlock, questNameColor, withFixedFloors } from './quest-color';
 import { icon } from './icons';
 import { applyTheme, currentTheme, saveTheme } from './theme';
 import { SUMMARY, summaryBlocks, type ShotKind } from './shot';
@@ -165,7 +165,9 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
     const derived = normalQuestBlock(event);
     // 手動の修正(overrides.json): 注記を出し、指定のブロックは出さない
     for (const note of event.fix?.notes ?? []) item.append(el('p', 'detail-note', note));
-    const blocks: DetailBlock[] = [...(event.details ?? []), ...(derived ? [derived] : [])].filter((b) => !event.fix?.hide_blocks?.includes(b.label));
+    // 星墓がグループA/Bに分かれる開催は、設定の表(本開催の登場ステージ)を出し、記事の階層クエストのブロックは出さない
+    const groupsBlock = hakaiGroupsBlock(event.name, event.start);
+    const blocks: DetailBlock[] = [...(event.details ?? []).filter((b) => !(groupsBlock && /階層.*クエスト/.test(b.label))), ...(groupsBlock ? [groupsBlock] : []), ...(derived ? [derived] : [])].filter((b) => !event.fix?.hide_blocks?.includes(b.label));
     for (const block0 of blocks) {
       const block = withFixedFloors(event.name, block0, event.start);
       const box = el('div', 'detail-block');
@@ -194,6 +196,8 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
               return;
             }
             const td = el('td', undefined, i === 2 && t.head[0] === '弾' ? '' : c);
+            // グループなしの階層(6〜10階層)は、グループA・Bの2列にまたがる
+            if (t.head[0] === '階層' && t.head.length === 3 && r.length === 2 && i === 1) td.colSpan = 2;
             // 超UP期間の表(激・獣神祭): キャラクターは名前ごとに属性色で、1体ずつ改行
             if (i === 2 && t.head[0] === '弾') {
               c.split('、').forEach((n) => {
@@ -216,7 +220,7 @@ function renderDetail(state: AppState, rerender: () => void): HTMLElement {
               else colorAttrs(td, c);
             }
             // 階層クエストの名前(2列目)に属性色(config/display/quest-colors.json)
-            if (qnames && i === 1) {
+            if (qnames && i >= 1) {
               const qc = questNameColor(c);
               if (qc && paint(td, qc)) td.classList.add('qname');
             }

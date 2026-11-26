@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import hakai from '../config/schedule/hakai.json';
 import { checkHakai, configProblems } from '../src/hakai-check';
-import { fixedFloors, pickFloors, questNameColor, withFixedFloors } from '../src/quest-color';
+import { fixedFloors, hakaiGroupsBlock, pickFloors, questNameColor, withFixedFloors } from '../src/quest-color';
+import { tableOf } from '../src/details';
 
 const cfg = (over: Partial<{ quests: { name: string; color: string }[]; schedules: { since: string; floors: { floor: number; quest: string }[] }[] }> = {}) => ({
   quests: [{ name: 'A', color: 'red' }, { name: 'B', color: 'blue' }],
@@ -51,7 +52,7 @@ describe('pickFloors(開催ごとの階層。since の版)', () => {
   });
   it('withFixedFloors は開催の開始日を渡すと版が使われ、現在の設定で既存の6〜10階層は不変', () => {
     const block = { label: '本開催の1階層～5階層までのクエスト', lines: ['1階層：パライソの星墓'] };
-    expect(withFixedFloors('「破界の星墓」', block, '2026-10-27T12:00:00+09:00').lines.slice(1)).toEqual(fixedFloors().map((f) => `${f.floor}階層：${f.name}`));
+    expect(withFixedFloors('「破界の星墓」', block, '2026-10-27T12:00:00+09:00').lines.slice(1)).toEqual(fixedFloors('2026-10-27T12:00:00+09:00').map((f) => `${f.floor}階層：${f.name}`));
     expect(hakai.schedules.length).toBeGreaterThan(0);
   });
 });
@@ -115,5 +116,40 @@ describe('境界値', () => {
     const clash = checkHakai([rec(['6階層：記事の星墓'])]);
     expect(clash.problems.some((p) => p.includes('見直してください'))).toBe(true);
     expect(checkHakai([rec(['5階層：パラノヴィアの星墓'])]).problems).toEqual([]);
+  });
+});
+
+describe('グループA/Bの本開催の登場ステージ', () => {
+  it('新6〜10階層(2026-12開催から)は属性色が引ける。古い開催は従来の6〜10階層のまま', () => {
+    const colors = { エリュシオンの星墓: '#a16800', 'カリ・ユガの星墓': '#3154ef', 'ディエス・イレの星墓': '#eb0043', アガルタの星墓: '#a237c3', ドーヴァーオーズの星墓: '#007d32' };
+    for (const [n, c] of Object.entries(colors)) expect(questNameColor(n), n).toBe(c);
+    expect(fixedFloors('2026-12-01T12:00:00+09:00').map((f) => f.name)).toEqual(Object.keys(colors).map((n) => n.replace('カリ・ユガ', 'カリユガ').replace('ディエス・イレ', 'ディエスイレ')));
+    expect(fixedFloors('2026-11-27T12:00:00+09:00')[0]?.name).toBe('ニギミタマの星墓');
+  });
+  it('設定の版(start=開催の開始日)があるときだけ表を作る。1〜5階層はA/B、6〜10階層は1つ', () => {
+    const b = hakaiGroupsBlock('「破界の星墓」が12/1より…', '2026-12-01T12:00:00+09:00');
+    expect(b?.label).toBe('本開催の登場ステージ');
+    expect(b?.lines[0]).toBe('1階層 | アポカリプスの星墓 | ティルナノーグの星墓');
+    expect(b?.lines[4]).toBe('5階層 | コキュートスの星墓 | メラン&コリンの星墓');
+    expect(b?.lines[5]).toBe('6階層 | エリュシオンの星墓');
+    expect(b?.lines).toHaveLength(10);
+    expect(tableOf(b?.lines ?? [])?.rows[0]).toEqual(['1階層', 'アポカリプスの星墓', 'ティルナノーグの星墓']);
+    expect(tableOf(b?.lines ?? [])?.rows[5]).toEqual(['6階層', 'エリュシオンの星墓']);
+    expect(hakaiGroupsBlock('「破界の星墓」', '2026-12-27T12:00:00+09:00')).toBeNull(); // 開催ごとに足す
+    expect(hakaiGroupsBlock('別のクエスト', '2026-12-01T12:00:00+09:00')).toBeNull();
+  });
+  it('設定の矛盾(未定義のクエスト・AとBが同じ・start の重複/形式)を検出する', () => {
+    const g = (groups: { start: string; floors: { floor: number; a: string; b: string }[] }[]) => ({ ...cfg(), groups });
+    expect(configProblems(g([{ start: '2026-12-01', floors: [{ floor: 1, a: 'A', b: 'B' }] }]), palette)).toEqual([]);
+    expect(configProblems(g([{ start: '2026-12-01', floors: [{ floor: 1, a: 'A', b: 'A' }, { floor: 1, a: 'A', b: 'Z' }] }]), palette)).toEqual([
+      'groups(2026-12-01) の 1階層はグループAとBが同じです: A',
+      'groups(2026-12-01) の階層番号が重複しています: 1',
+      'groups(2026-12-01) の 1階層が quests に無いクエストを参照しています: Z',
+    ]);
+    expect(configProblems(g([{ start: '12/1', floors: [] }, { start: '12/1', floors: [] }]), palette)).toEqual(['groups の start は YYYY-MM-DD: 12/1', 'groups の start は YYYY-MM-DD: 12/1', 'groups の start が重複しています: 12/1']);
+  });
+  it('checkHakai: 最初の版以降の開催でグループの表が無いものを返す', () => {
+    const ev = (start: string) => ({ id: 'x', events: [{ name: '「破界の星墓」', start }] });
+    expect(checkHakai([ev('2026-11-27T12:00:00+09:00'), ev('2026-12-01T12:00:00+09:00'), ev('2026-12-27T12:00:00+09:00')]).missingGroups).toEqual(['2026-12-27']);
   });
 });
