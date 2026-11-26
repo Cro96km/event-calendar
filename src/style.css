@@ -538,7 +538,8 @@ button {
 .detail-table th,
 .detail-table td {
   padding: .55rem 1.25rem;
-  text-align: left;
+  text-align: center;
+  vertical-align: middle;
   border-bottom: 1px solid var(--border);
 }
 
