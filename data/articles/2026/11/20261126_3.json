@@ -1,0 +1,26 @@
+{
+  "id": "20261126_3",
+  "url": "https://www.monster-strike.com/news/20261126_3.html",
+  "title": "「オーディン」の真獣神化が12/1に解禁！",
+  "category": "update",
+  "categories": [
+    "update"
+  ],
+  "published": "2026-11-26",
+  "fetched_at": "2026-11-26T21:15:37+09:00",
+  "lastmod": "2026-11-26T17:03:21+09:00",
+  "content_hash": "sha256:912c49fde21a4f533b2ebda0935c5d36a2144fe35ef71fca090a70d24c7873fa",
+  "parse_status": "none",
+  "events": [],
+  "reward_until": null,
+  "characters": [
+    {
+      "name": "オーディン",
+      "kind": "真獣神化",
+      "start": "2026-12-01T00:00:00+09:00",
+      "end": "2026-12-02T00:00:00+09:00",
+      "at": "2026-12-01T12:00:00+09:00",
+      "attr": "水"
+    }
+  ]
+}
