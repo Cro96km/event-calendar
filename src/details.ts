@@ -134,7 +134,7 @@ function charaTableRows(lines: string[], from: number): { rows: string[]; next: 
     const raw = lines[j] as string;
     if (raw.startsWith('# ') || /^[▼※◎]/.test(clean(raw))) break;
     const l = clean(raw);
-    if (/^キャラクター\s+レアリティ/.test(l)) continue;
+    if (/^キャラクター名?\s+レアリティ/.test(l)) continue;
     const m = CHARA_ROW_RE.exec(l);
     if (m) {
       rows.push({ name: m[1] as string, rarity: m[2] as string, attr: m[3] ?? '' });
