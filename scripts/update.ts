@@ -99,6 +99,7 @@ const summary = {
   pending: report.pending.length,
   carriedPending: report.carriedPending,
   newQuests: report.newQuests.length,
+  groupsUnread: report.groupsUnread.length,
   longLabels: report.longLabels.length,
   unparsed: report.unparsed.length,
   health,

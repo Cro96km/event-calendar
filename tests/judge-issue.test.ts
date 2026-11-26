@@ -7,7 +7,7 @@ import type { UpdateReport } from '../src/update-report';
 const group = (id: string, category = 'campaign', over: Partial<ReviewGroup> = {}): ReviewGroup => ({
   id, category, examples: [`${id}の例A`, `${id}の例B`], count: 2, period: '2026-11-03〜2026-11-09', url: `https://example.test/${encodeURIComponent(id)}`, conflict: null, ...over,
 });
-const empty: UpdateReport = { newArticles: 0, changedArticles: 0, newEvents: [], changedEvents: [], visibleAdded: [], visibleRemoved: [], pending: [], carriedPending: 0, newQuests: [], longLabels: [], unparsed: [] };
+const empty: UpdateReport = { newArticles: 0, changedArticles: 0, newEvents: [], changedEvents: [], visibleAdded: [], visibleRemoved: [], pending: [], carriedPending: 0, newQuests: [], groupsUnread: [], longLabels: [], unparsed: [] };
 const withPending = (pending: ReviewGroup[]): UpdateReport => ({ ...empty, pending });
 
 describe('renderJudgeIssue', () => {
@@ -30,11 +30,14 @@ describe('renderJudgeIssue', () => {
     const r = renderJudgeIssue({
       ...empty,
       newQuests: [{ name: '新登場の星墓', article: '20261125_1', start: '2026-11-27' }],
+      groupsUnread: [{ id: '20261226_1', title: '「破界の星墓」が12/27より登場', start: '2026-12-27' }],
       longLabels: [{ id: 'x#0', label: '長い"ラベル"の項目', width: 17.2 }],
       unparsed: [{ id: 'Z_1', title: '期間不明の記事', url: 'https://example.test/Z_1' }],
     }, '2026-11-06');
     expect(r?.body).toContain('{ "name": "新登場", "color": "red" }');
     expect(r?.body).toContain('{ "match": "長いラベルの項目", "label": "ここに短い表記" }');
+    expect(r?.body).toContain('本開催の登場ステージ');
+    expect(r?.body).toContain('[「破界の星墓」が12/27より登場](https://www.monster-strike.com/news/20261226_1.html)(開催 2026-12-27)');
     expect(r?.body).toContain('[期間不明の記事](https://example.test/Z_1)');
     expect(r?.body).not.toContain('<!--k:'); // 要判断が無ければチェック行は無い
   });

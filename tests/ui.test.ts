@@ -1220,6 +1220,47 @@ describe('ガチャセクション', () => {
     ]);
   });
 
+  it('星墓のグループA/B開催: 本開催の登場ステージの表(階層|グループA|グループB。6〜10階層は2列にまたがる)を属性色つきで出し、記事の階層クエストのブロックは出さない', () => {
+    const e = ev('g#0', 'event', '2026-12-01T12:00:00+09:00', '2026-12-21T11:59:00+09:00', {
+      name: '「破界の星墓」が12/1より期間限定で登場！',
+      details: [
+        { label: '本開催の1階層～5階層までのクエスト', lines: ['1階層：パライソの星墓'] },
+        { label: '本開催の登場ステージ', lines: ['1階層 | アポカリプスの星墓 | ティルナノーグの星墓', '2階層 | ラブの星墓 | シャンバラの星墓', '6階層 | エリュシオンの星墓', '7階層 | ドーヴァーオーズの星墓'] },
+      ],
+    });
+    state.events = [e];
+    state.weekStart = '2026-11-30';
+    state.collapsed.clear();
+    render(root, state);
+    click(bar('g#0'));
+    const blocks = [...(q('detail')?.querySelectorAll('.detail-block') ?? [])];
+    expect(blocks.map((b) => b.querySelector('h4')?.textContent)).toEqual(['本開催の登場ステージ']);
+    expect([...blocks[0]!.querySelectorAll('th')].map((t) => t.textContent)).toEqual(['階層', 'グループA', 'グループB']);
+    const rows = [...blocks[0]!.querySelectorAll('tbody tr')];
+    const cell = (r: Element, i: number) => { const td = r.querySelectorAll('td')[i] as HTMLElement; return [td.textContent, td.style.getPropertyValue('--pc')]; };
+    expect(rows).toHaveLength(4);
+    expect([cell(rows[0]!, 1), cell(rows[0]!, 2)]).toEqual([['アポカリプスの星墓', '#a237c3'], ['ティルナノーグの星墓', '#3154ef']]);
+    expect(cell(rows[2]!, 1)).toEqual(['エリュシオンの星墓', '#a16800']);
+    expect(rows[2]!.querySelectorAll('td')).toHaveLength(2);
+    expect(rows[2]!.querySelectorAll('td')[1]?.getAttribute('colspan')).toBe('2');
+    expect(cell(rows[3]!, 1)).toEqual(['ドーヴァーオーズの星墓', '#007d32']);
+  });
+
+  it('非コラボのイベントガチャの新キャラクターの表: 名前と属性を属性色で', () => {
+    const e = ev('n#0', 'event', '2026-11-03T12:00:00+09:00', '2026-11-09T11:59:00+09:00', {
+      name: 'ガチャ「サンプル」開催!',
+      details: [{ label: '新キャラクター', lines: ['アルファ | ★6（獣神化前） | 水', 'ベータ | ★6（獣神化前） | 木'] }],
+    });
+    state.events = [e];
+    state.weekStart = '2026-11-02';
+    state.collapsed.clear();
+    render(root, state);
+    click(bar('n#0'));
+    const tds = [...(q('detail')?.querySelectorAll('.detail-table tbody tr') ?? [])].map((r) => [...r.querySelectorAll('td')].map((td) => [td.textContent, (td as HTMLElement).style.getPropertyValue('--pc')]));
+    expect(tds[0]).toEqual([['アルファ', '#3154ef'], ['★6（獣神化前）', ''], ['水', '#3154ef']]);
+    expect(tds[1]?.[0]).toEqual(['ベータ', '#007d32']);
+  });
+
   it('超究極・絶級のボス名の公式色: 行ラベルの文字とバーの縁(--pc とクラス)。#rrggbb 以外は無視', () => {
     const a = ev('b#0', 'event', '2026-11-03T12:00:00+09:00', '2026-11-09T11:59:00+09:00', { name: '超究極・兵クエスト（ミザリー）が出現', color: '#3154ef' });
     const b = ev('b#1', 'event', '2026-11-03T12:00:00+09:00', '2026-11-09T11:59:00+09:00', { name: '超究極・傑クエスト（ララバイ）が出現', color: 'expression(1)' });
