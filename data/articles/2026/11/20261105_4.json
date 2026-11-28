@@ -7,9 +7,9 @@
     "event"
   ],
   "published": "2026-11-05",
-  "fetched_at": "2026-11-25T16:52:53+09:00",
-  "lastmod": "2026-11-25T10:54:13+09:00",
-  "content_hash": "sha256:6fb6455fbcae2e767cb07de846c66798b7c93e2d96e57ad017182608017a647b",
+  "fetched_at": "2026-11-28T23:16:14+09:00",
+  "lastmod": "2026-11-27T14:09:24+09:00",
+  "content_hash": "sha256:bd159c3a9b8cb05477472bd73c5788a202d19bc350ea46ab3657f4619a390b83",
   "parse_status": "ok",
   "events": [
     {
@@ -37,7 +37,8 @@
       "start": "2026-11-07T12:00:00+09:00",
       "end": "2026-11-25T11:59:00+09:00",
       "raw": "2026年11月7日(土)12:00〜11月25日(水)11:59",
-      "inherited": true
+      "inherited": true,
+      "anchor": "1"
     },
     {
       "id": "20261105_4#3",
